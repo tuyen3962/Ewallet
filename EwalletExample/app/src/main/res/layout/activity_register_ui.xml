@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tvRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:text="Đăng kí tài khoản"
+        android:textColor="@color/colorPrimaryDark"
+        android:textStyle="bold"
+        android:textSize="25sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tvRegister"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        android:text="Họ tên"
+        android:textSize="25sp" />
+
+    <EditText
+        android:id="@+id/etFullName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvRegister"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:width="200dp"
+        android:hint="Nhập họ và tên"
+        android:gravity="center"
+        android:textSize="18dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/etFullName"
+        android:layout_marginTop="25dp"
+        android:layout_marginLeft="20dp"
+        android:text="Tên tài khoản"
+        android:textSize="25sp" />
+
+    <EditText
+        android:id="@+id/etUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etFullName"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:width="200dp"
+        android:hint="Nhập tài khoản"
+        android:gravity="center"
+        android:textSize="18dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etUsername"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="20dp"
+        android:text="Nhập mật khẩu"
+        android:textSize="25sp" />
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etUsername"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:width="200dp"
+        android:hint="Mật khẩu"
+        android:gravity="center"
+        android:textSize="18dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etPassword"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="10dp"
+        android:text="Xác nhận mật khẩu"
+        android:textSize="22sp" />
+
+    <EditText
+        android:id="@+id/etConfirmPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etPassword"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:width="200dp"
+        android:hint="Nhập lại mật khẩu"
+        android:gravity="center"
+        android:textSize="18dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etConfirmPassword"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="20dp"
+        android:text="Số điện thoại"
+        android:textSize="25sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etConfirmPassword"
+        android:text="+84"
+        android:layout_marginTop="35dp"
+        android:textSize="18dp"
+        android:layout_alignLeft="@id/etPhone"/>
+
+    <EditText
+        android:id="@+id/etPhone"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etConfirmPassword"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:hint="Nhập số điện thoại"
+        android:gravity="center"
+        android:textSize="18dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etPhone"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="20dp"
+        android:text="Email"
+        android:textSize="25sp" />
+
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etPhone"
+        android:layout_marginTop="25dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="15dp"
+        android:width="200dp"
+        android:hint="Nhập email"
+        android:gravity="center"
+        android:textSize="18dp" />
+
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etEmail"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/edit_round_button"
+        android:layout_centerHorizontal="true"
+        android:width="200dp"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:text="Đăng kí" />
+
+</RelativeLayout>
