@@ -2,6 +2,7 @@ package com.example.ewalletexample.data;
 
 public class User {
     private int userId;
+    private String fullName;
     private String username;
     private String password;
     private String phoneNumber;
@@ -9,6 +10,14 @@ public class User {
 
     public User(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public User(String fullName, String username, String password, String phoneNumber, String email) {
+        this.fullName = fullName;
+        this.username = username;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
     }
 
     public User(String username, String password, String phoneNumber, String email) {
@@ -24,6 +33,14 @@ public class User {
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.email = email;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public int getUserId() {

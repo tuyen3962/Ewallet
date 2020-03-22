@@ -114,11 +114,12 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
             user = new User(phone);
         }
         else{
+            String fullName = intent.getStringExtra(Symbol.FULLNAME);
             String username = intent.getStringExtra(Symbol.USERNAME);
             String password = intent.getStringExtra(Symbol.PASSWORD);
             String phone = intent.getStringExtra(Symbol.PHONE);
             String email = intent.getStringExtra(Symbol.EMAIL);
-            user = new User(username,password,phone,email);
+            user = new User(fullName,username,password,phone,email);
         }
     }
 

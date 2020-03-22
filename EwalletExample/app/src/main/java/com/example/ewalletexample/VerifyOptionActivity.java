@@ -52,12 +52,13 @@ public class VerifyOptionActivity extends AppCompatActivity implements View.OnCl
         reason = intent.getStringExtra(Symbol.REASION_VERIFY);
         if (reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER))
         {
+            String fullName = intent.getStringExtra(Symbol.FULLNAME);
             String username = intent.getStringExtra(Symbol.USERNAME);
             String password = intent.getStringExtra(Symbol.PASSWORD);
             String phone = intent.getStringExtra(Symbol.PHONE);
             String email = intent.getStringExtra(Symbol.EMAIL);
 
-            user = new User(username, password, phone, email);
+            user = new User(fullName, username, password, phone, email);
 
             tvIntroduce.setText("Xác thực tài khoản cho đăng kí");
             btnVerifyByPhone.setText("Xác thực bằng số điện thoại");
@@ -124,6 +125,7 @@ public class VerifyOptionActivity extends AppCompatActivity implements View.OnCl
         }
 
         Intent intent = new Intent(VerifyOptionActivity.this, VerifyByPhoneActivity.class);
+        intent.putExtra(Symbol.FULLNAME,user.getFullName());
         intent.putExtra(Symbol.USERNAME, user.getUsername());
         intent.putExtra(Symbol.PASSWORD, user.getPassword());
         intent.putExtra(Symbol.PHONE, user.getPhoneNumber());
