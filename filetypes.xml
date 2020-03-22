@@ -1,0 +1,9 @@
+<application>
+  <component name="FileTypeManager" version="17">
+    <extensionMap>
+      <mapping pattern="time" type="JSON" />
+      <mapping pattern="PROCESS_PHONE_NUMBER-journal" type="PLAIN_TEXT" />
+      <mapping pattern="json" type="PLAIN_TEXT" />
+    </extensionMap>
+  </component>
+</application>
