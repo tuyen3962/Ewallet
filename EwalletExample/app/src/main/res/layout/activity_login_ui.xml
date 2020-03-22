@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/gradient">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="160dp"
+        android:layout_marginTop="50dp"
+        android:text="VDT"
+        android:textSize="40sp"
+        android:textColor="@color/colorPrimary"/>
+
+    <TextView
+        android:id="@+id/tvResetPass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="128dp"
+        android:layout_marginTop="15dp"
+        android:text="Chào quý khách"
+        android:textSize="20dp"
+        android:textStyle="bold"
+        android:layout_below="@id/textView3"
+        android:textColor="@color/colorPrimary"/>
+
+    <EditText
+        android:id="@+id/etUsername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="20dp"
+        android:width="230dp"
+        android:minHeight="40dp"
+        android:maxHeight="50dp"
+        android:layout_below="@id/tvResetPass"
+        android:background="@drawable/edit_round_textview"
+        android:drawableLeft="@drawable/ic_action_account"
+        android:ems="20"
+        android:inputType="textPersonName"
+        android:hint="Nhập tên tài khoản"/>
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etUsername"
+        android:gravity="center"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="25dp"
+        android:width="230dp"
+        android:minHeight="40dp"
+        android:maxHeight="50dp"
+        android:background="@drawable/edit_round_textview"
+        android:drawableLeft="@drawable/ic_action_password"
+        android:ems="20"
+        android:inputType="textPassword"
+        android:hint="Nhập mật khẩu"/>
+
+    <Button
+        android:id="@+id/btnLoginByPhone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etPassword"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="30dp"
+        android:width="210dp"
+        android:background="@drawable/edit_round_button"
+        android:text="Đăng nhập bằng điện thoại"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="30dp"
+        android:width="210dp"
+        android:layout_below="@id/btnLoginByPhone"
+        android:background="@drawable/edit_round_button"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        android:text="Đăng nhập" />
+
+    <Button
+        android:id="@+id/btnForgetPass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:layout_centerInParent="true"
+        android:width="210dp"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        android:background="@drawable/edit_round_button"
+        android:layout_below="@id/btnLogin"
+        android:text="Quên mật khẩu" />
+
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:layout_centerInParent="true"
+        android:width="210dp"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        android:background="@drawable/edit_round_button"
+        android:layout_below="@id/btnForgetPass"
+        android:text="Đăng kí" />
+
+</RelativeLayout>
