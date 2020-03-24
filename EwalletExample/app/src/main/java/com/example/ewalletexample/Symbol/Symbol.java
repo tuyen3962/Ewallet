@@ -10,7 +10,6 @@ public class Symbol {
     public static String VERIFY_FORGET_BY_EMAIL = "EMAIL";
 
     public static String FULLNAME = "FULLNAME";
-    public static String USERNAME = "USERNAME";
     public static String PASSWORD = "PASSWORD";
     public static String PHONE = "PHONE";
     public static String EMAIL = "EMAIL";

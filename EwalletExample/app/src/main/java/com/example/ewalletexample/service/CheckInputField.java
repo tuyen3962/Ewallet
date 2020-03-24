@@ -6,7 +6,7 @@ public class CheckInputField {
     private static String PASSWORD_REGEX = "[0-9]{6}";
     private static String PHONE_REGEX = "0+[8|9|3|7|5]+[0-9]{8}";
 
-    public static boolean CheckEmail(String email){
+    public static boolean EmailIsValid(String email){
         if (email.matches(EMAIL_REGEX)){
             return true;
         }
@@ -14,7 +14,7 @@ public class CheckInputField {
         return false;
     }
 
-    public static boolean CheckPassword(String passowrd){
+    public static boolean PasswordIsValid(String passowrd){
         if (passowrd.matches(PASSWORD_REGEX)){
             return true;
         }
@@ -22,7 +22,7 @@ public class CheckInputField {
         return false;
     }
 
-    public static boolean CheckPhoneNumber(String phone){
+    public static boolean PhoneNumberIsValid(String phone){
         if(phone.matches(PHONE_REGEX)){
             String phoneCarrier = phone.substring(0,2);
             if(CarrierNumber.GetInstance().CarrierPhoneIsValid(phoneCarrier)){

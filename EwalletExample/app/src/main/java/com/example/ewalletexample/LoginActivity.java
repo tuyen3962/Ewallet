@@ -13,10 +13,9 @@ import android.widget.Toast;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
+public class LoginActivity extends AppCompatActivity {
 
     EditText etUsername, etPassword;
-    Button btnLoginByPhone, btnRegister, btnForgetPassword, btnLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,40 +23,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.activity_login_ui);
 
         InitLayoutProperties();
-
-        SetOnClickEventForButton();
     }
 
     void InitLayoutProperties(){
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
-        btnLogin = findViewById(R.id.btnLogin);
-        btnForgetPassword = findViewById(R.id.btnForgetPass);
-        btnRegister = findViewById(R.id.btnRegister);
-        btnLoginByPhone = findViewById(R.id.btnLoginByPhone);
     }
 
-    void SetOnClickEventForButton(){
-        btnForgetPassword.setOnClickListener(this);
-        btnLogin.setOnClickListener(this);
-        btnLoginByPhone.setOnClickListener(this);
-        btnRegister.setOnClickListener(this);
-    }
-
-    @Override
-    public void onClick(View view) {
-        if (view.getId() == btnLogin.getId()){
-            LoginButtonEvent();
-        } else if(view.getId() == btnRegister.getId()){
-            RegisterButtonEvent();
-        } else if (view.getId() == btnLoginByPhone.getId()){
-            LoginByPhoneButtonEvent();
-        }else if(view.getId() == btnForgetPassword.getId()){
-            ForgetPasswordButtonEvent();
-        }
-    }
-
-    void LoginButtonEvent(){
+    public void UserLoginEvent(View view){
         String username = etUsername.getText().toString();
         String password = etPassword.getText().toString();
 
@@ -77,18 +50,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         return null;
     }
 
-    void RegisterButtonEvent(){
-        startActivity(new Intent(this, RegisterActivity.class));
+    public void UserForgetPasswordEvent(){
+//        Intent intent = new Intent(LoginActivity.this, VerifyOptionActivity.class);
+//        intent.putExtra(Symbol.REASION_VERIFY,Symbol.REASON_VERIFY_FOR_FORGET);
+//
+//        startActivity(intent);
     }
 
-    void ForgetPasswordButtonEvent(){
-        Intent intent = new Intent(LoginActivity.this, VerifyOptionActivity.class);
-        intent.putExtra(Symbol.REASION_VERIFY,Symbol.REASON_VERIFY_FOR_FORGET);
-
-        startActivity(intent);
-    }
-
-    void LoginByPhoneButtonEvent(){
+    public void UserRegisterEvent(View view){
         startActivity(new Intent(LoginActivity.this, RegisterByPhone.class));
     }
 }
