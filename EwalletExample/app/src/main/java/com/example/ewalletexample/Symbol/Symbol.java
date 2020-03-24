@@ -1,16 +1,27 @@
 package com.example.ewalletexample.Symbol;
 
-public class Symbol {
-    public static String REASION_VERIFY = "REASONVERIFY";
-    public static String REASON_VERIFY_FOR_FORGET = "FORGETPASSWORD";
-    public static String REASON_VERIFY_FOR_REGISTER = "REGISTER";
+public enum  Symbol {
+    REASION_VERIFY("REASONVERIFY"),
+    REASON_VERIFY_FOR_FORGET("FORGETPASSWORD"),
+    REASON_VERIFY_FOR_REGISTER("REGISTER"),
 
-    public static String VERRIFY_FORGET = "VERIFY_FORGET";
-    public static String VERIFY_FORGET_BY_PHONE = "PHONE";
-    public static String VERIFY_FORGET_BY_EMAIL = "EMAIL";
+    VERRIFY_FORGET("VERIFY_FORGET"),
+    VERIFY_FORGET_BY_PHONE("PHONE"),
+    VERIFY_FORGET_BY_EMAIL("EMAIL"),
 
-    public static String FULLNAME = "FULLNAME";
-    public static String PASSWORD = "PASSWORD";
-    public static String PHONE = "PHONE";
-    public static String EMAIL = "EMAIL";
+    FULLNAME("FULLNAME"),
+    PASSWORD("PASSWORD"),
+    PHONE("PHONE"),
+    EMAIL("EMAIL"),
+    USER_ID("USER_ID");
+
+    private String value;
+
+    Symbol(String value){
+        this.value = value;
+    }
+
+    public String GetValue(){
+        return value;
+    }
 }

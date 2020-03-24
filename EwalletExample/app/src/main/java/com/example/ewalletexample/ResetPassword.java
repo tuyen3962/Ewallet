@@ -18,6 +18,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class ResetPassword extends AppCompatActivity {
 
@@ -45,6 +46,7 @@ public class ResetPassword extends AppCompatActivity {
         init();
 
         GetValueFromIntent();
+        UpdateFullName();
     }
 
     void init(){
@@ -58,16 +60,16 @@ public class ResetPassword extends AppCompatActivity {
 
     void GetValueFromIntent(){
         Intent intent = getIntent();
-        reason = intent.getStringExtra(Symbol.VERRIFY_FORGET);
-        if(reason.equalsIgnoreCase(Symbol.VERIFY_FORGET_BY_EMAIL)){
-            email = intent.getStringExtra(Symbol.EMAIL);
+        reason = intent.getStringExtra(Symbol.VERRIFY_FORGET.GetValue());
+        if(reason.equalsIgnoreCase(Symbol.VERIFY_FORGET_BY_EMAIL.GetValue())){
+            email = intent.getStringExtra(Symbol.EMAIL.GetValue());
             DisableResetPassword();
             LoadingVerifyEmail verifyEmail = new LoadingVerifyEmail(email);
             verifyEmail.start();
         }
         else
         {
-            phone = intent.getStringExtra(Symbol.PHONE);
+            phone = intent.getStringExtra(Symbol.PHONE.GetValue());
         }
     }
 
@@ -77,6 +79,13 @@ public class ResetPassword extends AppCompatActivity {
         btnReset.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);
         view.setVisibility(View.VISIBLE);
+    }
+
+    void UpdateFullName(){
+        FirebaseUser firebaseUser = auth.getCurrentUser();
+        if(firebaseUser != null){
+            tvUsername.setText(firebaseUser.getDisplayName());
+        }
     }
 
     void EnableResetPassword(){

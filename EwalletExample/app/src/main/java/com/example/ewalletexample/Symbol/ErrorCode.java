@@ -1,0 +1,39 @@
+package com.example.ewalletexample.Symbol;
+
+public enum  ErrorCode {
+    SUCCESS(1),
+    EXCEPTION(0),
+    // -1 -> -100 validate
+    VALIDATE_FULL_NAME_INVALID(-1),
+    VALIDATE_PIN_INVALID(-2),
+    VALIDATE_PHONE_INVALID(-3),
+    VALIDATE_PHONE_DUPLICATE(-4),
+    VALIDATE_USER_ID_INVALID(-5),
+    VALIDATE_AMOUNT_INVALID(-6),
+    VALIDATE_TRANSACTION_ID_INVALID(-7),
+    VALIDATE_TRANSACTION_DUPLICATE(-8),
+    VALIDATE_BANK_CODE_INVALID(-9),
+    VALIDATE_CAR_NUMBER_INVALID(-10),
+    VALIDATE_CMND_INVALID(-11),
+    VALIDATE_F6CARD_NO_INVALID(-12),
+    VALIDATE_L4CARD_NO_INVALID(-13),
+    VALIDATE_ORDER_ID_INVALID(-14),
+    VALIDATE_SOURCE_OF_FUN_INVALID(-15),
+    VALIDATE_SERVICE_TYPE_INVALID(-16),
+
+    // -101 -> -200 BUS
+    USER_PASSWORD_WRONG(-101),
+    USER_PIN_WRONG(-102),
+    BALANCE_NOT_ENOUGHT(-103),
+    USER_HAS_NOT_MAPPING_YET(-104),
+    DUPLICATE_TRANSACTION(-105);
+
+    private int value;
+    ErrorCode(int value){
+        this.value=value;
+    }
+
+    public int GetValue() {
+        return this.value;
+    }
+}

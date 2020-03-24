@@ -27,7 +27,7 @@ public class VerifyUserForForget extends AppCompatActivity {
 
     FirebaseAuth auth;
 
-    TextView tvDetail, tvCountryCode;
+    TextView tvDetail, tvChangeTypeVerify;
     EditText etDetail;
     Button btnVerifyAccount;
 
@@ -39,41 +39,33 @@ public class VerifyUserForForget extends AppCompatActivity {
         setContentView(R.layout.activity_verify_user_for_forget);
 
         auth = FirebaseAuth.getInstance();
+
         init();
-        SettingValueByIntent();
 
-        btnVerifyAccount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String detail = etDetail.getText().toString();
-
-                if(view.getId() == btnVerifyAccount.getId()){
-                    VerifyAccountEvent(detail);
-                }
-            }
-        });
-    }
-
-    void SettingValueByIntent(){
-        Intent intent = getIntent();
-        String verifyForgetOption = intent.getStringExtra(Symbol.VERRIFY_FORGET);
-        if (verifyForgetOption.equalsIgnoreCase(Symbol.VERIFY_FORGET_BY_EMAIL)){
-            ShowUIVerifyForgetByEmail();
-            verifyAccountByPhone = false;
-        }else{
-            ShowUIVerifyForgetByPhone();
-            verifyAccountByPhone = true;
-        }
+        ShowUIVerifyForgetByPhone();
+        verifyAccountByPhone = true;
     }
 
     void init(){
         etDetail = findViewById(R.id.etDetail);
-        tvCountryCode = findViewById(R.id.tvCountryCode);
         tvDetail = findViewById(R.id.tvDetail);
         btnVerifyAccount = findViewById(R.id.btnVerifyAccount);
+        tvChangeTypeVerify = findViewById(R.id.tvChangeTypeVerify);
     }
 
-    void VerifyAccountEvent(String detail){
+    public void ChangeTypeVerifyEvent(View view){
+        verifyAccountByPhone = !verifyAccountByPhone;
+        if(verifyAccountByPhone){
+            ShowUIVerifyForgetByPhone();
+        }
+        else{
+            ShowUIVerifyForgetByEmail();
+        }
+    }
+
+    public void VerifyAccountEvent(View view){
+        String detail = etDetail.getText().toString();
+
         if(verifyAccountByPhone){
             VerifyAccountByPhone(detail);
         }else {
@@ -83,8 +75,8 @@ public class VerifyUserForForget extends AppCompatActivity {
 
     private void VerifyAccountByPhone(String phone){
         Intent intent = new Intent(VerifyUserForForget.this, VerifyByPhoneActivity.class);
-        intent.putExtra(Symbol.REASION_VERIFY, Symbol.REASON_VERIFY_FOR_FORGET);
-        intent.putExtra(Symbol.PHONE, phone);
+        intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_FORGET.GetValue());
+        intent.putExtra(Symbol.PHONE.GetValue(), phone);
         startActivity(intent);
     }
 
@@ -105,9 +97,9 @@ public class VerifyUserForForget extends AppCompatActivity {
                                     if(task.isSuccessful()){
                                         Toast.makeText(getApplicationContext(), "Registration successful. Please check your email for verification.", Toast.LENGTH_LONG).show();
                                         Intent intent = new Intent(VerifyUserForForget.this, ResetPassword.class);
-                                        intent.putExtra(Symbol.VERRIFY_FORGET, Symbol.VERIFY_FORGET_BY_EMAIL);
+                                        intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_EMAIL.GetValue());
                                         Toast.makeText(VerifyUserForForget.this,email, Toast.LENGTH_SHORT).show();
-                                        intent.putExtra(Symbol.EMAIL, email);
+                                        intent.putExtra(Symbol.EMAIL.GetValue(), email);
                                         startActivity(intent);
                                     }
                                     else
@@ -125,13 +117,11 @@ public class VerifyUserForForget extends AppCompatActivity {
     }
 
     private void ShowUIVerifyForgetByPhone(){
-        tvCountryCode.setVisibility(View.VISIBLE);
         tvDetail.setText(tvDetailPhone);
         etDetail.setHint(hintEtDetailPhone);
     }
 
     private void ShowUIVerifyForgetByEmail(){
-        tvCountryCode.setVisibility(View.GONE);
         tvDetail.setText(tvDetailEmail);
         etDetail.setHint(hintEtDetailEmail);
     }

@@ -15,17 +15,20 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class RegisterByPhone extends AppCompatActivity {
 
     EditText etFullname, etUserPhone, etPassword, etConfirmPass, etEmail;
     TextView tvWarning;
 
+    FirebaseAuth auth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_by_phone);
-
+        auth = FirebaseAuth.getInstance();
         initUI();
         AddTextWatcherIntoEditText();
     }
@@ -76,15 +79,6 @@ public class RegisterByPhone extends AppCompatActivity {
         ShowWarningTextview(response.getMessage());
     }
 
-    private void ShowWarningTextview(String message){
-        tvWarning.setText(message);
-        tvWarning.setVisibility(View.VISIBLE);
-    }
-
-    private void HideWarningTextview(){
-        tvWarning.setVisibility(View.GONE);
-    }
-
     private Response InputFieldIsValid(){
         String fullName = etFullname.getText().toString();
 
@@ -133,12 +127,21 @@ public class RegisterByPhone extends AppCompatActivity {
 
     private void SwitchToVerifyByPhoneActivity(){
         Intent intent = new Intent(RegisterByPhone.this, VerifyByPhoneActivity.class);
-        intent.putExtra(Symbol.REASION_VERIFY, Symbol.REASON_VERIFY_FOR_REGISTER);
-        intent.putExtra(Symbol.FULLNAME,etFullname.getText().toString());
-        intent.putExtra(Symbol.PASSWORD, etPassword.getText().toString());
-        intent.putExtra(Symbol.EMAIL, etEmail.getText().toString());
-        intent.putExtra(Symbol.PHONE, etUserPhone.getText().toString());
+        intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_REGISTER.GetValue());
+        intent.putExtra(Symbol.FULLNAME.GetValue(), etFullname.getText().toString());
+        intent.putExtra(Symbol.PASSWORD.GetValue(), etPassword.getText().toString());
+        intent.putExtra(Symbol.EMAIL.GetValue(), etEmail.getText().toString());
+        intent.putExtra(Symbol.PHONE.GetValue(), etUserPhone.getText().toString());
 
         startActivity(intent);
+    }
+
+    private void ShowWarningTextview(String message){
+        tvWarning.setText(message);
+        tvWarning.setVisibility(View.VISIBLE);
+    }
+
+    private void HideWarningTextview(){
+        tvWarning.setVisibility(View.GONE);
     }
 }
