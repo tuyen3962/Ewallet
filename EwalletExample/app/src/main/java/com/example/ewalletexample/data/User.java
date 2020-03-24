@@ -3,7 +3,6 @@ package com.example.ewalletexample.data;
 public class User {
     private int userId;
     private String fullName;
-    private String username;
     private String password;
     private String phoneNumber;
     private String email;
@@ -12,24 +11,15 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
-    public User(String fullName, String username, String password, String phoneNumber, String email) {
+    public User(String fullName, String phoneNumber, String password, String email) {
         this.fullName = fullName;
-        this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.email = email;
     }
 
-    public User(String username, String password, String phoneNumber, String email) {
-        this.username = username;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
-    }
-
-    public User(int userId, String username, String password, String phoneNumber, String email) {
+    public User(int userId, String phoneNumber, String password, String email) {
         this.userId = userId;
-        this.username = username;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.email = email;
@@ -49,14 +39,6 @@ public class User {
 
     public void setUserId(int userId) {
         this.userId = userId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {

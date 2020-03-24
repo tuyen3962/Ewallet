@@ -4,9 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -26,6 +25,14 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 public class VerifyByPhoneActivity extends AppCompatActivity{
@@ -36,6 +43,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
     private String reason;
 
     private String mVerificationId;
+
+    private final String urlRegisterUserInServer = "/um/register";
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     Button btnVerifyPhone;
@@ -50,7 +59,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
 
         GetValueFromIntent();
 
-//        SendVerifyCodeToPhoneNumber();
+        SendVerifyCodeToPhoneNumber();
 
         Initalize();
 
@@ -59,7 +68,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
             public void onClick(View view) {
                 String code = GetCode();
                 Log.d("TAG", "onClick: " + code);
-//                VerifyVerificationCode(code);
+                VerifyVerificationCode(code);
             }
         });
     }
@@ -96,9 +105,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
     }
 
     void SendVerifyCodeToPhoneNumber(){
+        String phone = "+84" + user.getPhoneNumber().substring(1);
+
         Toast.makeText(this, user.getPhoneNumber(), Toast.LENGTH_SHORT).show();
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                "+84" + user.getPhoneNumber(),
+                phone,
                 60,
                 TimeUnit.SECONDS,
                 TaskExecutors.MAIN_THREAD,
@@ -115,11 +126,10 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         }
         else{
             String fullName = intent.getStringExtra(Symbol.FULLNAME);
-            String username = intent.getStringExtra(Symbol.USERNAME);
             String password = intent.getStringExtra(Symbol.PASSWORD);
             String phone = intent.getStringExtra(Symbol.PHONE);
             String email = intent.getStringExtra(Symbol.EMAIL);
-            user = new User(fullName,username,password,phone,email);
+            user = new User(fullName,phone,password,email);
         }
     }
 
@@ -144,7 +154,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         @Override
         public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
             super.onCodeSent(s, forceResendingToken);
-            Toast.makeText(VerifyByPhoneActivity.this, "code has sent " + s,Toast.LENGTH_LONG).show();
+//            Toast.makeText(VerifyByPhoneActivity.this, "code has sent " + s,Toast.LENGTH_LONG).show();
             //storing the verification id that is sent to the user
             mVerificationId = s;
         }
@@ -164,11 +174,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER)){
-                                //verification successful we will start the profile activity
-                                Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
-                                //Store user data
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                startActivity(intent);
+                                SendDataToServer();
+//                                //verification successful we will start the profile activity
+//                                Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
+//                                //Store user data
+//                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+//                                startActivity(intent);
                             }
                             else{
                                 //verification successful we will start the profile activity
@@ -190,5 +202,60 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                         }
                     }
                 });
+    }
+
+    private void SendDataToServer(){
+        JSONObject postData = new JSONObject();
+
+        try {
+            postData.put("fullname",user.getFullName());
+            postData.put("pin" , user.getPassword());
+            postData.put("phone", user.getPhoneNumber());
+
+            new LoadUserDataToServer().execute(urlRegisterUserInServer, postData.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class LoadUserDataToServer extends AsyncTask<String, Integer, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            String data = "";
+
+            HttpURLConnection httpURLConnection = null;
+
+            try {
+
+                httpURLConnection = (HttpURLConnection) new URL(params[0]).openConnection();
+                httpURLConnection.setRequestMethod("POST");
+
+                httpURLConnection.setDoOutput(true);
+
+                DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
+                wr.writeBytes(params[1]);
+                wr.flush();
+                wr.close();
+
+                InputStream in = httpURLConnection.getInputStream();
+                InputStreamReader inputStreamReader = new InputStreamReader(in);
+
+                int inputStreamData = inputStreamReader.read();
+                while (inputStreamData != -1) {
+                    char current = (char) inputStreamData;
+                    inputStreamData = inputStreamReader.read();
+                    data += current;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (httpURLConnection != null) {
+                    httpURLConnection.disconnect();
+                }
+            }
+            Log.d("TAG",data);
+            return data;
+        }
     }
 }
