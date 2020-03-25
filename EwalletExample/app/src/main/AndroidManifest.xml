@@ -9,14 +9,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".PersonalDetailActivity"></activity>
+        <activity android:name=".ChooseBankConnectActivity"></activity>
+        <activity android:name=".PersonalDetailActivity" />
         <activity android:name=".PersonalWalletActivity" />
         <activity android:name=".ResetPassword" />
         <activity android:name=".VerifyUserForForget" />
         <activity android:name=".RegisterByPhone" />
         <activity android:name=".VerifyByPhoneActivity" />
-        <activity android:name=".MainActivity" />
-        <activity android:name=".LoginActivity">
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

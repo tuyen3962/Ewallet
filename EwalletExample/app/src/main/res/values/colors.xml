@@ -8,4 +8,5 @@
     <color name="Black">#0E0E0E</color>
     <color name="Red">#FD0707</color>
     <color name="SoftRed">#FF8F8F</color>
+    <color name="bgBottomNavigation">#fe485a</color>
 </resources>

@@ -6,6 +6,12 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="White">@color/White</item>
+        <item name="Grey">@color/Grey</item>
+        <item name="Black">@color/Black</item>
+        <item name="Red">@color/Red</item>
+        <item name="SoftRed">@color/SoftRed</item>
+        <item name="bgBottomNavigation">@color/bgBottomNavigation</item>
     </style>
 
 </resources>
