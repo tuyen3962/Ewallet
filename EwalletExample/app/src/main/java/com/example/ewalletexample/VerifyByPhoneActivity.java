@@ -15,8 +15,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Symbol.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
+import com.example.ewalletexample.model.EmailModel;
+import com.example.ewalletexample.model.PhoneModel;
 import com.example.ewalletexample.service.EditTextCodeChangeListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -29,6 +32,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,13 +50,12 @@ import java.util.concurrent.TimeUnit;
 public class VerifyByPhoneActivity extends AppCompatActivity{
 
     FirebaseAuth auth;
+    DatabaseReference mDatabase;
 
     private User user;
     private String reason;
 
     private String mVerificationId;
-
-    private final String urlRegisterUserInServer = "http://192.168.1.14:8080/um/register";
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     Button btnVerifyPhone;
@@ -66,6 +70,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         setContentView(R.layout.activity_verify_by_phone);
 
         auth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
         GetValueFromIntent();
 
@@ -82,7 +87,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
             }
         });
     }
-
 
     void Initalize(){
         progressBar = findViewById(R.id.progressBar);
@@ -250,13 +254,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
             postData.put("pin" , user.getPassword());
             postData.put("phone", user.getPhoneNumber());
 
-            new LoadUserDataToServer().execute(urlRegisterUserInServer, postData.toString());
+            new LoadUserDataToServer().execute(ServerAPI.REGISTER_API.GetUrl(), postData.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private void SaveUserProfileAndLogOutTheCurrentFirebaseUser(){
+    private void SaveUserProfileAndLogOutTheCurrentFirebaseUser(String userID){
         FirebaseUser firebaseUser = auth.getCurrentUser();
 
         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
@@ -265,6 +269,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
 
         if(firebaseUser != null){
             firebaseUser.updateProfile(profileUpdates);
+            mDatabase.child("phones").push().setValue(new PhoneModel(userID, user.getPhoneNumber(), firebaseUser.getUid()));
+            mDatabase.child("emails").push().setValue(new EmailModel(userID, user.getEmail(), firebaseUser.getUid()));
             auth.signOut();
         }
     }
@@ -303,14 +309,15 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                 try{
                     JSONObject  json = new JSONObject(body);
                     int retureCode = json.getInt("returncode");
+                    String id = json.getString("userid");
                     if (retureCode == ErrorCode.SUCCESS.GetValue()){
 
                         if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
                             //verification successful we will start the profile activity
                             Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
                             //Store user data
+                            SaveUserProfileAndLogOutTheCurrentFirebaseUser(id);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            SaveUserProfileAndLogOutTheCurrentFirebaseUser();
                             startActivity(intent);
                         }
                         else{
@@ -323,14 +330,12 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                             startActivity(intent);
                         }
                     }
-                    else
-                    {
-                        HideLoading();
-                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
+
+            HideLoading();
         }
     }
 }

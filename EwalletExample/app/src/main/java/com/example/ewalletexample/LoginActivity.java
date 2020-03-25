@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Symbol.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.Response;
 
@@ -29,9 +30,6 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 public class LoginActivity extends AppCompatActivity {
-
-    private final String urlLoginInServer = "http://192.168.1.14:8080/um/login";
-
     EditText etUsername, etPassword;
     Button btnLogin;
     TextView tvLogging, tvForgetPassword, tvRegister;
@@ -91,7 +89,7 @@ public class LoginActivity extends AppCompatActivity {
             json.put("phone",username);
             json.put("pin",password);
 
-            new LoginThread().execute(urlLoginInServer, json.toString());
+            new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
         }catch (Exception e){
             HideLoading();
             Log.d("TAG", "CheckUsernameAndPassword: "  + e.getMessage());
@@ -128,6 +126,14 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setEnabled(active);
     }
 
+    private void SwitchToMainActivity(String userid){
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+
+        startActivity(intent);
+    }
+
     private class LoginThread extends AsyncTask<String, Void, ResponseEntity<String>>{
         @Override
         protected ResponseEntity<String> doInBackground(String... params) {
@@ -155,31 +161,23 @@ public class LoginActivity extends AppCompatActivity {
             return null;
         }
 
-
-
         @Override
         protected void onPostExecute(ResponseEntity<String> response){
             if(response != null){
                 String body = response.getBody();
                 try{
                     JSONObject json = new JSONObject(body);
-                    int retureCode = json.getInt("returncode");
-                    if (retureCode == ErrorCode.SUCCESS.GetValue()){
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 
-                        intent.putExtra(Symbol.USER_ID.GetValue(), json.getString("userid"));
-
-                        startActivity(intent);
-                    }
-                    else
-                    {
-                        HideLoading();
+                    if (json.getInt("returncode") == ErrorCode.SUCCESS.GetValue()){
+                        SwitchToMainActivity(json.getString("userid"));
                     }
                 } catch (JSONException e) {
                     HideLoading();
                     e.printStackTrace();
                 }
             }
+
+            HideLoading();
         }
     }
 }
