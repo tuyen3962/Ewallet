@@ -66,7 +66,6 @@ public class RegisterByPhone extends AppCompatActivity {
     private ValueEventListener databaseValueEvent = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            Toast.makeText(RegisterByPhone.this,"database change " ,Toast.LENGTH_SHORT).show();
             if(hasCheckPhoneNumber){
                 hasCheckPhoneNumber = false;
                 return;
@@ -185,7 +184,6 @@ public class RegisterByPhone extends AppCompatActivity {
     }
 
     private void SwitchToVerifyByPhoneActivity(){
-        Toast.makeText(RegisterByPhone.this,"switch" , Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(RegisterByPhone.this, VerifyByPhoneActivity.class);
         intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_REGISTER.GetValue());
         intent.putExtra(Symbol.FULLNAME.GetValue(), etFullname.getText().toString());

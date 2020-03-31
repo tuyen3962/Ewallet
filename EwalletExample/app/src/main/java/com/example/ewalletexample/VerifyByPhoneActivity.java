@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,8 +15,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ewalletexample.Server.GetBalanceServer;
 import com.example.ewalletexample.Symbol.ErrorCode;
-import com.example.ewalletexample.Symbol.ServerAPI;
+import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.model.EmailModel;
@@ -54,15 +56,19 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
 
     private User user;
     private String reason;
+    private String userid;
 
     private String mVerificationId;
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
-    Button btnVerifyPhone;
+    Button btnVerifyPhone, btnResendVerifyCode;
     EditTextCodeChangeListener code12, code23, code34, code45, code56, code6;
 
     ProgressBar progressBar;
     TextView tvVerifying;
+
+    CountDownTimer countDown;
+    boolean canResendCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,14 +84,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
 
         Initalize();
 
-        btnVerifyPhone.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String code = GetCode();
-
-                VerifyVerificationCode(code);
-            }
-        });
+        SetupCountDownTimer();
+        countDown.start();
     }
 
     void Initalize(){
@@ -99,8 +99,34 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         etCode05 = findViewById(R.id.etCode05);
         etCode06 = findViewById(R.id.etCode06);
         btnVerifyPhone = findViewById(R.id.btnVerifyPhone);
-
+        btnResendVerifyCode = findViewById(R.id.btnResendVerifyPhone);
         AddTextWatcherEventToEditText();
+    }
+
+    void SetupCountDownTimer(){
+        canResendCode = false;
+
+        countDown = new CountDownTimer(15000,1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                SetTextForButtonResend("Gửi lại (" + (millisUntilFinished/1000) + ")");
+            }
+
+            @Override
+            public void onFinish() {
+                SetTextForButtonResend("Gửi lại");
+                SetActiveForButtonResend(true);
+                canResendCode = true;
+            }
+        };
+    }
+
+    void SetTextForButtonResend(String text){
+        btnResendVerifyCode.setText(text);
+    }
+
+    void SetActiveForButtonResend(boolean active){
+        btnResendVerifyCode.setEnabled(active);
     }
 
     void AddTextWatcherEventToEditText(){
@@ -130,6 +156,23 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                 TimeUnit.SECONDS,
                 TaskExecutors.MAIN_THREAD,
                 mCallbacks);
+    }
+
+    public void ResendVerifyCodeEvent(View view){
+        if(canResendCode){
+            SetActiveForButtonResend(false);
+            countDown.start();
+        }
+    }
+
+    void ResendVerificationCode(String phoneNumber, PhoneAuthProvider.ForceResendingToken token) {
+        PhoneAuthProvider.getInstance().verifyPhoneNumber(
+                phoneNumber,        // Phone number to verify
+                60,                 // Timeout duration
+                TimeUnit.SECONDS,   // Unit of timeout
+                this,               // Activity (for callback binding)
+                mCallbacks,         // OnVerificationStateChangedCallbacks
+                token);             // ForceResendingToken from callbacks
     }
 
     void GetValueFromIntent(){
@@ -168,15 +211,17 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         }
 
         @Override
-        public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
-            super.onCodeSent(s, forceResendingToken);
+        public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken token) {
+            super.onCodeSent(s, token);
 //            Toast.makeText(VerifyByPhoneActivity.this, "code has sent " + s,Toast.LENGTH_LONG).show();
             //storing the verification id that is sent to the user
             mVerificationId = s;
         }
     };
 
-    void VerifyVerificationCode(String code){
+    public void VerifyVerificationCode(View view){
+        String code = GetCode();
+
         ShowLoading();
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId,code);
@@ -309,16 +354,21 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                 try{
                     JSONObject  json = new JSONObject(body);
                     int retureCode = json.getInt("returncode");
-                    String id = json.getString("userid");
+                    userid = json.getString("userid");
                     if (retureCode == ErrorCode.SUCCESS.GetValue()){
 
                         if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
                             //verification successful we will start the profile activity
-                            Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
                             //Store user data
-                            SaveUserProfileAndLogOutTheCurrentFirebaseUser(id);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
+                            SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
+                            JSONObject postData = new JSONObject();
+                            try{
+                                postData.put("userid",userid);
+
+                                new GetBalance().execute(postData.toString());
+                            }catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
                         else{
                             //verification successful we will start the profile activity
@@ -336,6 +386,27 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
             }
 
             HideLoading();
+        }
+    }
+
+    private class GetBalance extends GetBalanceServer{
+        @Override
+        protected void onPostExecute(ResponseEntity<String> responseEntity){
+            String body = responseEntity.getBody();
+            try{
+                JSONObject  json = new JSONObject(body);
+                int retureCode = json.getInt("returncode");
+                if (retureCode == ErrorCode.SUCCESS.GetValue()){
+                    long amount = json.getLong("amount");
+                    Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
+                    intent.putExtra(Symbol.USER_ID.GetValue(),userid);
+                    intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

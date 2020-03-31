@@ -27,12 +27,13 @@
                 android:layout_height="100dp">
 
                 <ImageView
-                    android:id="@+id/imageView"
+                    android:id="@+id/imgAccount"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_alignParentEnd="true"
                     android:layout_marginTop="30dp"
                     android:layout_marginEnd="50dp"
+                    android:background="@color/Black"
                     app:srcCompat="@drawable/ic_action_person" />
 
                 <TextView

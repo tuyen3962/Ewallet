@@ -14,10 +14,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ewalletexample.Server.GetBalanceServer;
+import com.example.ewalletexample.Server.LoginRequest;
 import com.example.ewalletexample.Symbol.ErrorCode;
-import com.example.ewalletexample.Symbol.ServerAPI;
+import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.Response;
+import com.google.gson.JsonIOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,6 +37,7 @@ public class LoginActivity extends AppCompatActivity {
     Button btnLogin;
     TextView tvLogging, tvForgetPassword, tvRegister;
     ProgressBar progressBar;
+    private String userid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +93,7 @@ public class LoginActivity extends AppCompatActivity {
             json.put("phone",username);
             json.put("pin",password);
 
-            new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
+            new LoginThread().execute(json.toString());
         }catch (Exception e){
             HideLoading();
             Log.d("TAG", "CheckUsernameAndPassword: "  + e.getMessage());
@@ -126,41 +130,7 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setEnabled(active);
     }
 
-    private void SwitchToMainActivity(String userid){
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-
-        startActivity(intent);
-    }
-
-    private class LoginThread extends AsyncTask<String, Void, ResponseEntity<String>>{
-        @Override
-        protected ResponseEntity<String> doInBackground(String... params) {
-            final String url = params[0];
-
-            RestTemplate restTemplate = new RestTemplate();
-
-            try {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-
-                restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-
-                HttpEntity<String> entity = new HttpEntity<>(params[1], headers);
-
-                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-
-                return response;
-            }
-            catch (Exception e){
-                HideLoading();
-                Log.w("Warn",e.getMessage());
-            }
-
-            return null;
-        }
-
+    private class LoginThread extends LoginRequest {
         @Override
         protected void onPostExecute(ResponseEntity<String> response){
             if(response != null){
@@ -169,15 +139,50 @@ public class LoginActivity extends AppCompatActivity {
                     JSONObject json = new JSONObject(body);
 
                     if (json.getInt("returncode") == ErrorCode.SUCCESS.GetValue()){
-                        SwitchToMainActivity(json.getString("userid"));
+                        userid = json.getString("userid");
+
+                        JSONObject postData = new JSONObject();
+
+                        try {
+                            postData.put("userid",userid);
+
+                            new GetBalanceInMain().execute(postData.toString());
+                        } catch (JsonIOException e){
+                            e.printStackTrace();
+                        }
                     }
                 } catch (JSONException e) {
-                    HideLoading();
                     e.printStackTrace();
                 }
             }
 
             HideLoading();
+        }
+    }
+
+    class GetBalanceInMain extends GetBalanceServer {
+        @Override
+        protected void onPostExecute(ResponseEntity<String> response){
+            if(response == null){
+                Log.d("WARNING", "onPostExecute: load data from server failer");
+            }
+            else{
+                String body = response.getBody();
+                try{
+                    JSONObject json = new JSONObject(body);
+
+                    if (json.getInt("returncode") == ErrorCode.SUCCESS.GetValue()){
+                        long balance = json.getLong("amount");
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+                        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+
+                        startActivity(intent);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

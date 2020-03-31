@@ -88,6 +88,7 @@
             android:gravity="center"
             android:ems="10"
             android:inputType="number" />
+
         <EditText
             android:id="@+id/etCode04"
             android:layout_width="40dp"
@@ -113,14 +114,36 @@
             android:inputType="number" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnVerifyPhone"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/codeLayout"
-        android:layout_centerInParent="true"
+    <LinearLayout
+        android:layout_below="@+id/codeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
         android:layout_marginTop="30dp"
-        android:text="Xac thuc"
-        android:background="@drawable/edit_round_button" />
+        android:orientation="horizontal">
+
+
+        <Button
+            android:id="@+id/btnVerifyPhone"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_below="@id/codeLayout"
+            android:background="@drawable/edit_round_button"
+            android:layout_marginHorizontal="10dp"
+            android:text="Xac thuc"
+            android:onClick="VerifyVerificationCode"/>
+
+        <Button
+            android:id="@+id/btnResendVerifyPhone"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_below="@id/codeLayout"
+            android:layout_marginHorizontal="10dp"
+            android:enabled="false"
+            android:background="@drawable/edit_round_button_disable"
+            android:text="Gửi lại"
+            android:onClick="ResendVerifyCodeEvent"/>
+
+    </LinearLayout>
 
 </RelativeLayout>

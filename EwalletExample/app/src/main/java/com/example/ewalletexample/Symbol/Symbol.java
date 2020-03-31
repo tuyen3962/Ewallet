@@ -13,7 +13,9 @@ public enum  Symbol {
     PASSWORD("PASSWORD"),
     PHONE("PHONE"),
     EMAIL("EMAIL"),
-    USER_ID("USER_ID");
+    USER_ID("USER_ID"),
+
+    AMOUNT("AMOUNT");
 
     private String value;
 
