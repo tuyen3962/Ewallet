@@ -5,19 +5,27 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.CheckInputField;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-public class VerifyUserForForget extends AppCompatActivity {
+public class VerifyUserForForget extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
 
     private final String tvDetailPhone = "Số điện thoại";
     private final String hintEtDetailPhone = "Nhập số điện thoại";
@@ -26,11 +34,10 @@ public class VerifyUserForForget extends AppCompatActivity {
     private final String hintEtDetailEmail = "Nhập email";
 
     FirebaseAuth auth;
-
-    TextView tvDetail, tvChangeTypeVerify;
+    DatabaseReference mDatabase;
+    TextView tvDetail, tvChangeTypeVerify, tvError;
     EditText etDetail;
-    Button btnVerifyAccount;
-
+    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     boolean verifyAccountByPhone;
 
     @Override
@@ -39,7 +46,8 @@ public class VerifyUserForForget extends AppCompatActivity {
         setContentView(R.layout.activity_verify_user_for_forget);
 
         auth = FirebaseAuth.getInstance();
-
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
         init();
 
         ShowUIVerifyForgetByPhone();
@@ -49,8 +57,8 @@ public class VerifyUserForForget extends AppCompatActivity {
     void init(){
         etDetail = findViewById(R.id.etDetail);
         tvDetail = findViewById(R.id.tvDetail);
-        btnVerifyAccount = findViewById(R.id.btnVerifyAccount);
         tvChangeTypeVerify = findViewById(R.id.tvChangeTypeVerify);
+        tvError = findViewById(R.id.tvError);
     }
 
     public void ChangeTypeVerifyEvent(View view){
@@ -74,10 +82,44 @@ public class VerifyUserForForget extends AppCompatActivity {
     }
 
     private void VerifyAccountByPhone(String phone){
-        Intent intent = new Intent(VerifyUserForForget.this, VerifyByPhoneActivity.class);
-        intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_FORGET.GetValue());
-        intent.putExtra(Symbol.PHONE.GetValue(), phone);
-        startActivity(intent);
+        if(!CheckInputField.PhoneNumberIsValid(phone)){
+            ShowErrorText("Số điện thoại không hợp lệ");
+        }
+        firebaseDatabaseHandler.RegisterDataListener();
+    }
+
+    @Override
+    public void HandleDataModel(UserModel model){
+        Log.d("TAG", "UnregisterDatabaseCheckValue: " + model.toString());
+        if(model != null){
+            Intent intent = new Intent(VerifyUserForForget.this, VerifyByPhoneActivity.class);
+            intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_FORGET.GetValue());
+            intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
+            intent.putExtra(Symbol.PHONE.GetValue(), model.getPhone());
+            intent.putExtra(Symbol.USER_ID.GetValue(), model.getUserID());
+            startActivity(intent);
+        }
+        else{
+            ShowErrorText("Khong ton tai so dien thoai");
+        }
+    }
+
+    @Override
+    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
+        for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).getChildren()){
+            UserModel model = data.getValue(UserModel.class);
+            if (model.getPhone().equalsIgnoreCase(etDetail.getText().toString())){
+                firebaseDatabaseHandler.UnregisterValueListener(model);
+                return;
+            }
+        }
+
+        firebaseDatabaseHandler.UnregisterValueListener(null);
+    }
+
+    @Override
+    public void HandlerDatabaseError(DatabaseError databaseError) {
+
     }
 
     private void VerifyAccountByEmail(String email){
@@ -85,7 +127,6 @@ public class VerifyUserForForget extends AppCompatActivity {
     }
 
     private void SendLinkToEmailForReset(final String email){
-        Toast.makeText(this, email, Toast.LENGTH_SHORT).show();
         auth.createUserWithEmailAndPassword(email, "123456")
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
@@ -98,7 +139,6 @@ public class VerifyUserForForget extends AppCompatActivity {
                                         Toast.makeText(getApplicationContext(), "Registration successful. Please check your email for verification.", Toast.LENGTH_LONG).show();
                                         Intent intent = new Intent(VerifyUserForForget.this, ResetPassword.class);
                                         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_EMAIL.GetValue());
-                                        Toast.makeText(VerifyUserForForget.this,email, Toast.LENGTH_SHORT).show();
                                         intent.putExtra(Symbol.EMAIL.GetValue(), email);
                                         startActivity(intent);
                                     }
@@ -124,5 +164,10 @@ public class VerifyUserForForget extends AppCompatActivity {
     private void ShowUIVerifyForgetByEmail(){
         tvDetail.setText(tvDetailEmail);
         etDetail.setHint(hintEtDetailEmail);
+    }
+
+    private void ShowErrorText(String message){
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
     }
 }

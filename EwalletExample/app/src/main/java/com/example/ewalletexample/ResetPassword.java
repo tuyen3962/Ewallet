@@ -3,38 +3,48 @@ package com.example.ewalletexample;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ewalletexample.Server.RequestServerAPI;
+import com.example.ewalletexample.Server.RequestServerFunction;
+import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.data.User;
+import com.example.ewalletexample.model.Response;
+import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.CheckInputField;
+import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 
-public class ResetPassword extends AppCompatActivity {
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class ResetPassword extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
 
     FirebaseAuth auth;
+    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
 
-    View view;
-    ProgressBar progressBar;
+    ProgressDialog progressDialog;
     private EditText etPassword, etConfirmPassword;
-    private TextView tvUsername;
-    Button btnReset;
+    private TextView tvUsername, tvError;
 
     private boolean isFinishVerifyEmail = false;
-    private String reason;
-    private String email;
-    private String phone;
-    private User userData;
+    private String reason, email, phone, userid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,58 +52,124 @@ public class ResetPassword extends AppCompatActivity {
         setContentView(R.layout.activity_reset_password);
 
         auth = FirebaseAuth.getInstance();
-
-        init();
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
+        Initialize();
 
         GetValueFromIntent();
-        UpdateFullName();
     }
 
-    void init(){
-        view = findViewById(R.id.view);
+    void Initialize(){
+        tvError = findViewById(R.id.tvError);
         tvUsername = findViewById(R.id.tvUsername);
-        progressBar = findViewById(R.id.progressLoading);
+        progressDialog = new ProgressDialog(this);
         etPassword = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmNewPasswork);
-        btnReset = findViewById(R.id.btnResetNewPassword);
     }
 
     void GetValueFromIntent(){
         Intent intent = getIntent();
         reason = intent.getStringExtra(Symbol.VERRIFY_FORGET.GetValue());
+        userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         if(reason.equalsIgnoreCase(Symbol.VERIFY_FORGET_BY_EMAIL.GetValue())){
             email = intent.getStringExtra(Symbol.EMAIL.GetValue());
-            DisableResetPassword();
             LoadingVerifyEmail verifyEmail = new LoadingVerifyEmail(email);
             verifyEmail.start();
         }
         else
         {
             phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+            tvUsername.setText(phone);
         }
     }
 
-    void DisableResetPassword(){
-        etPassword.setEnabled(false);
-        etConfirmPassword.setEnabled(false);
-        btnReset.setEnabled(false);
-        progressBar.setVisibility(View.VISIBLE);
-        view.setVisibility(View.VISIBLE);
+    private void ShowProgressDialog(String message){
+        progressDialog.setTitle(message);
+        progressDialog.show();
     }
 
-    void UpdateFullName(){
-        FirebaseUser firebaseUser = auth.getCurrentUser();
-        if(firebaseUser != null){
-            tvUsername.setText(firebaseUser.getDisplayName());
+    private void HideProgressDialog(){
+        progressDialog.hide();
+    }
+
+    public void VerifyResetPasswordEvent(View view){
+        ShowProgressDialog("Loading...");
+
+        String password = etPassword.getText().toString();
+        String confirmPass = etConfirmPassword.getText().toString();
+
+        Response response = CheckPassword(password, confirmPass);
+
+        if(response.GetStatus()){
+            firebaseDatabaseHandler.RegisterDataListener();
+        }
+        else{
+            ShowErrorText(response.GetMessage());
         }
     }
 
-    void EnableResetPassword(){
-        etPassword.setEnabled(true);
-        etConfirmPassword.setEnabled(true);
-        btnReset.setEnabled(true);
-        progressBar.setVisibility(View.GONE);
-        view.setVisibility(View.GONE);
+    private Response CheckPassword(String pass, String confirmPass){
+        if(TextUtils.isEmpty(pass)){
+            return new Response(ErrorCode.EMPTY_PIN);
+        }
+        else if(TextUtils.isEmpty(confirmPass)){
+            return new Response(ErrorCode.EMPTY_CONFIRM_PIN);
+        }
+        else if(!CheckInputField.PasswordIsValid(pass)){
+            return new Response(ErrorCode.VALIDATE_PIN_INVALID);
+        }
+        else if(!pass.equalsIgnoreCase(confirmPass)){
+            return new Response(ErrorCode.UNVALID_PIN_AND_CONFIRM_PIN);
+        }
+
+        return new Response(ErrorCode.SUCCESS);
+    }
+
+    public void CancelResetPasswordEvent(View view){
+        startActivity(new Intent(ResetPassword.this, LoginActivity.class));
+    }
+
+    private void ShowErrorText(String message){
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
+        HideProgressDialog();
+    }
+
+    @Override
+    public void HandleDataModel(UserModel model) {
+        if(model == null) return;
+
+        JSONObject postData = new JSONObject();
+
+        try {
+            postData.put("userid", model.getUserID());
+            postData.put("dob",model.getDob());
+            postData.put("pin",etPassword.getText().toString());
+            postData.put("cmnd",model.getCmnd());
+            postData.put("address", model.getAddres());
+
+            new ResetPasswordEvent().execute(ServerAPI.UPDATE_USER_API.GetUrl(), postData.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
+        for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).getChildren()){
+            UserModel model = data.getValue(UserModel.class);
+            if (model.getPhone().equalsIgnoreCase(phone)){
+                Log.d("TAG", "HandleDataSnapShot: " + model.toString());
+                firebaseDatabaseHandler.UnregisterValueListener(model);
+                return;
+            }
+        }
+        Log.d("TAG", "HandleDataSnapShot: null");
+        firebaseDatabaseHandler.UnregisterValueListener(null);
+    }
+
+    @Override
+    public void HandlerDatabaseError(DatabaseError databaseError) {
+        ShowErrorText(databaseError.getMessage());
     }
 
     class LoadingVerifyEmail extends Thread{
@@ -116,7 +192,6 @@ public class ResetPassword extends AppCompatActivity {
                             // the auth state listener will be notified and logic to handle the
                             // signed in user can be handled in the listener.
 //                        isFinishVerifyEmail = true;
-                            EnableResetPassword();
                         }
                     });
                 } catch (InterruptedException e) {
@@ -126,17 +201,30 @@ public class ResetPassword extends AppCompatActivity {
         }
     }
 
-    class LoadingUserData extends Thread{
-        private String data;
-        private String reason;
-
-        public LoadingUserData(String _reason, String _data){
-            reason = _reason;
-            data = _data;
+    private class ResetPasswordEvent extends RequestServerAPI implements RequestServerFunction {
+        public ResetPasswordEvent(){
+            super();
+            SetRequestServerFunction(this);
         }
 
-        public void Run() throws InterruptedException {
+        @Override
+        public boolean CheckReturnCode(int code) {
+            Log.d("TAG", "CheckReturnCode: " + code);
+            if(code == ErrorCode.SUCCESS.GetValue()){
+                return true;
+            }
+            ShowError(code, "Doi mat khau that bai");
+            return false;
+        }
 
+        @Override
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            startActivity(new Intent(ResetPassword.this, LoginActivity.class));
+        }
+
+        @Override
+        public void ShowError(int errorCode, String message) {
+            ShowErrorText(message);
         }
     }
 }
