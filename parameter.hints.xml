@@ -1,5 +1,13 @@
 <application>
   <component name="ParameterNameHintsSettings">
+    <blacklists>
+      <blacklist language="Java">
+        <added pattern="com.example.ewalletexample.Server.RequestServerAPI.RequestServerAPI(function)" />
+      </blacklist>
+      <blacklist language="Groovy" />
+      <blacklist language="Kotlin" />
+    </blacklists>
     <option id="SHOW_LOCAL_VARIABLE_HINT" value="true" />
+    <option id="java.method.name.contains.parameter.name" value="true" />
   </component>
 </application>
