@@ -5,6 +5,8 @@ public enum  ServerAPI {
     LOGIN_API ("/um/login"),
     REGISTER_API("/um/register"),
 
+    UPDATE_USER_API("/um/update"),
+
     // verify user when excuting the transformation of money
     VERIFY_PIN_API(""),
 
