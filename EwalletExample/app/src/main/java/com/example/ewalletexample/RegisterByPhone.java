@@ -1,6 +1,5 @@
 package com.example.ewalletexample;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -8,29 +7,30 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.data.User;
-import com.example.ewalletexample.model.PhoneModel;
+import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-public class RegisterByPhone extends AppCompatActivity {
+public class RegisterByPhone extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
 
     EditText etFullname, etUserPhone, etPassword, etConfirmPass, etEmail;
     TextView tvWarning;
 
     DatabaseReference mDatabase;
+    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
 
     private TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -62,52 +62,17 @@ public class RegisterByPhone extends AppCompatActivity {
         }
     };
 
-    private boolean hasCheckPhoneNumber = false;
-    private ValueEventListener databaseValueEvent = new ValueEventListener() {
-        @Override
-        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            if(hasCheckPhoneNumber){
-                hasCheckPhoneNumber = false;
-                return;
-            }
-
-            String phone = etUserPhone.getText().toString();
-
-            if(TextUtils.isEmpty(phone)){
-                return;
-            }
-
-            hasCheckPhoneNumber = true;
-
-            for(DataSnapshot data : dataSnapshot.child("phones").getChildren()){
-                PhoneModel model = data.getValue(PhoneModel.class);
-                if(model.getPhone().equalsIgnoreCase(phone)){
-                    ShowWarningTextview("Số điện thoại đã được đăng kí");
-                    mDatabase.removeEventListener(databaseValueEvent);
-                    return;
-                }
-            }
-
-            SwitchToVerifyByPhoneActivity();
-            mDatabase.removeEventListener(databaseValueEvent);
-        }
-
-        @Override
-        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_by_phone);
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        initUI();
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
+        Intialize();
         AddTextWatcherIntoEditText();
     }
 
-    void initUI(){
+    void Intialize(){
         etFullname = findViewById(R.id.etFullName);
         etUserPhone = findViewById(R.id.etUserPhone);
         etPassword = findViewById(R.id.etPassword);
@@ -127,12 +92,12 @@ public class RegisterByPhone extends AppCompatActivity {
     public void RegisterEvent(View view){
         Response response = InputFieldIsValid();
 
-        if(response.isStatus()){
-//            SwitchToVerifyByPhoneActivity();
-            mDatabase.addValueEventListener(databaseValueEvent);
+        if(response.GetStatus()){
+            firebaseDatabaseHandler.RegisterDataListener();
         }
         else{
-            ShowWarningTextview(response.getMessage());
+            ShowWarningText(response.GetMessage());
+            ClearSpecificEditText();
         }
 
     }
@@ -141,24 +106,24 @@ public class RegisterByPhone extends AppCompatActivity {
         String fullName = etFullname.getText().toString();
 
         if(TextUtils.isEmpty(fullName)){
-            return new Response("Xin hãy nhập họ và tên",false);
+            return new Response(ErrorCode.VALIDATE_FULL_NAME_INVALID);
         }
 
         String phone = etUserPhone.getText().toString();
 
         if(TextUtils.isEmpty(phone) && !CheckInputField.PhoneNumberIsValid(phone)){
-            return new Response("Xin hãy nhập số điện thoại đăng kí",false);
+            return new Response(ErrorCode.VALIDATE_PHONE_INVALID);
         }
 
         Response response = CheckPassword();
 
-        if(response.isStatus()){
+        if(response.GetStatus()){
             String email = etEmail.getText().toString();
             if(TextUtils.isEmpty(etEmail.getText().toString()) && !CheckInputField.EmailIsValid(email)){
-                return new Response("Xin hãy nhập email",false);
+                return new Response(ErrorCode.VALIDATE_EMAIL_INVALID);
             }
             else{
-                return new Response("",true);
+                return new Response(ErrorCode.SUCCESS);
             }
         }
 
@@ -170,16 +135,16 @@ public class RegisterByPhone extends AppCompatActivity {
         String confirmPass = etConfirmPass.getText().toString();
 
         if (TextUtils.isEmpty(pass) || TextUtils.isEmpty(confirmPass)){
-            return new Response("Xin hãy nhập mật khẩu", false);
+            return new Response(ErrorCode.EMPTY_PIN);
         }
         else if(!CheckInputField.PasswordIsValid(pass) || !CheckInputField.PasswordIsValid(confirmPass)){
-            return new Response("Mật khẩu không hợp lệ", false);
+            return new Response(ErrorCode.VALIDATE_PIN_INVALID);
         }
         else if(pass.equalsIgnoreCase(confirmPass)){
-            return new Response("",true);
+            return new Response(ErrorCode.SUCCESS);
         }
         else{
-            return new Response("Mật khẩu và xác nhận mật khẩu không trùng", false);
+            return new Response(ErrorCode.UNVALID_PIN_AND_CONFIRM_PIN);
         }
     }
 
@@ -194,12 +159,49 @@ public class RegisterByPhone extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private void ShowWarningTextview(String message){
+    private void ShowWarningText(String message){
         tvWarning.setText(message);
         tvWarning.setVisibility(View.VISIBLE);
     }
 
     private void HideWarningTextview(){
         tvWarning.setVisibility(View.GONE);
+    }
+
+    private void ClearSpecificEditText(){
+        etEmail.setText("");
+        etConfirmPass.setText("");
+        etPassword.setText("");
+        etEmail.setText("");
+    }
+
+    @Override
+    public void HandleDataModel(UserModel data) {
+        if(data == null){
+            SwitchToVerifyByPhoneActivity();
+        }
+        else{
+            ShowWarningText(ErrorCode.VALIDATE_PHONE_DUPLICATE.GetMessage());
+            ClearSpecificEditText();
+        }
+    }
+
+    @Override
+    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
+        String phone = etUserPhone.getText().toString();
+        for(DataSnapshot data : dataSnapshot.child("users").getChildren()){
+            UserModel model = data.getValue(UserModel.class);
+            if(model.getPhone().equalsIgnoreCase(phone)){
+                firebaseDatabaseHandler.UnregisterValueListener(model);
+                return;
+            }
+        }
+
+        firebaseDatabaseHandler.UnregisterValueListener(null);
+    }
+
+    @Override
+    public void HandlerDatabaseError(DatabaseError databaseError) {
+
     }
 }

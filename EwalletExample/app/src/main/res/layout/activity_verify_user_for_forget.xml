@@ -70,4 +70,16 @@
         android:text="Xác thực"
         android:background="@drawable/edit_round_button"
         android:onClick="VerifyAccountEvent"/>
+
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnVerifyAccount"
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:text="555"
+        android:textColor="@color/SoftRed"
+        android:textSize="30dp"
+        android:visibility="gone"/>
 </RelativeLayout>

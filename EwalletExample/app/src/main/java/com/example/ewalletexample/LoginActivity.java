@@ -2,42 +2,53 @@ package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.ewalletexample.Server.GetBalanceServer;
-import com.example.ewalletexample.Server.LoginRequest;
+import com.example.ewalletexample.Server.RequestServerAPI;
+import com.example.ewalletexample.Server.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
-import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.Response;
-import com.google.gson.JsonIOException;
+import com.example.ewalletexample.service.CheckInputField;
+import com.example.ewalletexample.service.ServerAPI;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
 
 public class LoginActivity extends AppCompatActivity {
     EditText etUsername, etPassword;
-    Button btnLogin;
-    TextView tvLogging, tvForgetPassword, tvRegister;
-    ProgressBar progressBar;
+    TextView tvError;
+
+    ProgressDialog progressDialog;
     private String userid;
+
+    TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if(tvError.getVisibility() == View.VISIBLE){
+                tvError.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +59,14 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     void InitLayoutProperties(){
+        progressDialog = new ProgressDialog(this);
+
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
 
-        btnLogin = findViewById(R.id.btnLogin);
-        tvLogging = findViewById(R.id.tvLogging);
-        tvForgetPassword = findViewById(R.id.tvForgetPass);
-        tvRegister = findViewById(R.id.tvRegister);
-        progressBar = findViewById(R.id.progressBar);
+        etUsername.addTextChangedListener(textWatcher);
+        etPassword.addTextChangedListener(textWatcher);
+        tvError = findViewById(R.id.tvError);
     }
 
     public void UserLoginEvent(View view){
@@ -66,24 +77,30 @@ public class LoginActivity extends AppCompatActivity {
 
         Response response = CheckUsernameAndPassword(username,password);
 
-        if(response.isStatus()){
+        if(response.GetStatus()){
             SendLoginRequest(username,password);
         }
         else{
             HideLoading();
-            Toast.makeText(LoginActivity.this, response.getMessage(),Toast.LENGTH_SHORT).show();
+            ShowErrorText(response.GetMessage());
         }
     }
 
     Response CheckUsernameAndPassword(String username, String password){
         if(TextUtils.isEmpty(username)){
-            return new Response("Nhap username", false);
+            return new Response(ErrorCode.VALIDATE_PHONE_INVALID);
+        }
+        else if(!CheckInputField.PhoneNumberIsValid(username)){
+            return new Response(ErrorCode.VALIDATE_PHONE_INVALID);
         }
         else if(TextUtils.isEmpty(password)){
-            return new Response("Nhap mat khau", false);
+            return new Response(ErrorCode.VALIDATE_PIN_INVALID);
+        }
+        else if(!CheckInputField.PasswordIsValid(password)){
+            return new Response(ErrorCode.VALIDATE_PIN_INVALID);
         }
 
-        return new Response("", true);
+        return new Response(ErrorCode.SUCCESS);
     }
 
     private void SendLoginRequest(String username, String password){
@@ -93,7 +110,7 @@ public class LoginActivity extends AppCompatActivity {
             json.put("phone",username);
             json.put("pin",password);
 
-            new LoginThread().execute(json.toString());
+            new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
         }catch (Exception e){
             HideLoading();
             Log.d("TAG", "CheckUsernameAndPassword: "  + e.getMessage());
@@ -109,80 +126,85 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void ShowLoading(){
-        tvLogging.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.VISIBLE);
-
-        SetEnableForEditLogin(false);
+        progressDialog.setTitle("Loading...");
+        progressDialog.show();
     }
 
     private void HideLoading(){
-        tvLogging.setVisibility(View.GONE);
-        progressBar.setVisibility(View.GONE);
-
-        SetEnableForEditLogin(true);
+        progressDialog.hide();
     }
 
-    private void SetEnableForEditLogin(boolean active){
-        tvRegister.setEnabled(active);
-        tvForgetPassword.setEnabled(active);
-        etPassword.setEnabled(active);
-        etUsername.setEnabled(active);
-        btnLogin.setEnabled(active);
+    private void ShowErrorText(String message){
+        tvError.setVisibility(View.VISIBLE);
+        tvError.setText(message);
     }
 
-    private class LoginThread extends LoginRequest {
+    private class LoginThread extends RequestServerAPI implements RequestServerFunction {
+        public LoginThread() {
+            super();
+            SetRequestServerFunction(this);
+        }
+
         @Override
-        protected void onPostExecute(ResponseEntity<String> response){
-            if(response != null){
-                String body = response.getBody();
-                try{
-                    JSONObject json = new JSONObject(body);
-
-                    if (json.getInt("returncode") == ErrorCode.SUCCESS.GetValue()){
-                        userid = json.getString("userid");
-
-                        JSONObject postData = new JSONObject();
-
-                        try {
-                            postData.put("userid",userid);
-
-                            new GetBalanceInMain().execute(postData.toString());
-                        } catch (JsonIOException e){
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+        public boolean CheckReturnCode(int code) {
+            if (code == ErrorCode.SUCCESS.GetValue()){
+                return true;
             }
+            else {
+                ShowError(code, "Fail");
+                return false;
+            }
+        }
 
-            HideLoading();
+        @Override
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            userid = jsonData.getString("userid");
+            JSONObject json = new JSONObject();
+
+            json.put("userid", userid);
+
+            new GetBalanceInMain().execute(ServerAPI.GET_BALANCE_API.GetUrl(), json.toString());
+        }
+
+        @Override
+        public void ShowError(int errorCode, String message) {
+            if(errorCode == ErrorCode.USER_PASSWORD_WRONG.GetValue()){
+                ShowErrorText("Sai mật khẩu");
+                HideLoading();
+            }
+            Log.d("ERROR", message);
         }
     }
 
-    class GetBalanceInMain extends GetBalanceServer {
+    class GetBalanceInMain extends RequestServerAPI implements RequestServerFunction {
+        public GetBalanceInMain() {
+            super();
+            SetRequestServerFunction(this);
+        }
+
         @Override
-        protected void onPostExecute(ResponseEntity<String> response){
-            if(response == null){
-                Log.d("WARNING", "onPostExecute: load data from server failer");
+        public boolean CheckReturnCode(int code) {
+            if(code == ErrorCode.SUCCESS.GetValue()){
+                return true;
             }
             else{
-                String body = response.getBody();
-                try{
-                    JSONObject json = new JSONObject(body);
-
-                    if (json.getInt("returncode") == ErrorCode.SUCCESS.GetValue()){
-                        long balance = json.getLong("amount");
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-                        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-
-                        startActivity(intent);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                ShowError(0, "Fail");
+                return false;
             }
+        }
+
+        @Override
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            long amount = jsonData.getLong("amount");
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+            intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+            startActivity(intent);
+        }
+
+        @Override
+        public void ShowError(int errorCode, String message) {
+            Log.d("ERROR", message);
         }
     }
 }

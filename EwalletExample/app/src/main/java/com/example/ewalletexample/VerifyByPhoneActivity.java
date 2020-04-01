@@ -3,26 +3,28 @@ package com.example.ewalletexample;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.ewalletexample.Server.GetBalanceServer;
+import com.example.ewalletexample.Server.RequestServerAPI;
+import com.example.ewalletexample.Server.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
-import com.example.ewalletexample.model.EmailModel;
-import com.example.ewalletexample.model.PhoneModel;
-import com.example.ewalletexample.service.EditTextCodeChangeListener;
+import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.code.CodeEditText;
+import com.example.ewalletexample.service.code.EditTextCodeChangeListener;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -34,41 +36,36 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.TimeUnit;
 
-public class VerifyByPhoneActivity extends AppCompatActivity{
+public class VerifyByPhoneActivity extends AppCompatActivity {
 
     FirebaseAuth auth;
-    DatabaseReference mDatabase;
+    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
 
     private User user;
-    private String reason;
-    private String userid;
+    private String reason, verifyForget, userid;
 
     private String mVerificationId;
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
+    CodeEditText codeEditText;
     Button btnVerifyPhone, btnResendVerifyCode;
-    EditTextCodeChangeListener code12, code23, code34, code45, code56, code6;
-
-    ProgressBar progressBar;
-    TextView tvVerifying;
+    TextView tvError;
+    ProgressDialog progressDialog;
 
     CountDownTimer countDown;
     boolean canResendCode;
+
+    PhoneAuthProvider.ForceResendingToken token;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +73,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         setContentView(R.layout.activity_verify_by_phone);
 
         auth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
 
         GetValueFromIntent();
 
@@ -89,8 +86,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
     }
 
     void Initalize(){
-        progressBar = findViewById(R.id.progressBar);
-        tvVerifying = findViewById(R.id.tvVerifying);
+        progressDialog = new ProgressDialog(this);
 
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
@@ -98,9 +94,33 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         etCode04 = findViewById(R.id.etCode04);
         etCode05 = findViewById(R.id.etCode05);
         etCode06 = findViewById(R.id.etCode06);
+        tvError = findViewById(R.id.tvError);
         btnVerifyPhone = findViewById(R.id.btnVerifyPhone);
         btnResendVerifyCode = findViewById(R.id.btnResendVerifyPhone);
         AddTextWatcherEventToEditText();
+    }
+
+    void AddTextWatcherEventToEditText(){
+        codeEditText = new CodeEditText(1, etCode01, etCode02, etCode03, etCode04, etCode05, etCode06);
+    }
+
+    void GetValueFromIntent(){
+        Intent intent = getIntent();
+
+        reason = intent.getStringExtra(Symbol.REASION_VERIFY.GetValue());
+        if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_FORGET.GetValue())){
+            verifyForget = intent.getStringExtra(Symbol.VERRIFY_FORGET.GetValue());
+            String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+            userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
+            user = new User(phone);
+        }
+        else{
+            String fullName = intent.getStringExtra(Symbol.FULLNAME.GetValue());
+            String password = intent.getStringExtra(Symbol.PASSWORD.GetValue());
+            String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+            String email = intent.getStringExtra(Symbol.EMAIL.GetValue());
+            user = new User(fullName,phone,password,email);
+        }
     }
 
     void SetupCountDownTimer(){
@@ -129,15 +149,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         btnResendVerifyCode.setEnabled(active);
     }
 
-    void AddTextWatcherEventToEditText(){
-        code12 = new EditTextCodeChangeListener(etCode01, etCode02,1);
-        code23 = new EditTextCodeChangeListener(etCode02, etCode03,1);
-        code34 = new EditTextCodeChangeListener(etCode03, etCode04,1);
-        code45 = new EditTextCodeChangeListener(etCode04, etCode05,1);
-        code56 = new EditTextCodeChangeListener(etCode05, etCode06,1);
-        code6 = new EditTextCodeChangeListener(etCode06,1);
-    }
-
     String GetCode(){
         return etCode01.getText().toString() +
                 etCode02.getText().toString() +
@@ -162,6 +173,12 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
         if(canResendCode){
             SetActiveForButtonResend(false);
             countDown.start();
+
+            String phone = "+84" + user.getPhoneNumber().substring(1);
+            Toast.makeText(VerifyByPhoneActivity.this, "Đã gửi code lại",Toast.LENGTH_SHORT).show();
+            if(token != null){
+                ResendVerificationCode(phone, token);
+            }
         }
     }
 
@@ -173,23 +190,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                 this,               // Activity (for callback binding)
                 mCallbacks,         // OnVerificationStateChangedCallbacks
                 token);             // ForceResendingToken from callbacks
-    }
-
-    void GetValueFromIntent(){
-        Intent intent = getIntent();
-
-        reason = intent.getStringExtra(Symbol.REASION_VERIFY.GetValue());
-        if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_FORGET.GetValue())){
-            String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-            user = new User(phone);
-        }
-        else{
-            String fullName = intent.getStringExtra(Symbol.FULLNAME.GetValue());
-            String password = intent.getStringExtra(Symbol.PASSWORD.GetValue());
-            String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-            String email = intent.getStringExtra(Symbol.EMAIL.GetValue());
-            user = new User(fullName,phone,password,email);
-        }
     }
 
     //the callback to detect the verification status
@@ -207,25 +207,23 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
 
         @Override
         public void onVerificationFailed(FirebaseException e) {
-            Toast.makeText(VerifyByPhoneActivity.this, e.getMessage(),Toast.LENGTH_SHORT).show();
+            ShowErrorText(e.getMessage());
         }
 
         @Override
-        public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken token) {
+        public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
             super.onCodeSent(s, token);
-//            Toast.makeText(VerifyByPhoneActivity.this, "code has sent " + s,Toast.LENGTH_LONG).show();
             //storing the verification id that is sent to the user
             mVerificationId = s;
+            token = forceResendingToken;
         }
     };
 
     public void VerifyVerificationCode(View view){
         String code = GetCode();
-
         ShowLoading();
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId,code);
-
         //signing the user
         signInWithPhoneAuthCredential(credential);
     }
@@ -240,55 +238,47 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
                                 SendRequestRegisterToServer();
                             }
                             else{
-                                //verification successful we will start the profile activity
-                                Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
-                                intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE);
-                                intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
-                                startActivity(intent);
+                                SendUserDetailForResetPassword();
                             }
-
                         } else {
 
                             //verification unsuccessful.. display an error message
-                            HideLoading();
                             String message = "Somthing is wrong, we will fix it soon...";
                             HideLoading();
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 message = "Invalid code entered...";
                             }
+                            ShowErrorText(message);
                         }
                     }
                 });
     }
 
+    private void SendUserDetailForResetPassword(){
+        FirebaseUser firebaseUser = auth.getCurrentUser();
+        if(firebaseUser != null){
+            auth.signOut();
+        }
+
+        Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
+        intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
+        intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        startActivity(intent);
+    }
+
     private void ShowLoading(){
-        SetActiveForCodeUI(false);
-        ShowProgressLoading();
+        progressDialog.setTitle("Verifying...");
+        progressDialog.show();
     }
 
     private void HideLoading(){
-        SetActiveForCodeUI(true);
-        HideProgressLoading();
+        progressDialog.hide();
     }
 
-    private void SetActiveForCodeUI(boolean active){
-        etCode06.setEnabled(active);
-        etCode01.setEnabled(active);
-        etCode02.setEnabled(active);
-        etCode03.setEnabled(active);
-        etCode04.setEnabled(active);
-        etCode05.setEnabled(active);
-        btnVerifyPhone.setEnabled(active);
-    }
-
-    private void ShowProgressLoading(){
-        tvVerifying.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.VISIBLE);
-    }
-
-    private void HideProgressLoading(){
-        tvVerifying.setVisibility(View.GONE);
-        progressBar.setVisibility(View.GONE);
+    private void ShowErrorText(String message){
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
     }
 
     private void SendRequestRegisterToServer(){
@@ -299,7 +289,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
             postData.put("pin" , user.getPassword());
             postData.put("phone", user.getPhoneNumber());
 
-            new LoadUserDataToServer().execute(ServerAPI.REGISTER_API.GetUrl(), postData.toString());
+            new RegisterEvent().execute(ServerAPI.REGISTER_API.GetUrl(), postData.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -314,99 +304,75 @@ public class VerifyByPhoneActivity extends AppCompatActivity{
 
         if(firebaseUser != null){
             firebaseUser.updateProfile(profileUpdates);
-            mDatabase.child("phones").push().setValue(new PhoneModel(userID, user.getPhoneNumber(), firebaseUser.getUid()));
-            mDatabase.child("emails").push().setValue(new EmailModel(userID, user.getEmail(), firebaseUser.getUid()));
+            UserModel model = new UserModel(user.getFullName(), userID, user.getPhoneNumber(), firebaseUser.getUid(), user.getEmail());
+            firebaseDatabaseHandler.PushDataIntoDatabase("users", model);
             auth.signOut();
         }
     }
 
-    private class LoadUserDataToServer extends AsyncTask<String, Integer, ResponseEntity<String>> {
-
-        @Override
-        protected ResponseEntity<String> doInBackground(String... params) {
-            final String url = params[0];
-
-            RestTemplate restTemplate = new RestTemplate();
-
-            try {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-
-                restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-
-                HttpEntity<String> entity = new HttpEntity<>(params[1], headers);
-
-                ResponseEntity<String> response = restTemplate.exchange(url,HttpMethod.POST, entity, String.class);
-
-                return response;
-            }
-            catch (Exception e){
-                Log.w("Warn",e.getMessage());
-            }
-
-            return null;
+    private class RegisterEvent extends RequestServerAPI implements RequestServerFunction {
+        public RegisterEvent(){
+            SetRequestServerFunction(this);
         }
 
         @Override
-        protected void onPostExecute(ResponseEntity<String> response){
-            if(response != null){
-                String body = response.getBody();
-                try{
-                    JSONObject  json = new JSONObject(body);
-                    int retureCode = json.getInt("returncode");
-                    userid = json.getString("userid");
-                    if (retureCode == ErrorCode.SUCCESS.GetValue()){
-
-                        if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
-                            //verification successful we will start the profile activity
-                            //Store user data
-                            SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
-                            JSONObject postData = new JSONObject();
-                            try{
-                                postData.put("userid",userid);
-
-                                new GetBalance().execute(postData.toString());
-                            }catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        else{
-                            //verification successful we will start the profile activity
-                            Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
-                            //Store user data
-                            intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
-                            intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
-
-                            startActivity(intent);
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+        public boolean CheckReturnCode(int code) {
+            Log.d("TAG", "CheckReturnCode: " + code);
+            if (code == ErrorCode.SUCCESS.GetValue()){
+                return  true;
             }
 
-            HideLoading();
+            ShowError(code, "");
+            return false;
+        }
+
+        @Override
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            userid = jsonData.getString("userid");
+            Log.d("TAG", "DataHandle: " + verifyForget + " " + reason);
+            //verification successful we will start the profile activity
+            SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
+            JSONObject postData = new JSONObject();
+            postData.put("userid",userid);
+
+            new GetBalance().execute(ServerAPI.GET_BALANCE_API.GetUrl(), postData.toString());
+        }
+
+        @Override
+        public void ShowError(int errorCode, String message) {
+            Log.d("ERROR", message);
         }
     }
 
-    private class GetBalance extends GetBalanceServer{
+    private class GetBalance extends RequestServerAPI implements RequestServerFunction{
+        public GetBalance(){
+            SetRequestServerFunction(this);
+        }
+
         @Override
-        protected void onPostExecute(ResponseEntity<String> responseEntity){
-            String body = responseEntity.getBody();
-            try{
-                JSONObject  json = new JSONObject(body);
-                int retureCode = json.getInt("returncode");
-                if (retureCode == ErrorCode.SUCCESS.GetValue()){
-                    long amount = json.getLong("amount");
-                    Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
-                    intent.putExtra(Symbol.USER_ID.GetValue(),userid);
-                    intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
+        public boolean CheckReturnCode(int code) {
+            if (code == ErrorCode.SUCCESS.GetValue()){
+                return  true;
             }
+            else{
+                ShowError(code, "");
+                return false;
+            }
+        }
+
+        @Override
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            long amount = jsonData.getLong("amount");
+            Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
+            intent.putExtra(Symbol.USER_ID.GetValue(),userid);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        }
+
+        @Override
+        public void ShowError(int errorCode, String message) {
+            Log.d("ERROR", message);
         }
     }
 }

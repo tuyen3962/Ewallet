@@ -1,27 +1,19 @@
 package com.example.ewalletexample.model;
 
+import com.example.ewalletexample.Symbol.ErrorCode;
+
 public class Response {
-    private String message;
-    private boolean status;
+    private ErrorCode code;
 
-    public Response(String _message, boolean _status){
-        message = _message;
-        status = _status;
+    public Response(ErrorCode code){
+        this.code = code;
     }
 
-    public String getMessage() {
-        return message;
+    public String GetMessage() {
+        return code.GetMessage();
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public boolean isStatus() {
-        return status;
-    }
-
-    public void setStatus(boolean status) {
-        this.status = status;
+    public boolean GetStatus() {
+        return code.GetValue() == ErrorCode.SUCCESS.GetValue();
     }
 }

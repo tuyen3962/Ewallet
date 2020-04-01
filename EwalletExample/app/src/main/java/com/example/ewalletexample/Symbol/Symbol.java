@@ -15,7 +15,9 @@ public enum  Symbol {
     EMAIL("EMAIL"),
     USER_ID("USER_ID"),
 
-    AMOUNT("AMOUNT");
+    AMOUNT("AMOUNT"),
+
+    CHILD_NAME_FIREBASE_DATABASE("users");
 
     private String value;
 
