@@ -10,6 +10,7 @@ public class UserModel {
     private String dob;
     private String cmnd;
     private String addres;
+    private String imgLink;
 
     public UserModel(String userID, String phone, String phoneToken, String email, String emailToken, String fullname, String dob, String cmnd, String addres) {
         this.userID = userID;
@@ -33,6 +34,7 @@ public class UserModel {
         this.dob = "";
         this.cmnd = "";
         this.addres = "";
+        this.imgLink = "";
     }
 
     public UserModel(String userID, String phone, String phoneToken, String email){
@@ -48,6 +50,14 @@ public class UserModel {
     }
 
     public UserModel(){}
+
+    public String getImgLink() {
+        return imgLink;
+    }
+
+    public void setImgLink(String imgLink) {
+        this.imgLink = imgLink;
+    }
 
     public String getUserID() {
         return userID;

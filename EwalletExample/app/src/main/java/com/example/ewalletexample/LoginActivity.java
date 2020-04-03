@@ -18,8 +18,15 @@ import com.example.ewalletexample.Server.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.Response;
+import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +37,8 @@ public class LoginActivity extends AppCompatActivity {
 
     ProgressDialog progressDialog;
     private String userid;
+    private String imgAccountLink;
+    private LoadImageAccountLinkThread loadImgThread;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -139,6 +148,16 @@ public class LoginActivity extends AppCompatActivity {
         tvError.setText(message);
     }
 
+    private void SwitchToMainScreen(long amount) throws InterruptedException {
+        loadImgThread.join();
+
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), imgAccountLink);
+        startActivity(intent);
+    }
+
     private class LoginThread extends RequestServerAPI implements RequestServerFunction {
         public LoginThread() {
             super();
@@ -159,8 +178,10 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             userid = jsonData.getString("userid");
-            JSONObject json = new JSONObject();
+            loadImgThread = new LoadImageAccountLinkThread(userid, FirebaseDatabase.getInstance().getReference());
+            loadImgThread.start();
 
+            JSONObject json = new JSONObject();
             json.put("userid", userid);
 
             new GetBalanceInMain().execute(ServerAPI.GET_BALANCE_API.GetUrl(), json.toString());
@@ -196,15 +217,54 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             long amount = jsonData.getLong("amount");
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
-            intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-            startActivity(intent);
+
+            try {
+                SwitchToMainScreen(amount);
+            } catch (InterruptedException e) {
+                Log.w("TAG", "DataHandle: " + e.getMessage() );
+            }
         }
 
         @Override
         public void ShowError(int errorCode, String message) {
             Log.d("ERROR", message);
+        }
+    }
+
+    private class LoadImageAccountLinkThread extends Thread implements HandleDataFromFirebaseDatabase<UserModel> {
+        private String id;
+        private FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
+
+        public LoadImageAccountLinkThread(String userid, DatabaseReference mDatabase){
+            id = userid;
+            firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
+        }
+
+        @Override
+        public void run() {
+            firebaseDatabaseHandler.RegisterDataListener();
+        }
+
+        @Override
+        public void HandleDataModel(UserModel model) {
+            if(model == null) return;
+
+            imgAccountLink = model.getImgLink();
+        }
+
+        @Override
+        public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
+            for(DataSnapshot datas : dataSnapshot.child("users").getChildren()){
+                UserModel model = datas.getValue(UserModel.class);
+                if(model.getUserID().equalsIgnoreCase(id)){
+                    firebaseDatabaseHandler.UnregisterValueListener(model);
+                }
+            }
+        }
+
+        @Override
+        public void HandlerDatabaseError(DatabaseError databaseError) {
+
         }
     }
 }

@@ -16,6 +16,7 @@ public enum  Symbol {
     USER_ID("USER_ID"),
 
     AMOUNT("AMOUNT"),
+    IMAGE_ACCOUNT_LINK("IMAGE_ACCOUNT"),
 
     CHILD_NAME_FIREBASE_DATABASE("users");
 
