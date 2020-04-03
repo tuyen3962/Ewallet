@@ -2,17 +2,20 @@ package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentActivity;
 
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
 
 import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 public class ChooseBankConnectActivity extends AppCompatActivity {
 
     MaterialSearchView searchView;
+    FragmentActivity layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
