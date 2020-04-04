@@ -1,14 +1,29 @@
 package com.example.ewalletexample.data;
 
+import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.model.UserModel;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class User {
-    private int userId;
+    private String userId;
     private String fullName;
     private String password;
     private String phoneNumber;
     private String email;
+    private String imgAccountLink;
+    private String dateOfbirth;
+    private String address;
+    private String cmnd;
 
     public User(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public User(UserModel model){
+        setImgAccountLink(model.getImgLink());
+        setFullName(model.getFullname());
     }
 
     public User(String fullName, String phoneNumber, String password, String email) {
@@ -18,12 +33,7 @@ public class User {
         this.email = email;
     }
 
-    public User(int userId, String phoneNumber, String password, String email) {
-        this.userId = userId;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
-    }
+    public User(){}
 
     public String getFullName() {
         return fullName;
@@ -33,11 +43,11 @@ public class User {
         this.fullName = fullName;
     }
 
-    public int getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -63,5 +73,37 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getImgAccountLink() {
+        return imgAccountLink;
+    }
+
+    public void setImgAccountLink(String imgAccountLink) {
+        this.imgAccountLink = imgAccountLink;
+    }
+
+    public String getDateOfbirth() {
+        return dateOfbirth;
+    }
+
+    public void setDateOfbirth(String dateOfbirth) {
+        this.dateOfbirth = dateOfbirth;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getCmnd() {
+        return cmnd;
+    }
+
+    public void setCmnd(String cmnd) {
+        this.cmnd = cmnd;
     }
 }

@@ -34,10 +34,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ResetPassword extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
+public class ResetPassword extends AppCompatActivity {
 
     FirebaseAuth auth;
-    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
 
     ProgressDialog progressDialog;
     private EditText etPassword, etConfirmPassword;
@@ -52,7 +51,6 @@ public class ResetPassword extends AppCompatActivity implements HandleDataFromFi
         setContentView(R.layout.activity_reset_password);
 
         auth = FirebaseAuth.getInstance();
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
         Initialize();
 
         GetValueFromIntent();
@@ -100,7 +98,7 @@ public class ResetPassword extends AppCompatActivity implements HandleDataFromFi
         Response response = CheckPassword(password, confirmPass);
 
         if(response.GetStatus()){
-            firebaseDatabaseHandler.RegisterDataListener();
+            SendRequestResetPassword(password);
         }
         else{
             ShowErrorText(response.GetMessage());
@@ -128,24 +126,15 @@ public class ResetPassword extends AppCompatActivity implements HandleDataFromFi
         startActivity(new Intent(ResetPassword.this, LoginActivity.class));
     }
 
-    private void ShowErrorText(String message){
-        tvError.setText(message);
-        tvError.setVisibility(View.VISIBLE);
-        HideProgressDialog();
-    }
-
-    @Override
-    public void HandleDataModel(UserModel model) {
-        if(model == null) return;
-
+    private void SendRequestResetPassword(String pass){
         JSONObject postData = new JSONObject();
 
         try {
-            postData.put("userid", model.getUserID());
-            postData.put("dob",model.getDob());
-            postData.put("pin",etPassword.getText().toString());
-            postData.put("cmnd",model.getCmnd());
-            postData.put("address", model.getAddres());
+            postData.put("userid", userid);
+            postData.put("pin",pass);
+            postData.put("cmnd","");
+            postData.put("address","");
+            postData.put("dob","");
 
             new ResetPasswordEvent().execute(ServerAPI.UPDATE_USER_API.GetUrl(), postData.toString());
         } catch (JSONException e) {
@@ -153,23 +142,10 @@ public class ResetPassword extends AppCompatActivity implements HandleDataFromFi
         }
     }
 
-    @Override
-    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
-        for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).getChildren()){
-            UserModel model = data.getValue(UserModel.class);
-            if (model.getPhone().equalsIgnoreCase(phone)){
-                Log.d("TAG", "HandleDataSnapShot: " + model.toString());
-                firebaseDatabaseHandler.UnregisterValueListener(model);
-                return;
-            }
-        }
-        Log.d("TAG", "HandleDataSnapShot: null");
-        firebaseDatabaseHandler.UnregisterValueListener(null);
-    }
-
-    @Override
-    public void HandlerDatabaseError(DatabaseError databaseError) {
-        ShowErrorText(databaseError.getMessage());
+    private void ShowErrorText(String message){
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
+        HideProgressDialog();
     }
 
     class LoadingVerifyEmail extends Thread{
@@ -209,7 +185,6 @@ public class ResetPassword extends AppCompatActivity implements HandleDataFromFi
 
         @Override
         public boolean CheckReturnCode(int code) {
-            Log.d("TAG", "CheckReturnCode: " + code);
             if(code == ErrorCode.SUCCESS.GetValue()){
                 return true;
             }

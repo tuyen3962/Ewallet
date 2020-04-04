@@ -46,7 +46,7 @@ public class PersonalWalletActivity extends AppCompatActivity {
 
         imgAccount = findViewById(R.id.imgAccount);
 
-        layoutAccount = findViewById(R.id.layoutAccount);
+        layoutAccount = findViewById(R.id.layoutUserAccount);
         layoutBankAccount = findViewById(R.id.layoutBankAccount);
         layoutSetting = findViewById(R.id.layoutSetting);
     }

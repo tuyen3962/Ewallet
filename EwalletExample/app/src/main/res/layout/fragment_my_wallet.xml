@@ -11,7 +11,7 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/layoutAccount"
+            android:id="@+id/layoutUserAccount"
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:orientation="horizontal">

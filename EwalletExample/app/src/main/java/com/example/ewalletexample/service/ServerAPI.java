@@ -5,7 +5,7 @@ public enum  ServerAPI {
     LOGIN_API ("/um/login"),
     REGISTER_API("/um/register"),
 
-    UPDATE_USER_API("/um/update"),
+    UPDATE_USER_API("/um/update-user"),
 
     // verify user when excuting the transformation of money
     VERIFY_PIN_API(""),
@@ -17,7 +17,7 @@ public enum  ServerAPI {
     UNLINK_BANK_CARD_API("/bank-mapping/unlink"),
     GET_BANK_LINKING_API("/bank-mapping/list");
 
-    private String baseURL = "http://192.168.15.112:8080";
+    private String baseURL = "http://192.168.1.13:8080";
 
 
     private String url;

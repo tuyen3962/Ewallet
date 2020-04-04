@@ -189,11 +189,17 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
     @Override
     public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
         String phone = etUserPhone.getText().toString();
-        for(DataSnapshot data : dataSnapshot.child("users").getChildren()){
-            UserModel model = data.getValue(UserModel.class);
-            if(model.getPhone().equalsIgnoreCase(phone)){
-                firebaseDatabaseHandler.UnregisterValueListener(model);
-                return;
+        if(dataSnapshot.child("users").getChildrenCount() > 0){
+            firebaseDatabaseHandler.UnregisterValueListener(null);
+            return;
+        }
+        else  {
+            for(DataSnapshot data : dataSnapshot.child("users").getChildren()){
+                UserModel model = data.getValue(UserModel.class);
+                if(model.getPhone().equalsIgnoreCase(phone)){
+                    firebaseDatabaseHandler.UnregisterValueListener(model);
+                    return;
+                }
             }
         }
 

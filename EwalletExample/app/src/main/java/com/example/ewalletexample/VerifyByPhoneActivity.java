@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -86,7 +87,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     }
 
     void Initalize(){
-        progressDialog = new ProgressDialog(this);
+        progressDialog = new ProgressDialog(VerifyByPhoneActivity.this);
 
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
@@ -221,7 +222,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
     public void VerifyVerificationCode(View view){
         String code = GetCode();
-        ShowLoading();
+        if(TextUtils.isEmpty(code) || code.length() < 6){
+            ShowErrorText("Xin nhap code");
+            return;
+        }
+//        ShowLoading();
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId,code);
         //signing the user
@@ -259,6 +264,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         if(firebaseUser != null){
             auth.signOut();
         }
+        HideLoading();
 
         Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
@@ -304,8 +310,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         if(firebaseUser != null){
             firebaseUser.updateProfile(profileUpdates);
-            UserModel model = new UserModel(user.getFullName(), userID, user.getPhoneNumber(), firebaseUser.getUid(), user.getEmail());
-            firebaseDatabaseHandler.PushDataIntoDatabase("users", model);
+            UserModel model = new UserModel(user.getFullName(), user.getPhoneNumber(), firebaseUser.getUid(), user.getEmail());
+            firebaseDatabaseHandler.PushDataIntoDatabase("users",userID, model);
             auth.signOut();
         }
     }
@@ -317,7 +323,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         @Override
         public boolean CheckReturnCode(int code) {
-            Log.d("TAG", "CheckReturnCode: " + code);
             if (code == ErrorCode.SUCCESS.GetValue()){
                 return  true;
             }
@@ -328,44 +333,16 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
+            HideLoading();
             userid = jsonData.getString("userid");
-            Log.d("TAG", "DataHandle: " + verifyForget + " " + reason);
+            Log.d("TAG", "DataHandle: " + userid);
             //verification successful we will start the profile activity
             SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
-            JSONObject postData = new JSONObject();
-            postData.put("userid",userid);
-
-            new GetBalance().execute(ServerAPI.GET_BALANCE_API.GetUrl(), postData.toString());
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
-            Log.d("ERROR", message);
-        }
-    }
-
-    private class GetBalance extends RequestServerAPI implements RequestServerFunction{
-        public GetBalance(){
-            SetRequestServerFunction(this);
-        }
-
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if (code == ErrorCode.SUCCESS.GetValue()){
-                return  true;
-            }
-            else{
-                ShowError(code, "");
-                return false;
-            }
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            long amount = jsonData.getLong("amount");
             Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
             intent.putExtra(Symbol.USER_ID.GetValue(),userid);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), 0);
+            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), "");
+            intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         }
