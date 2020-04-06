@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".RegisterByPhone">
 
-
     <TextView
         android:id="@+id/textView5"
         android:layout_width="wrap_content"
@@ -32,18 +31,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="5dp"
         android:text="VDT"
         android:textColor="@color/Red"
         android:layout_below="@+id/tvRegisterByPhone"
         android:textSize="28sp"
-        android:visibility="gone"/>
+        android:visibility="visible"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tvWarning"
-        android:layout_marginTop="20dp"
+        android:layout_below="@id/tvRegisterByPhone"
+        android:layout_marginTop="40dp"
         android:textSize="20dp"
         android:text="Họ và tên"
         android:layout_marginStart="20dp"/>
@@ -52,9 +51,9 @@
         android:id="@+id/etFullName"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tvWarning"
+        android:layout_below="@id/tvRegisterByPhone"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="40dp"
         android:hint="Nhập họ và tên"
         android:gravity="center"
         android:textSize="18dp"
@@ -66,6 +65,27 @@
         android:layout_below="@id/etFullName"
         android:layout_marginTop="20dp"
         android:textSize="20dp"
+        android:text="Chứng minh \n nhân dân"
+        android:layout_marginStart="20dp"/>
+
+    <EditText
+        android:id="@+id/etCMND"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etFullName"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="20dp"
+        android:hint="Nhập chứng minh \n nhân dân"
+        android:gravity="center"
+        android:textSize="18dp"
+        android:layout_marginRight="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/etCMND"
+        android:layout_marginTop="20dp"
+        android:textSize="20dp"
         android:text="Số điện thoại"
         android:layout_marginStart="20dp"/>
 
@@ -73,7 +93,7 @@
         android:id="@+id/etUserPhone"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/etFullName"
+        android:layout_below="@id/etCMND"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="20dp"
         android:hint="Nhập số điện thoại"

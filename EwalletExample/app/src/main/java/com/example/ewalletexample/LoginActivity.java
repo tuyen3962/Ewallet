@@ -17,12 +17,15 @@ import com.example.ewalletexample.Server.RequestServerAPI;
 import com.example.ewalletexample.Server.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
+import com.example.ewalletexample.dialogs.ProgressDialogHandler;
 import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,10 +38,10 @@ public class LoginActivity extends AppCompatActivity {
     EditText etUsername, etPassword;
     TextView tvError;
 
-    ProgressDialog progressDialog;
+    ProgressBarManager progressBarManager;
     private String userid;
-    private String imgAccountLink;
-    private LoadImageAccountLinkThread loadImgThread;
+    private long userAmount;
+    LoadDataFromFirebase loadDataFromFirebase;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -68,7 +71,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     void InitLayoutProperties(){
-        progressDialog = new ProgressDialog(this);
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnLogin));
 
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
@@ -79,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void UserLoginEvent(View view){
-        ShowLoading();
+        progressBarManager.ShowProgressBar("Loading");
 
         String username = etUsername.getText().toString();
         String password = etPassword.getText().toString();
@@ -90,7 +93,7 @@ public class LoginActivity extends AppCompatActivity {
             SendLoginRequest(username,password);
         }
         else{
-            HideLoading();
+            progressBarManager.HideProgressBar();
             ShowErrorText(response.GetMessage());
         }
     }
@@ -121,7 +124,7 @@ public class LoginActivity extends AppCompatActivity {
 
             new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
         }catch (Exception e){
-            HideLoading();
+            progressBarManager.HideProgressBar();
             Log.d("TAG", "CheckUsernameAndPassword: "  + e.getMessage());
         }
     }
@@ -134,27 +137,18 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(new Intent(LoginActivity.this, RegisterByPhone.class));
     }
 
-    private void ShowLoading(){
-        progressDialog.setTitle("Loading...");
-        progressDialog.show();
-    }
-
-    private void HideLoading(){
-        progressDialog.hide();
-    }
-
     private void ShowErrorText(String message){
         tvError.setVisibility(View.VISIBLE);
         tvError.setText(message);
     }
 
-    private void SwitchToMainScreen(long amount) throws InterruptedException {
-        loadImgThread.join();
-
+    private void SwitchToMainScreen(UserModel model) {
+        Log.d("TAG", "run: " + model );
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), imgAccountLink);
+        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), model.getImgLink());
+        intent.putExtra(Symbol.FULLNAME.GetValue(), model.getFullname());
         startActivity(intent);
     }
 
@@ -170,6 +164,7 @@ public class LoginActivity extends AppCompatActivity {
                 return true;
             }
             else {
+                progressBarManager.HideProgressBar();
                 ShowError(code, "Fail");
                 return false;
             }
@@ -178,8 +173,6 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             userid = jsonData.getString("userid");
-            loadImgThread = new LoadImageAccountLinkThread(userid, FirebaseDatabase.getInstance().getReference());
-            loadImgThread.start();
 
             JSONObject json = new JSONObject();
             json.put("userid", userid);
@@ -189,11 +182,10 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         public void ShowError(int errorCode, String message) {
+            ShowErrorText("Số điện thoại hoặc mật khẩu sai");
             if(errorCode == ErrorCode.USER_PASSWORD_WRONG.GetValue()){
                 ShowErrorText("Sai mật khẩu");
-                HideLoading();
             }
-            Log.d("ERROR", message);
         }
     }
 
@@ -205,7 +197,7 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
+            if(code == ErrorCode.SUCCESS.GetValue() || code == ErrorCode.VALIDATE_USER_ID_INVALID.GetValue()){
                 return true;
             }
             else{
@@ -216,13 +208,9 @@ public class LoginActivity extends AppCompatActivity {
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            long amount = jsonData.getLong("amount");
-
-            try {
-                SwitchToMainScreen(amount);
-            } catch (InterruptedException e) {
-                Log.w("TAG", "DataHandle: " + e.getMessage() );
-            }
+            userAmount = jsonData.getLong("amount");
+            loadDataFromFirebase = new LoadDataFromFirebase(FirebaseDatabase.getInstance());
+            loadDataFromFirebase.FindUserModel(userid);
         }
 
         @Override
@@ -231,40 +219,22 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private class LoadImageAccountLinkThread extends Thread implements HandleDataFromFirebaseDatabase<UserModel> {
-        private String id;
-        private FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
+    class LoadDataFromFirebase implements ResponseModelByKey<UserModel> {
+        FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
 
-        public LoadImageAccountLinkThread(String userid, DatabaseReference mDatabase){
-            id = userid;
-            firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
+        public LoadDataFromFirebase(FirebaseDatabase database){
+            firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(database.getReference());
+        }
+
+        public void FindUserModel(String key){
+            firebaseDatabaseHandler.GetUserModelByKey(key, UserModel.class, this);
         }
 
         @Override
-        public void run() {
-            firebaseDatabaseHandler.RegisterDataListener();
-        }
+        public void GetModel(UserModel data) {
+            if(data == null) return;
 
-        @Override
-        public void HandleDataModel(UserModel model) {
-            if(model == null) return;
-
-            imgAccountLink = model.getImgLink();
-        }
-
-        @Override
-        public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
-            for(DataSnapshot datas : dataSnapshot.child("users").getChildren()){
-                UserModel model = datas.getValue(UserModel.class);
-                if(model.getUserID().equalsIgnoreCase(id)){
-                    firebaseDatabaseHandler.UnregisterValueListener(model);
-                }
-            }
-        }
-
-        @Override
-        public void HandlerDatabaseError(DatabaseError databaseError) {
-
+            SwitchToMainScreen(data);
         }
     }
 }

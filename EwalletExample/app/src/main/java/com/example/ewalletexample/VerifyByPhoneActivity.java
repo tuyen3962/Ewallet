@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.example.ewalletexample.Server.RequestServerAPI;
 import com.example.ewalletexample.Server.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
@@ -26,6 +27,7 @@ import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.code.EditTextCodeChangeListener;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -61,7 +63,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     CodeEditText codeEditText;
     Button btnVerifyPhone, btnResendVerifyCode;
     TextView tvError;
-    ProgressDialog progressDialog;
+    ProgressBarManager progressBarManager;
 
     CountDownTimer countDown;
     boolean canResendCode;
@@ -74,8 +76,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         setContentView(R.layout.activity_verify_by_phone);
 
         auth = FirebaseAuth.getInstance();
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-
         GetValueFromIntent();
 
         SendVerifyCodeToPhoneNumber();
@@ -87,7 +87,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     }
 
     void Initalize(){
-        progressDialog = new ProgressDialog(VerifyByPhoneActivity.this);
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone);
 
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
@@ -120,7 +121,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             String password = intent.getStringExtra(Symbol.PASSWORD.GetValue());
             String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
             String email = intent.getStringExtra(Symbol.EMAIL.GetValue());
-            user = new User(fullName,phone,password,email);
+            String cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
+            user = new User(fullName,phone,password,email, cmnd);
         }
     }
 
@@ -226,7 +228,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             ShowErrorText("Xin nhap code");
             return;
         }
-//        ShowLoading();
+        progressBarManager.ShowProgressBar("Verifying");
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId,code);
         //signing the user
@@ -240,6 +242,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
+                                progressBarManager.SetMessage("Saving");
                                 SendRequestRegisterToServer();
                             }
                             else{
@@ -249,7 +252,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
                             //verification unsuccessful.. display an error message
                             String message = "Somthing is wrong, we will fix it soon...";
-                            HideLoading();
+                            progressBarManager.HideProgressBar();
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 message = "Invalid code entered...";
                             }
@@ -264,22 +267,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         if(firebaseUser != null){
             auth.signOut();
         }
-        HideLoading();
+        progressBarManager.HideProgressBar();
 
         Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
         intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         startActivity(intent);
-    }
-
-    private void ShowLoading(){
-        progressDialog.setTitle("Verifying...");
-        progressDialog.show();
-    }
-
-    private void HideLoading(){
-        progressDialog.hide();
     }
 
     private void ShowErrorText(String message){
@@ -333,17 +327,45 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            HideLoading();
             userid = jsonData.getString("userid");
-            Log.d("TAG", "DataHandle: " + userid);
             //verification successful we will start the profile activity
             SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
+            String[] arrStr = new String[]{"userid:"+ user.getUserId(),"pin:","dob:","cmnd:"+ user.getCmnd(),"address:"};
+            String json = HandlerJsonData.ExchangeToJsonString(arrStr);
+            new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
+        }
+
+        @Override
+        public void ShowError(int errorCode, String message) {
+            Log.d("ERROR", message);
+        }
+    }
+
+    private class UpdateUserProfile extends RequestServerAPI implements RequestServerFunction{
+        public UpdateUserProfile(){
+            SetRequestServerFunction(this);
+        }
+
+        @Override
+        public boolean CheckReturnCode(int code) {
+            if (code == ErrorCode.SUCCESS.GetValue()){
+                return  true;
+            }
+
+            ShowError(code, "");
+            return false;
+        }
+
+        @Override
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            progressBarManager.HideProgressBar();
+
+            //verification successful we will start the profile activity
             Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
             intent.putExtra(Symbol.USER_ID.GetValue(),userid);
             intent.putExtra(Symbol.AMOUNT.GetValue(), 0);
             intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), "");
             intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         }
 

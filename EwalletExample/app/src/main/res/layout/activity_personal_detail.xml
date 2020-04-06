@@ -1,340 +1,345 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Thông tin cá nhân"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:layout_weight="1"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Trở về"
-            android:textSize="18sp"
-            android:textColor="@color/Grey"
-            android:layout_marginEnd="5dp"
-            android:drawableEnd="@drawable/ic_action_home"
-            android:gravity="center_vertical"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="23dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
-            android:gravity="center_horizontal"
-            android:text="Ảnh đại diện"
-            android:textSize="20sp" />
-
-        <ImageView
-            android:id="@+id/imgAccount"
-            android:layout_width="100dp"
-            android:layout_height="0dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_weight="10"
-            app:srcCompat="@drawable/ic_action_person" />
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:gravity="center_horizontal">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btnUploadImage"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="2dp"
-                android:layout_marginHorizontal="10dp"
-                android:textSize="15dp"
-                android:text="Upload"
-                android:background="@drawable/edit_round_button"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnVerifyUploadImage"
-                android:layout_width="85dp"
-                android:layout_height="match_parent"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="2dp"
-                android:layout_marginHorizontal="10dp"
-                android:text="Xác định"
-                android:background="@drawable/edit_round_button"
-                android:visibility="gone"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Thông tin cá nhân"
+                    android:textSize="36sp"
+                    android:textStyle="bold"
+                    android:layout_weight="1"/>
 
-            <Button
-                android:id="@+id/btnCancelUploadImage"
-                android:layout_width="85dp"
-                android:layout_height="match_parent"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="2dp"
-                android:layout_marginHorizontal="10dp"
-                android:text="Hủy bỏ"
-                android:background="@drawable/edit_round_button"
-                android:visibility="gone"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Trở về"
+                    android:textSize="18sp"
+                    android:textColor="@color/Grey"
+                    android:layout_marginEnd="5dp"
+                    android:drawableEnd="@drawable/ic_action_home"
+                    android:gravity="center_vertical"
+                    android:onClick="BackToMainEvent"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="23dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:gravity="center_horizontal"
+                    android:text="Ảnh đại diện"
+                    android:textSize="20sp" />
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/imgAccount"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_action_person"
+                    app:civ_border_width="2dp"
+                    android:layout_gravity="center"
+                    android:layout_weight="10"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center_horizontal">
+
+                    <Button
+                        android:id="@+id/btnUploadImage"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="2dp"
+                        android:layout_marginHorizontal="10dp"
+                        android:textSize="15dp"
+                        android:text="Upload"
+                        android:background="@drawable/edit_round_button"
+                        android:onClick="UploadImageEvent"/>
+
+                    <Button
+                        android:id="@+id/btnVerifyUploadImage"
+                        android:layout_width="85dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="2dp"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="Xác định"
+                        android:background="@drawable/edit_round_button"
+                        android:visibility="gone"
+                        android:onClick="VerifyUploadImageEvent"/>
+
+                    <Button
+                        android:id="@+id/btnCancelUploadImage"
+                        android:layout_width="85dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginBottom="2dp"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="Hủy bỏ"
+                        android:background="@drawable/edit_round_button"
+                        android:visibility="gone"
+                        android:onClick="CancelUploadImageEvent"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Số điện thoại"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tvPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="6"
+                    android:gravity="center_vertical|right"
+                    android:text="SDT"
+                    android:textSize="20sp"
+                    android:visibility="visible"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|left"
+                    android:text="Họ và tên"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tvFullName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="4"
+                    android:gravity="center_vertical|right"
+                    android:text="FULLNAME"
+                    android:textSize="20sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Hạn mức giao dịch"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="8dp"
+                    android:layout_weight="5"
+                    android:gravity="center_vertical|right"
+                    android:text="Hạn mức giao dịch"
+                    android:textSize="20sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Ngày sinh"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tvDateOfBirth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4"
+                    android:gravity="center_vertical|right"
+                    android:layout_marginStart="10dp"
+                    android:text="DATE OF BIRTH"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/etDateOfBirth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4"
+                    android:gravity="center"
+                    android:layout_marginStart="10dp"
+                    android:text="DATE OF BIRTH"
+                    android:textSize="20sp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Địa chỉ"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tvAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="3"
+                    android:gravity="center_vertical|right"
+                    android:text="ADDRESS"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/etAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="3"
+                    android:gravity="center"
+                    android:text="ADDRESS"
+                    android:textSize="20sp"
+                    android:visibility="gone"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Chứng minh nhân dân"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/tvCMND"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="5"
+                    android:gravity="center_vertical|right"
+                    android:text="CMND"
+                    android:textSize="20sp" />
+
+                <EditText
+                    android:id="@+id/etCMND"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="5"
+                    android:gravity="center"
+                    android:text="CMND"
+                    android:textSize="20sp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_margin="5dp"
+                android:gravity="right">
+
+                <Button
+                    android:id="@+id/btnEditUserDetail"
+                    android:layout_width="120dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/edit_round_button"
+                    android:layout_marginHorizontal="10dp"
+                    android:textSize="20sp"
+                    android:text="Sửa"
+                    android:onClick="EditUserDetailEvent"/>
+
+                <Button
+                    android:id="@+id/btnFinishEditUserDetail"
+                    android:layout_width="120dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/edit_round_button"
+                    android:layout_marginHorizontal="10dp"
+                    android:textSize="20sp"
+                    android:visibility="gone"
+                    android:text="Hoàn tất"
+                    android:onClick="FinishEditUserDetailEvent"/>
+
+                <Button
+                    android:id="@+id/btnCancelEditUserDetail"
+                    android:layout_width="120dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/edit_round_button"
+                    android:layout_marginHorizontal="10dp"
+                    android:visibility="gone"
+                    android:textSize="20sp"
+                    android:text="Hủy bỏ"
+                    android:onClick="CancelEditUserDetailEvent"/>
+            </LinearLayout>
         </LinearLayout>
+    </ScrollView>
 
-    </LinearLayout>
-
-    <LinearLayout
+    <include
+        android:id="@+id/progressBar"
+        layout="@layout/progress_bar"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_margin="5dp">
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Số điện thoại"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/tvPhone"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="6"
-            android:gravity="center_vertical|right"
-            android:text="SDT"
-            android:textSize="20sp"
-            android:visibility="visible"/>
-
-        <EditText
-            android:id="@+id/etPhone"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="6"
-            android:gravity="center"
-            android:text="SDT"
-            android:textSize="20sp"
-            android:visibility="gone"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_margin="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical|left"
-            android:text="Họ và tên"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/tvFullName"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="4"
-            android:gravity="center_vertical|right"
-            android:text="FULLNAME"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/etFullName"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="4"
-            android:gravity="center"
-            android:text="FULLNAME"
-            android:textSize="20sp"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_margin="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Hạn mức giao dịch"
-            android:textSize="20sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="8dp"
-            android:layout_weight="5"
-            android:gravity="center_vertical|right"
-            android:text="Hạn mức giao dịch"
-            android:textSize="20sp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_margin="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Ngày sinh"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/tvDateOfBirth"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="4"
-            android:gravity="center_vertical|right"
-            android:layout_marginStart="10dp"
-            android:text="DATE OF BIRTH"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/etDateOfBirth"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="4"
-            android:gravity="center"
-            android:layout_marginStart="10dp"
-            android:text="DATE OF BIRTH"
-            android:textSize="20sp"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_margin="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Địa chỉ"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/tvAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="3"
-            android:gravity="center_vertical|right"
-            android:text="ADDRESS"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/etAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="3"
-            android:gravity="center"
-            android:text="ADDRESS"
-            android:textSize="20sp"
-            android:visibility="gone"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_margin="5dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Chứng minh nhân dân"
-            android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/tvCMND"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="5"
-            android:gravity="center_vertical|right"
-            android:text="CMND"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/etCMND"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_weight="5"
-            android:gravity="center"
-            android:text="CMND"
-            android:textSize="20sp"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="45dp"
-        android:layout_margin="5dp"
-        android:gravity="right">
-
-        <Button
-            android:id="@+id/btnEditUserDetail"
-            android:layout_width="120dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/edit_round_button"
-            android:layout_marginHorizontal="10dp"
-            android:textSize="20sp"
-            android:text="Sửa"/>
-
-        <Button
-            android:id="@+id/btnFinishEditUserDetail"
-            android:layout_width="120dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/edit_round_button"
-            android:layout_marginHorizontal="10dp"
-            android:textSize="20sp"
-            android:visibility="gone"
-            android:text="Hoàn tất"/>
-
-        <Button
-            android:id="@+id/btnCancelEditUserDetail"
-            android:layout_width="120dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/edit_round_button"
-            android:layout_marginHorizontal="10dp"
-            android:visibility="gone"
-            android:textSize="20sp"
-            android:text="Hủy bỏ"/>
-    </LinearLayout>
-</LinearLayout>
+</RelativeLayout>

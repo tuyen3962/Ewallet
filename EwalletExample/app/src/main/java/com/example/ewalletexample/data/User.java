@@ -26,11 +26,12 @@ public class User {
         setFullName(model.getFullname());
     }
 
-    public User(String fullName, String phoneNumber, String password, String email) {
+    public User(String fullName, String phoneNumber, String password, String email, String cmnd) {
         this.fullName = fullName;
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.email = email;
+        this.cmnd = cmnd;
     }
 
     public User(){}

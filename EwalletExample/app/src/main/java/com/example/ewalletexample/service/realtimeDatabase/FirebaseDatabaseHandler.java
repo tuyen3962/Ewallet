@@ -17,6 +17,23 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
 
     ValueEventListener databaseValueEvent;
 
+    private String keyModel;
+    private Class<T> tClass;
+    private ResponseModelByKey response;
+    ValueEventListener findDataEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            T model = dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).child(keyModel).getValue(tClass);
+            UnregisterFindValue(model);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
+
     public FirebaseDatabaseHandler(DatabaseReference mDatabase, HandleDataFromFirebaseDatabase<T> handleDataFromDatabase){
         this.mDatabase = mDatabase;
         SetRegisterDatabaseValueListener(handleDataFromDatabase);
@@ -53,9 +70,9 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
         dataHandler.HandleDataModel(model);
     }
 
-    public T GetUserModelByKey(DataSnapshot dataSnapshot, String key){
+    public T GetUserModelByKey(DataSnapshot dataSnapshot, String key, Class<T> tClass){
         if(ContainsKey(dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()), key)){
-            return (T) dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).child(key).getValue();
+            return dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).child(key).getValue(tClass);
         }
 
         return null;
@@ -70,7 +87,19 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
         mDatabase.child(childName).child(id).setValue(data);
     }
 
-    public void UpdateData(String childName){
+    public void UpdateData(String childName, String id, T data){
+        mDatabase.child(childName).child(id).setValue(data);
+    }
 
+    public void GetUserModelByKey(String key, Class<T> tClass, ResponseModelByKey response){
+        keyModel = key;
+        this.tClass = tClass;
+        mDatabase.addValueEventListener(findDataEventListener);
+        this.response = response;
+    }
+
+    private void UnregisterFindValue(T model){
+        mDatabase.removeEventListener(findDataEventListener);
+        response.GetModel(model);
     }
 }
