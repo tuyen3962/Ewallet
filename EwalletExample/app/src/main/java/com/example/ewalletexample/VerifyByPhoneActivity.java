@@ -364,8 +364,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
             intent.putExtra(Symbol.USER_ID.GetValue(),userid);
             intent.putExtra(Symbol.AMOUNT.GetValue(), 0);
-            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), "");
-            intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
             startActivity(intent);
         }
 

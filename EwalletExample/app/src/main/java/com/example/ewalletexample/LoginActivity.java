@@ -41,7 +41,6 @@ public class LoginActivity extends AppCompatActivity {
     ProgressBarManager progressBarManager;
     private String userid;
     private long userAmount;
-    LoadDataFromFirebase loadDataFromFirebase;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -142,13 +141,10 @@ public class LoginActivity extends AppCompatActivity {
         tvError.setText(message);
     }
 
-    private void SwitchToMainScreen(UserModel model) {
-        Log.d("TAG", "run: " + model );
+    private void SwitchToMainScreen() {
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), model.getImgLink());
-        intent.putExtra(Symbol.FULLNAME.GetValue(), model.getFullname());
         startActivity(intent);
     }
 
@@ -209,32 +205,12 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             userAmount = jsonData.getLong("amount");
-            loadDataFromFirebase = new LoadDataFromFirebase(FirebaseDatabase.getInstance());
-            loadDataFromFirebase.FindUserModel(userid);
+            SwitchToMainScreen();
         }
 
         @Override
         public void ShowError(int errorCode, String message) {
             Log.d("ERROR", message);
-        }
-    }
-
-    class LoadDataFromFirebase implements ResponseModelByKey<UserModel> {
-        FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
-
-        public LoadDataFromFirebase(FirebaseDatabase database){
-            firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(database.getReference());
-        }
-
-        public void FindUserModel(String key){
-            firebaseDatabaseHandler.GetUserModelByKey(key, UserModel.class, this);
-        }
-
-        @Override
-        public void GetModel(UserModel data) {
-            if(data == null) return;
-
-            SwitchToMainScreen(data);
         }
     }
 }

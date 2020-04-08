@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.BalanceVisible;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -28,13 +29,12 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 public class MyWalletFragement extends Fragment implements View.OnClickListener{
-    private String userid, imgAccountLink, fullname;
-    private long userAmount;
+    private String userid;
 
     CircleImageView imgAccount;
     Button btnVisibilyBalance;
-    LinearLayout layoutUserAccount, layoutSetting;
-    TextView tvBalance;
+    LinearLayout layoutUserAccount, layoutSetting, layoutBankAccount;
+    TextView tvBalance, tvFullName, tvPhone, tvNumCardConnected, tvEmail;
 
     private MainActivity mainActivity;
 
@@ -42,13 +42,10 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
 
     }
 
-    public static MyWalletFragement newInstance(String userid, long userAmount, String imgAccountLink, String fullname) {
+    public static MyWalletFragement newInstance(String userid) {
         MyWalletFragement fragment = new MyWalletFragement();
         Bundle args = new Bundle();
         args.putString(Symbol.USER_ID.GetValue(), userid);
-        args.putLong(Symbol.AMOUNT.GetValue(), userAmount);
-        args.putString(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), imgAccountLink);
-        args.putString(Symbol.FULLNAME.GetValue(), fullname);
         fragment.setArguments(args);
         return fragment;
     }
@@ -58,9 +55,6 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             userid = getArguments().getString(Symbol.USER_ID.GetValue());
-            userAmount = getArguments().getLong(Symbol.AMOUNT.GetValue());
-            imgAccountLink = getArguments().getString(Symbol.IMAGE_ACCOUNT_LINK.GetValue());
-            fullname = getArguments().getString(Symbol.FULLNAME.GetValue());
         }
     }
 
@@ -79,12 +73,14 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         View view = inflater.inflate(R.layout.fragment_my_wallet, container, false);
 
         Initialize(view);
-        mainActivity.InitializeProgressBar(btnVisibilyBalance, layoutSetting, layoutUserAccount);
         ShowAccountImage();
 
         btnVisibilyBalance.setOnClickListener(this);
         layoutSetting.setOnClickListener(this);
         layoutUserAccount.setOnClickListener(this);
+        layoutBankAccount.setOnClickListener(this);
+
+        SetTextviewDetail();
 
         return view;
     }
@@ -94,7 +90,23 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         btnVisibilyBalance = view.findViewById(R.id.btnVisibilyBalance);
         layoutUserAccount = view.findViewById(R.id.layoutUserAccount);
         layoutSetting = view.findViewById(R.id.layoutSetting);
+        layoutBankAccount = view.findViewById(R.id.layoutBankAccount);
         tvBalance = view.findViewById(R.id.tvBalance);
+        tvFullName = view.findViewById(R.id.tvFullName);
+        tvEmail = view.findViewById(R.id.tvEmail);
+        tvNumCardConnected = view.findViewById(R.id.tvNumCard);
+        tvPhone = view.findViewById(R.id.tvPhone);
+    }
+
+    void SetTextviewDetail(){
+        mainActivity.SetBalanceText(tvBalance);
+        UserModel model = mainActivity.GetUserModel();
+        if(model != null){
+            tvFullName.setText(model.getFullname());
+            tvPhone.setText(model.getPhone());
+            tvNumCardConnected.setText(mainActivity.GetNumCardConnected() + " thẻ liên kết");
+            tvEmail.setText(model.getEmail());
+        }
     }
 
     @Override
@@ -103,8 +115,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             SetVisibilityWalletAmount();
         }else if(v.getId() == layoutUserAccount.getId()){
             mainActivity.SwitchToPersonalDetailActivity();
-        }else{
-            //switch to setting layout
+        }else if(v.getId() == layoutBankAccount.getId()){
+            mainActivity.SwitchToBankConnectedActivity();
         }
     }
 
@@ -119,11 +131,6 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     }
 
     void ShowAccountImage(){
-        if(TextUtils.isEmpty(imgAccountLink)){
-            imgAccount.setImageDrawable(mainActivity.getResources().getDrawable(R.drawable.ic_action_person, null));
-            return;
-        }
-
         mainActivity.SetImageViewByUri(imgAccount);
     }
 }

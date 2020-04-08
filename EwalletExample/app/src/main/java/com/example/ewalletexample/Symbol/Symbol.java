@@ -18,6 +18,7 @@ public enum  Symbol {
     ADDRESS("ADDRESS"),
     CMND("CMND"),
     DOB("DATE_OF_BIRTH"),
+    NUM_CARD_CONNECT_BANK("NUM_CARD"),
 
     AMOUNT("AMOUNT"),
     IMAGE_ACCOUNT_LINK("IMAGE_ACCOUNT"),

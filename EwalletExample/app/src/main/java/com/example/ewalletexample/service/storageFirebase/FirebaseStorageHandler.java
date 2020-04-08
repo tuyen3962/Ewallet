@@ -2,6 +2,7 @@ package com.example.ewalletexample.service.storageFirebase;
 
 import android.content.Context;
 import android.net.Uri;
+import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.example.ewalletexample.R;
@@ -57,6 +58,20 @@ public class FirebaseStorageHandler {
             @Override
             public void onFailure(@NonNull Exception e) {
                 imgView.setImageDrawable(ResourcesCompat.getDrawable(currentContext.getResources(), R.drawable.ic_action_account, null));
+            }
+        });
+    }
+
+    public void LoadAccountImageFromLink(String linkImg, final ImageView imgview){
+        storageReference.child(linkImg).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                Glide.with(currentContext).load(uri).into(imgview);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                imgview.setImageDrawable(ResourcesCompat.getDrawable(currentContext.getResources(), R.drawable.ic_action_account, null));
             }
         });
     }
