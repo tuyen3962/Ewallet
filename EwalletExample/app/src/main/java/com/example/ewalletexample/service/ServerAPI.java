@@ -18,7 +18,7 @@ public enum  ServerAPI {
     GET_BANK_LINKING_API("/bank-mapping/list"),
     GET_LIST_BANK_SUPPORT("/bank-mapping/support-bank");
 
-    private String baseURL = "http://192.168.20.112:8080";
+    private String baseURL = "http://192.168.1.11:8080";
 
 
     private String url;

@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentTransaction;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.Manifest;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -21,6 +22,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -53,8 +55,9 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 
-public class PersonalDetailActivity extends AppCompatActivity implements AlertDialogTakePictureFunction, ResponseMethod, ResponseModelByKey<UserModel> {
+public class PersonalDetailActivity extends AppCompatActivity implements AlertDialogTakePictureFunction, ResponseMethod, ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener {
     private final static String DIALOG_TAG = "DIALOG";
     private final static int TAKE_PHOTO_REQUEST = 100;
     private final static int PICK_IMAGE_REQUEST = 101;
@@ -66,7 +69,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
             btnEditUserDetail, btnFinishEditUserDetail, btnCancelEditUserDetail;
 
     TextView tvDateOfBirth, tvAddress, tvCMND, tvFullname;
-    EditText etDateOfBirth, etAddress, etCMND;
+    EditText etAddress;
     CircleImageView imgAccount;
     ProgressBarManager progressBarManager;
 
@@ -81,8 +84,9 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
     private String currentPhotoPath;
     private File photoFile;
     private Uri photoUri;
-    private boolean canTakePhoto = false;
-    private boolean canPickImage = false;
+    private boolean canTakePhoto = false, canPickImage = false;
+
+    DatePickerDialog datePickerDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +103,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
     }
 
     void Initialize(){
+        datePickerDialog = new DatePickerDialog(this,this,1998,1,1);
         btnCancelEditUserDetail = findViewById(R.id.btnCancelEditUserDetail);
         btnVerifyUploadImage = findViewById(R.id.btnVerifyUploadImage);
         btnCancelUploadImage = findViewById(R.id.btnCancelUploadImage);
@@ -111,13 +116,11 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         tvCMND = findViewById(R.id.tvCMND);
         tvFullname = findViewById(R.id.tvFullName);
 
-        managementTextViewVisibility = new TextVisibilityManagement(true, tvAddress, tvCMND,tvDateOfBirth);
+        managementTextViewVisibility = new TextVisibilityManagement(tvAddress, tvCMND);
 
-        etDateOfBirth = findViewById(R.id.etDateOfBirth);
         etAddress = findViewById(R.id.etAddress);
-        etCMND = findViewById(R.id.etCMND);
 
-        managementEditTextVisibility = new TextVisibilityManagement(false, etAddress, etCMND, etDateOfBirth);
+        managementEditTextVisibility = new TextVisibilityManagement(etAddress);
 
         imgAccount = findViewById(R.id.imgAccount);
 
@@ -243,7 +246,6 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         dialogTakePicture.show(ft, DIALOG_TAG);
     }
 
-    //Finish
     public void EditUserDetailEvent(View view){
         ShowEditTextUserDetail();
         HideTextViewUserDetail();
@@ -252,8 +254,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
 
     //Unfinish
     public void FinishEditUserDetailEvent(View view) {
-        String dob = etDateOfBirth.getText().toString();
-        String cmnd = etCMND.getText().toString();
+        String dob = tvDateOfBirth.getText().toString();
+        String cmnd = tvCMND.getText().toString();
         String address = etAddress.getText().toString();
 
         String[] arrStr = new String[]{"userid:"+ user.getUserId(),"pin:","dob:" + dob,"cmnd:"+ cmnd,"address:"+ address};
@@ -272,6 +274,12 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         ShowTextViewUserDetail();
         ShowButtonCancelEditUserDetail();
         FillUserProfileIntoEditText();
+    }
+
+    public void ShowDatePickerDialog(View view){
+        if(managementEditTextVisibility.IsVisible()){
+            datePickerDialog.show();
+        }
     }
 
     private void ShowEditTextUserDetail(){
@@ -323,8 +331,6 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
 
     private void FillUserProfileIntoEditText(){
         etAddress.setText(user.getAddress());
-        etCMND.setText(user.getCmnd());
-        etDateOfBirth.setText(user.getDateOfbirth());
     }
 
     @Override
@@ -422,6 +428,17 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue(), user.getUserId(), model);
     }
 
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.YEAR, year);
+        c.set(Calendar.MONTH, month);
+        c.set(Calendar.DAY_OF_MONTH,dayOfMonth);
+
+        String currentDateString = dayOfMonth+"/"+(month+1)+"/"+year;
+        tvDateOfBirth.setText(currentDateString);
+    }
+
     class UpdateUserProfileThread extends RequestServerAPI implements RequestServerFunction{
 
         @Override
@@ -435,8 +452,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            user.setDateOfbirth(etDateOfBirth.getText().toString());
-            user.setCmnd(etCMND.getText().toString());
+            user.setDateOfbirth(tvDateOfBirth.getText().toString());
+            user.setCmnd(tvCMND.getText().toString());
             user.setAddress(etAddress.getText().toString());
             ShowUserProfile();
             ShowTextViewUserDetail();

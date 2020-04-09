@@ -8,65 +8,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TextVisibilityManagement {
-    private List<EditText> listEditTexts;
-    private List<TextView> listTextViews;
-    private boolean isTextview;
+    private List<View> listViewItems;
 
-    public TextVisibilityManagement(boolean isTextview, EditText... listItems){
-        listEditTexts = new ArrayList<>();
-        this.isTextview = isTextview;
+    public TextVisibilityManagement(View... listItems){
+        listViewItems = new ArrayList<>();
 
-        for (EditText item : listItems){
-            listEditTexts.add(item);
+        for (View item : listItems){
+            listViewItems.add(item);
         }
     }
 
-    public TextVisibilityManagement(boolean isTextview, TextView... listItems){
-        listTextViews = new ArrayList<>();
-        this.isTextview = isTextview;
-
-        for (TextView item : listItems){
-            listTextViews.add(item);
+    public boolean IsVisible(){
+        if (listViewItems.size() > 0){
+            return listViewItems.get(0).getVisibility() == View.VISIBLE;
         }
+
+        return false;
     }
 
     public void ShowText(){
-        if(isTextview){
-            ShowListTextView();
-        } else{
-            ShowListEditText();
-        }
-    }
-
-    private void ShowListTextView(){
-        for (TextView textView : listTextViews){
-            textView.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void ShowListEditText(){
-        for (EditText editText : listEditTexts){
-            editText.setVisibility(View.VISIBLE);
+        for (View item : listViewItems){
+            item.setVisibility(View.VISIBLE);
         }
     }
 
     public void HideText(){
-        if(isTextview){
-            HideListTextView();
-        } else{
-            HideListEditText();
-        }
-    }
-
-    private void HideListTextView(){
-        for (TextView textView : listTextViews){
-            textView.setVisibility(View.GONE);
-        }
-    }
-
-    private void HideListEditText(){
-        for (EditText editText : listEditTexts){
-            editText.setVisibility(View.GONE);
+        for (View item : listViewItems){
+            item.setVisibility(View.GONE);
         }
     }
 }

@@ -206,18 +206,8 @@
                     android:gravity="center_vertical|right"
                     android:layout_marginStart="10dp"
                     android:text="DATE OF BIRTH"
-                    android:textSize="20sp" />
-
-                <EditText
-                    android:id="@+id/etDateOfBirth"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="4"
-                    android:gravity="center"
-                    android:layout_marginStart="10dp"
-                    android:text="DATE OF BIRTH"
                     android:textSize="20sp"
-                    android:visibility="gone"/>
+                    android:onClick="ShowDatePickerDialog"/>
 
             </LinearLayout>
 
@@ -280,17 +270,6 @@
                     android:gravity="center_vertical|right"
                     android:text="CMND"
                     android:textSize="20sp" />
-
-                <EditText
-                    android:id="@+id/etCMND"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
-                    android:layout_weight="5"
-                    android:gravity="center"
-                    android:text="CMND"
-                    android:textSize="20sp"
-                    android:visibility="gone"/>
 
             </LinearLayout>
 
