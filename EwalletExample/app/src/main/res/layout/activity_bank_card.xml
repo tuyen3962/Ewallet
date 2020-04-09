@@ -12,7 +12,7 @@
         android:layout_weight="3">
 
         <ImageView
-            android:id="@+id/imageView2"
+            android:id="@+id/imgBank"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -27,18 +27,45 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/tvcardName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="TextView"
-                android:gravity="left|center_vertical"/>
+                android:textSize="20dp"
+                android:gravity="center"/>
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="TextView"
-                android:gravity="left|center_vertical"/>
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <TextView
+                    android:id="@+id/tvF6CardNo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="f6 card no"
+                    android:gravity="left|center_vertical"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="******"
+                    android:gravity="center"/>
+
+                <TextView
+                    android:id="@+id/tvL4CardNo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="l4 card no"
+                    android:gravity="right|center_vertical"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 

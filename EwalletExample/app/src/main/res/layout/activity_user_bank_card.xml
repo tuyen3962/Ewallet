@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddNewBankCardFragment">
+    tools:context=".UserBankCardActivity"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <TextView
+    <TextView
             android:id="@+id/textView6"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -19,12 +16,17 @@
             android:textSize="20dp"
             android:text="Thẻ ngân hàng liên kết" />
 
-        <!--    <ListView-->
-        <!--        android:id="@+id/listBankAccountConnect"-->
-        <!--        android:layout_width="match_parent"-->
-        <!--        android:layout_height="wrap_content" />-->
+    <ListView
+        android:id="@+id/listBankAccountConnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
-        <LinearLayout
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        android:background="@color/Grey"/>
+
+    <LinearLayout
             android:id="@+id/layoutAddNewBankAccount"
             android:layout_width="match_parent"
             android:layout_height="80dp"
@@ -49,7 +51,7 @@
 
         </LinearLayout>
 
-        <RelativeLayout
+    <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
@@ -68,6 +70,5 @@
 
         </RelativeLayout>
 
-    </LinearLayout>
 
-</FrameLayout>
+</LinearLayout>

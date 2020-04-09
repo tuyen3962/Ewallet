@@ -139,5 +139,11 @@
         android:textSize="30dp"
         android:visibility="gone"/>
 
+    <include
+        android:id="@+id/progressBar"
+        layout="@layout/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </RelativeLayout>

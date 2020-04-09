@@ -11,7 +11,7 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/layoutAccount"
+            android:id="@+id/layoutUserAccount"
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:orientation="horizontal">
@@ -23,7 +23,6 @@
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_action_person"
                 app:civ_border_width="2dp"
-                app:civ_border_color="#FF000000"
                 android:layout_weight="3"/>
 
             <LinearLayout

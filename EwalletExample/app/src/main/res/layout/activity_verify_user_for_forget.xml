@@ -46,6 +46,7 @@
         android:layout_below="@id/tvChangeTypeVerify"
         android:layout_marginTop="30dp"
         android:layout_marginLeft="20dp"
+        android:text="Số điện thoại"
         android:textSize="20dp"/>
 
     <EditText
@@ -55,7 +56,7 @@
         android:layout_below="@id/tvChangeTypeVerify"
         android:layout_alignParentEnd="true"
         android:layout_marginTop="20dp"
-        android:hint="Nhập mật khẩu"
+        android:hint="Nhập số diện thoại"
         android:gravity="center"
         android:textSize="18dp"
         android:layout_marginRight="20dp"/>

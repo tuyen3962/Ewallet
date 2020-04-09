@@ -39,6 +39,7 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     EditText etDetail;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     boolean verifyAccountByPhone;
+    String userid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,13 +91,12 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
 
     @Override
     public void HandleDataModel(UserModel model){
-        Log.d("TAG", "UnregisterDatabaseCheckValue: " + model.toString());
         if(model != null){
             Intent intent = new Intent(VerifyUserForForget.this, VerifyByPhoneActivity.class);
             intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_FORGET.GetValue());
             intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
             intent.putExtra(Symbol.PHONE.GetValue(), model.getPhone());
-            intent.putExtra(Symbol.USER_ID.GetValue(), model.getUserID());
+            intent.putExtra(Symbol.USER_ID.GetValue(), userid);
             startActivity(intent);
         }
         else{
@@ -104,11 +104,13 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
         }
     }
 
+    //check
     @Override
     public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
         for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).getChildren()){
             UserModel model = data.getValue(UserModel.class);
             if (model.getPhone().equalsIgnoreCase(etDetail.getText().toString())){
+                userid = data.getKey();
                 firebaseDatabaseHandler.UnregisterValueListener(model);
                 return;
             }

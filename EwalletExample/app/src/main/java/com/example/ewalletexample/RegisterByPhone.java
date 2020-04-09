@@ -26,7 +26,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterByPhone extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
 
-    EditText etFullname, etUserPhone, etPassword, etConfirmPass, etEmail;
+    EditText etFullname, etUserPhone, etPassword, etConfirmPass, etEmail, etCMND;
     TextView tvWarning;
 
     DatabaseReference mDatabase;
@@ -77,6 +77,7 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         etUserPhone = findViewById(R.id.etUserPhone);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPass = findViewById(R.id.etConfirmPassword);
+        etCMND = findViewById(R.id.etCMND);
         etEmail = findViewById(R.id.etEmail);
         tvWarning = findViewById(R.id.tvWarning);
     }
@@ -107,6 +108,12 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
 
         if(TextUtils.isEmpty(fullName)){
             return new Response(ErrorCode.VALIDATE_FULL_NAME_INVALID);
+        }
+
+        String cmnd = etCMND.getText().toString();
+
+        if(TextUtils.isEmpty(cmnd) || !CheckInputField.CMNDIsValid(cmnd)){
+            return new Response(ErrorCode.VALIDATE_CMND_INVALID);
         }
 
         String phone = etUserPhone.getText().toString();
@@ -155,6 +162,7 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         intent.putExtra(Symbol.PASSWORD.GetValue(), etPassword.getText().toString());
         intent.putExtra(Symbol.EMAIL.GetValue(), etEmail.getText().toString());
         intent.putExtra(Symbol.PHONE.GetValue(), etUserPhone.getText().toString());
+        intent.putExtra(Symbol.CMND.GetValue(), etCMND.getText().toString());
 
         startActivity(intent);
     }
@@ -189,11 +197,17 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
     @Override
     public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
         String phone = etUserPhone.getText().toString();
-        for(DataSnapshot data : dataSnapshot.child("users").getChildren()){
-            UserModel model = data.getValue(UserModel.class);
-            if(model.getPhone().equalsIgnoreCase(phone)){
-                firebaseDatabaseHandler.UnregisterValueListener(model);
-                return;
+        if(dataSnapshot.child("users").getChildrenCount() > 0){
+            firebaseDatabaseHandler.UnregisterValueListener(null);
+            return;
+        }
+        else  {
+            for(DataSnapshot data : dataSnapshot.child("users").getChildren()){
+                UserModel model = data.getValue(UserModel.class);
+                if(model.getPhone().equalsIgnoreCase(phone)){
+                    firebaseDatabaseHandler.UnregisterValueListener(model);
+                    return;
+                }
             }
         }
 

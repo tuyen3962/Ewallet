@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import com.example.ewalletexample.Server.RequestServerAPI;
 import com.example.ewalletexample.Server.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
@@ -25,6 +27,7 @@ import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.code.EditTextCodeChangeListener;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -60,7 +63,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     CodeEditText codeEditText;
     Button btnVerifyPhone, btnResendVerifyCode;
     TextView tvError;
-    ProgressDialog progressDialog;
+    ProgressBarManager progressBarManager;
 
     CountDownTimer countDown;
     boolean canResendCode;
@@ -73,8 +76,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         setContentView(R.layout.activity_verify_by_phone);
 
         auth = FirebaseAuth.getInstance();
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-
         GetValueFromIntent();
 
         SendVerifyCodeToPhoneNumber();
@@ -86,7 +87,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     }
 
     void Initalize(){
-        progressDialog = new ProgressDialog(this);
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone);
 
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
@@ -119,7 +121,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             String password = intent.getStringExtra(Symbol.PASSWORD.GetValue());
             String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
             String email = intent.getStringExtra(Symbol.EMAIL.GetValue());
-            user = new User(fullName,phone,password,email);
+            String cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
+            user = new User(fullName,phone,password,email, cmnd);
         }
     }
 
@@ -221,7 +224,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
     public void VerifyVerificationCode(View view){
         String code = GetCode();
-        ShowLoading();
+        if(TextUtils.isEmpty(code) || code.length() < 6){
+            ShowErrorText("Xin nhap code");
+            return;
+        }
+        progressBarManager.ShowProgressBar("Verifying");
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId,code);
         //signing the user
@@ -235,6 +242,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
+                                progressBarManager.SetMessage("Saving");
                                 SendRequestRegisterToServer();
                             }
                             else{
@@ -244,7 +252,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
                             //verification unsuccessful.. display an error message
                             String message = "Somthing is wrong, we will fix it soon...";
-                            HideLoading();
+                            progressBarManager.HideProgressBar();
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 message = "Invalid code entered...";
                             }
@@ -259,21 +267,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         if(firebaseUser != null){
             auth.signOut();
         }
+        progressBarManager.HideProgressBar();
 
         Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
         intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         startActivity(intent);
-    }
-
-    private void ShowLoading(){
-        progressDialog.setTitle("Verifying...");
-        progressDialog.show();
-    }
-
-    private void HideLoading(){
-        progressDialog.hide();
     }
 
     private void ShowErrorText(String message){
@@ -304,8 +304,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         if(firebaseUser != null){
             firebaseUser.updateProfile(profileUpdates);
-            UserModel model = new UserModel(user.getFullName(), userID, user.getPhoneNumber(), firebaseUser.getUid(), user.getEmail());
-            firebaseDatabaseHandler.PushDataIntoDatabase("users", model);
+            UserModel model = new UserModel(user.getFullName(), user.getPhoneNumber(), firebaseUser.getUid(), user.getEmail());
+            firebaseDatabaseHandler.PushDataIntoDatabase("users",userID, model);
             auth.signOut();
         }
     }
@@ -317,7 +317,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         @Override
         public boolean CheckReturnCode(int code) {
-            Log.d("TAG", "CheckReturnCode: " + code);
             if (code == ErrorCode.SUCCESS.GetValue()){
                 return  true;
             }
@@ -329,13 +328,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             userid = jsonData.getString("userid");
-            Log.d("TAG", "DataHandle: " + verifyForget + " " + reason);
             //verification successful we will start the profile activity
             SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
-            JSONObject postData = new JSONObject();
-            postData.put("userid",userid);
-
-            new GetBalance().execute(ServerAPI.GET_BALANCE_API.GetUrl(), postData.toString());
+            String[] arrStr = new String[]{"userid:"+ user.getUserId(),"pin:","dob:","cmnd:"+ user.getCmnd(),"address:"};
+            String json = HandlerJsonData.ExchangeToJsonString(arrStr);
+            new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
         }
 
         @Override
@@ -344,8 +341,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         }
     }
 
-    private class GetBalance extends RequestServerAPI implements RequestServerFunction{
-        public GetBalance(){
+    private class UpdateUserProfile extends RequestServerAPI implements RequestServerFunction{
+        public UpdateUserProfile(){
             SetRequestServerFunction(this);
         }
 
@@ -354,19 +351,19 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             if (code == ErrorCode.SUCCESS.GetValue()){
                 return  true;
             }
-            else{
-                ShowError(code, "");
-                return false;
-            }
+
+            ShowError(code, "");
+            return false;
         }
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            long amount = jsonData.getLong("amount");
+            progressBarManager.HideProgressBar();
+
+            //verification successful we will start the profile activity
             Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
             intent.putExtra(Symbol.USER_ID.GetValue(),userid);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), 0);
             startActivity(intent);
         }
 

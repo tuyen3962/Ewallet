@@ -1,5 +1,7 @@
 package com.example.ewalletexample.service.realtimeDatabase;
 
+import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.model.UserModel;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -14,6 +16,23 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
     HandleDataFromFirebaseDatabase<T> dataHandler;
 
     ValueEventListener databaseValueEvent;
+
+    private String keyModel;
+    private Class<T> tClass;
+    private ResponseModelByKey response;
+    ValueEventListener findDataEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+            T model = dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).child(keyModel).getValue(tClass);
+            UnregisterFindValue(model);
+        }
+
+        @Override
+        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+        }
+    };
+
 
     public FirebaseDatabaseHandler(DatabaseReference mDatabase, HandleDataFromFirebaseDatabase<T> handleDataFromDatabase){
         this.mDatabase = mDatabase;
@@ -51,11 +70,36 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
         dataHandler.HandleDataModel(model);
     }
 
-    public void PushDataIntoDatabase(String childName, T data){
-        mDatabase.child(childName).push().setValue(data);
+    public T GetUserModelByKey(DataSnapshot dataSnapshot, String key, Class<T> tClass){
+        if(ContainsKey(dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()), key)){
+            return dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).child(key).getValue(tClass);
+        }
+
+        return null;
     }
 
-    public void UpdateData(String childName){
+    private boolean ContainsKey(DataSnapshot dataSnapshot, String key){
+        return dataSnapshot.hasChild(key);
+    }
 
+    public void PushDataIntoDatabase(String childName, String id,T data){
+        mDatabase.child(childName).setValue(id);
+        mDatabase.child(childName).child(id).setValue(data);
+    }
+
+    public void UpdateData(String childName, String id, T data){
+        mDatabase.child(childName).child(id).setValue(data);
+    }
+
+    public void GetUserModelByKey(String key, Class<T> tClass, ResponseModelByKey response){
+        keyModel = key;
+        this.tClass = tClass;
+        mDatabase.addValueEventListener(findDataEventListener);
+        this.response = response;
+    }
+
+    private void UnregisterFindValue(T model){
+        mDatabase.removeEventListener(findDataEventListener);
+        response.GetModel(model);
     }
 }

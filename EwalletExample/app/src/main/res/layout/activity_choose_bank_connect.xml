@@ -1,76 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical">
-
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/SoftBlue"/>
-
-    <com.miguelcatalan.materialsearchview.MaterialSearchView
-        android:id="@+id/search_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:searchBackground="@color/SoftBlue"
-        app:searchSuggestionBackground="@color/SoftBlue"
-        app:searchCloseIcon="@drawable/ic_action_navigation_close_inverted"
-        app:searchBackIcon="@drawable/ic_action_navigation_arrow_back_inverted"
-        app:searchSuggestionIcon="@drawable/ic_suggestion"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#FFFFFF"/>
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <LinearLayout
+        android:id="@+id/listBankLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp">
+        android:background="#CCFFFFFF">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="Danh sách các ngân hàng"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp">
 
-        <GridLayout
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:padding="5dp"
+                android:text="Danh sách các ngân hàng"/>
+
+            <GridView
+                android:id="@+id/listBankSupport"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:minHeight="35dp"
+                android:numColumns="3"/>
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardBankDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone">
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="1">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="3dp"
+                    android:layout_alignParentEnd="true"
+                    android:drawableRight="@drawable/ic_action_cancel"
+                    android:textSize="20dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="3dp"
+                    android:layout_centerHorizontal="true"
+                    android:text="Tên ngân hàng"
+                    android:textSize="25dp" />
+
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:weightSum="4">
+                android:orientation="horizontal"
+                android:layout_margin="5dp"
+                android:weightSum="3">
 
-                <include layout="@layout/fragment_bank_item"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"/>
+                    android:gravity="center"
+                    android:textSize="20dp"
+                    android:text="Tên chủ thẻ" />
 
-                <include layout="@layout/fragment_bank_item"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"/>
+                <EditText
+                    android:id="@+id/etFullNameBank"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:ems="10"
+                    android:hint="Nhập tên chủ thẻ"
+                    android:gravity="center"
+                    android:inputType="textPersonName" />
+            </LinearLayout>
 
-                <include layout="@layout/fragment_bank_item"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="5dp"
+                android:weightSum="3">
 
-                <include layout="@layout/fragment_bank_item"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
+                    android:gravity="center|top"
+                    android:textSize="20dp"
+                    android:text="Chứng minh\n nhân dân" />
+
+                <EditText
+                    android:id="@+id/etCMNDCard"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:ems="10"
+                    android:hint="Nhập số CMND"
+                    android:gravity="center"
+                    android:inputType="textPersonName" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_margin="5dp"
+                android:weightSum="3">
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_width="match_parent"/>
+                    android:layout_weight="1"
+                    android:textSize="20dp"
+                    android:gravity="center"
+                    android:text="Mã thẻ" />
+
+                <EditText
+                    android:id="@+id/etCardNo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:gravity="center"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:hint="Nhập mã thẻ" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:layout_margin="5dp"
+                android:weightSum="3">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="4dp"
+                    android:text="Liên kết"
+                    android:onClick="CreateLinkAccountWithBank"/>
 
             </LinearLayout>
 
+        </LinearLayout>
 
-        </GridLayout>
+    </androidx.cardview.widget.CardView>
 
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

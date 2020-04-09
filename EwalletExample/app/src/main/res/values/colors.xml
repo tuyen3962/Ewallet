@@ -12,4 +12,5 @@
     <color name="Red">#FD0707</color>
     <color name="SoftRed">#FF8F8F</color>
     <color name="bgBottomNavigation">#fe485a</color>
+    <color name="SoftWhite">#CCFFFFFF</color>
 </resources>
