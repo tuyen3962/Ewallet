@@ -1,4 +1,4 @@
-package com.example.ewalletexample.Server;
+package com.example.ewalletexample.Server.request;
 
 import org.json.JSONException;
 import org.json.JSONObject;

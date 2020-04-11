@@ -1,14 +1,9 @@
-package com.example.ewalletexample.Server;
+package com.example.ewalletexample.Server.request;
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.ewalletexample.MainActivity;
 import com.example.ewalletexample.Symbol.ErrorCode;
-import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.VerifyByPhoneActivity;
-import com.example.ewalletexample.service.ServerAPI;
 
 import org.json.JSONException;
 import org.json.JSONObject;

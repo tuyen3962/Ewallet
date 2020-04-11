@@ -1,6 +1,7 @@
 package com.example.ewalletexample;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -33,6 +34,7 @@ public class HomeFragment extends Fragment {
 
     private String userid;
 
+    View topupLayout;
     CircleImageView imgAccount;
     TextView tvBalance;
     MainActivity mainActivity;
@@ -72,6 +74,13 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         Initialize(view);
         mainActivity.SetBalanceText(tvBalance);
+
+        topupLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TopupEvent();
+            }
+        });
         ShowAccountImage();
         return view;
     }
@@ -79,10 +88,18 @@ public class HomeFragment extends Fragment {
     void Initialize(View view){
         imgAccount = view.findViewById(R.id.imgAccount);
         tvBalance = view.findViewById(R.id.tvBalance);
+        topupLayout = view.findViewById(R.id.topupLayout);
     }
 
     void ShowAccountImage(){
         mainActivity.SetImageViewByUri(imgAccount);
+    }
+
+    public void TopupEvent(){
+        Intent intent = new Intent(mainActivity, TopupWalletActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        startActivity(intent);
     }
 
 }
