@@ -7,4 +7,16 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="city_arrays">
+        <item>Hà Nội</item>
+        <item>TP Hồ Chí Minh</item>
+        <item>An Giang</item>
+        <item>Bà Rịa - Vũng Tàu</item>
+        <item>Bình Dương</item>
+        <item>Bình Phước</item>
+        <item>Bình Thuận</item>
+        <item>Bình Định</item>
+        <item>Bạc Liêu</item>
+    </string-array>
 </resources>

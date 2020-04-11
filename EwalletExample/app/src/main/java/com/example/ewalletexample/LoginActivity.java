@@ -2,7 +2,6 @@ package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,23 +12,14 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.RequestServerAPI;
-import com.example.ewalletexample.Server.RequestServerFunction;
+import com.example.ewalletexample.Server.request.RequestServerAPI;
+import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
-import com.example.ewalletexample.dialogs.ProgressDialogHandler;
 import com.example.ewalletexample.model.Response;
-import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ServerAPI;
-import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
-import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
-import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;

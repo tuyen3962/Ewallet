@@ -1,14 +1,210 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     tools:context=".UserBankCardActivity"
-    android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <TextView
-            android:id="@+id/textView6"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/SoftBlue">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:drawableLeft="@drawable/ic_action_navigation_arrow_back_inverted"
+                    android:onClick="BackToMain"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:textStyle="bold"
+                    android:textSize="30dp"
+                    android:text="Ví của tôi"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"/>
+
+                <TextView
+                    android:id="@+id/tvConnectBankAccount"
+                    android:layout_width="30sp"
+                    android:layout_height="30sp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="10dp"
+                    android:drawableRight="@drawable/ic_action_add"
+                    android:onClick="AddNewBankCard"/>
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/tvBalance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="20dp"
+                android:text="Số dư hiện tại"
+                android:gravity="center"
+                android:layout_marginVertical="5dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:textStyle="bold"
+                android:textSize="50dp"
+                android:text="0"
+                android:layout_marginVertical="5dp"
+                android:gravity="center"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/Grey"
+                android:layout_margin="10dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="75dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:src="@drawable/history"
+                        android:padding="6dp"
+                        android:layout_weight="2"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:text="Nạp tiền"
+                        android:textSize="12dp"
+                        android:textColor="@color/White"
+                        android:layout_weight="1"
+                        android:gravity="center"/>
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/Grey"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/withdraw_white"
+                        android:layout_gravity="center"
+                        android:padding="8dp"
+                        android:layout_weight="1"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:text="Rút tiền"
+                        android:textSize="12dp"
+                        android:textColor="@color/White"
+                        android:gravity="center"
+                        android:layout_weight="1"/>
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/Grey"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/history"
+                        android:layout_gravity="center"
+                        android:padding="6dp"
+                        android:layout_weight="2"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Chuyển tiền"
+                        android:textSize="12dp"
+                        android:textColor="@color/White"
+                        android:layout_weight="1"
+                        android:gravity="center"/>
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/Grey"/>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_weight="1"
+                    android:weightSum="3">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/history_white"
+                        android:layout_gravity="center"
+                        android:padding="8dp"
+                        android:layout_weight="2"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="Lịch sử"
+                        android:textColor="@color/White"
+                        android:textSize="12dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
@@ -16,59 +212,63 @@
             android:textSize="20dp"
             android:text="Thẻ ngân hàng liên kết" />
 
-    <ListView
-        android:id="@+id/listBankAccountConnect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="10dp"
-        android:background="@color/Grey"/>
-
-    <LinearLayout
-            android:id="@+id/layoutAddNewBankAccount"
+        <ImageView
             android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:layout_marginBottom="5dp"
-            android:layout_marginTop="5dp"
-            android:weightSum="3">
+            android:layout_height="1dp"
+            android:background="@color/Grey"/>
+
+        <ListView
+            android:id="@+id/listBankAccountConnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:id="@+id/layoutConnectBank"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:src="@drawable/frame"
-                android:layout_marginHorizontal="5dp"/>
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:padding="5dp"
+                android:src="@drawable/card"/>
 
             <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="2"
-                android:text="Thêm thẻ ngân hàng liên kết mới"
-                android:textSize="20dp"
-                android:gravity="left|center_vertical"/>
+                android:layout_height="wrap_content"
+                android:text="Chưa có thông tin ngân hàng"
+                android:textSize="25dp"
+                android:textColor="@color/Grey"
+                android:layout_marginVertical="5dp"/>
 
-        </LinearLayout>
-
-    <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:layout_marginTop="5dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18dp"
+                android:textColor="@color/Grey"
+                android:gravity="center"
+                android:layout_marginVertical="5dp"
+                android:text="Kết nối ví điện tử với ngân hàng\n để sử dụng các dịch vụ"/>
 
             <Button
-                android:id="@+id/btnBackMain"
-                android:layout_width="100dp"
-                android:layout_height="40dp"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="20dp"
-                android:background="@drawable/edit_round_button"
-                android:text="Trở về"
-                android:textSize="18dp"/>
+                android:id="@+id/btnConnectBankAccount"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:background="@color/SoftBlue"
+                android:onClick="AddNewBankCard"
+                android:text="Liên kết"
+                android:textColor="@color/White"
+                android:textSize="18sp" />
+        </LinearLayout>
 
+    </LinearLayout>
 
-        </RelativeLayout>
+    <include layout="@layout/progress_bar"
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
 
-
-</LinearLayout>
+</RelativeLayout>

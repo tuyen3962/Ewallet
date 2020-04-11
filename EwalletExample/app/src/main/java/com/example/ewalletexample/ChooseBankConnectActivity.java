@@ -1,47 +1,37 @@
 package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.fragment.app.FragmentActivity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.RequestServerAPI;
-import com.example.ewalletexample.Server.RequestServerFunction;
+import com.example.ewalletexample.Server.request.RequestServerAPI;
+import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankSupport;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
-import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,9 +45,10 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     FirebaseDatabaseHandler firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
     GridView listBankSupportLayout;
-    LinearLayout listBankLayout;
-    CardView cardView;
-    EditText etFullNameCard, etCardNo, etCMNDCard;
+    LinearLayout listBankLayout, layoutBankAccountDetail;
+    EditText etFullNameCard, etCMNDCard, etCardNo0, etCardNo1, etCardNo2, etCardNo3;
+    TextView tvBack;
+    private CodeEditText codeEditText;
     private List<BankSupport> bankSupportList;
     String bankCode, userid;
     private UserModel model;
@@ -80,10 +71,17 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if(!isShowing){
                     isShowing = true;
-                    ShowView(cardView);
+                    ShowView(layoutBankAccountDetail);
                     HideGridView();
                     bankCode = bankSupportList.get(position).getBankCode();
                 }
+            }
+        });
+
+        tvBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ReturnToUserBankActivity();
             }
         });
     }
@@ -91,12 +89,19 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     void Initialize(){
         firebaseDatabaseHandler = new FirebaseDatabaseHandler(FirebaseDatabase.getInstance().getReference());
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
-        cardView = findViewById(R.id.cardBankDetail);
+        layoutBankAccountDetail = findViewById(R.id.layoutBankAccountDetail);
         listBankSupportLayout = findViewById(R.id.listBankSupport);
         listBankLayout = findViewById(R.id.listBankLayout);
-        etCardNo = findViewById(R.id.etCardNo);
         etCMNDCard = findViewById(R.id.etCMNDCard);
         etFullNameCard = findViewById(R.id.etFullNameBank);
+        tvBack = findViewById(R.id.tvBack);
+
+        etCardNo0 = findViewById(R.id.etCardNo0);
+        etCardNo1 = findViewById(R.id.etCardNo1);
+        etCardNo2 = findViewById(R.id.etCardNo2);
+        etCardNo3 = findViewById(R.id.etCardNo3);
+
+        codeEditText = new CodeEditText(4, etCardNo0, etCardNo1, etCardNo2, etCardNo3);
         isShowing = false;
     }
 
@@ -109,14 +114,13 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     }
 
     private void HideGridView(){
-        listBankLayout.setBackground(ResourcesCompat.getDrawable(getResources(), R.color.SoftWhite, null));
         listBankSupportLayout.setEnabled(false);
     }
 
-    private void ShowGridView(){
+    public void ShowGridView(View view){
         listBankSupportLayout.setEnabled(true);
         listBankLayout.setBackground(null);
-        HideView(cardView);
+        HideView(layoutBankAccountDetail);
         isShowing = false;
         bankCode = "";
     }
@@ -124,6 +128,37 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     private void AddIntoBankSupportGridView(){
         ListBankAdaper bankAdaper = new ListBankAdaper(this, bankSupportList);
         listBankSupportLayout.setAdapter(bankAdaper);
+    }
+
+    public void CreateLinkAccountWithBank(View view){
+        String cardNo = codeEditText.GetCombineText();
+        String fullname = etFullNameCard.getText().toString();
+        String cmnd = etCMNDCard.getText().toString();
+
+        if(cardNo.isEmpty() || fullname.isEmpty() || cmnd.isEmpty()){
+            return;
+        }
+
+        SendRequestForLinkingBank(cardNo, fullname, cmnd);
+    }
+
+    private void SendRequestForLinkingBank(String cardID, String fullNameCard, String cmndCard){
+        String[] arr = new String[]{"userid:"+userid,"bankcode:"+bankCode,"cardno:"+cardID,
+                "fullname:"+fullNameCard,"cmnd:"+cmndCard, "phone:"+model.getPhone()};
+
+        try {
+            String jsonData = HandlerJsonData.ExchangeToJsonString(arr);
+            new LinkAccountWithBank().execute(ServerAPI.LINK_BANK_CARD_API.GetUrl(), jsonData);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void ReturnToUserBankActivity(){
+        Intent intent = getIntent();
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+        startActivity(intent);
     }
 
     private void ShowView(final View view){
@@ -165,30 +200,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         view.startAnimation(animation);
     }
 
-    public void CreateLinkAccountWithBank(View view){
-        String cardNo = etCardNo.getText().toString();
-        String fullname = etFullNameCard.getText().toString();
-        String cmnd = etCMNDCard.getText().toString();
-
-        if(cardNo.isEmpty() || fullname.isEmpty() || cmnd.isEmpty()){
-            return;
-        }
-
-        SendRequestForLinkingBank(cardNo, fullname, cmnd);
-    }
-
-    private void SendRequestForLinkingBank(String cardID, String fullNameCard, String cmndCard){
-        String[] arr = new String[]{"userid:"+userid,"bankcode:"+bankCode,"cardno:"+cardID,
-                "fullname:"+fullNameCard,"cmnd:"+cmndCard, "phone:"+model.getPhone()};
-
-        try {
-            String jsonData = HandlerJsonData.ExchangeToJsonString(arr);
-            new LinkAccountWithBank().execute(ServerAPI.LINK_BANK_CARD_API.GetUrl(), jsonData);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void GetModel(UserModel data) {
         this.model = data;
@@ -227,6 +238,8 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
                 final LayoutInflater inflater = LayoutInflater.from(mContext);
                 convertView = inflater.inflate(R.layout.bank_support_item, null);
             }
+
+            convertView.getLayoutParams().height = 100;
 
             ImageView bankImg = convertView.findViewById(R.id.imgBank);
             firebaseStorageHandler.LoadAccountImageFromLink(bankSupport.getBankImage(), bankImg);
@@ -289,7 +302,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         }
 
         @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
+        public void DataHandle(JSONObject jsonData)  {
             Intent intent = getIntent();
             intent.putExtra(Symbol.USER_ID.GetValue(), userid);
             intent.putExtra(Symbol.AMOUNT.GetValue(), amount);

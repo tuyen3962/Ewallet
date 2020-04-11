@@ -3,6 +3,8 @@ package com.example.ewalletexample.service.code;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
 import android.widget.EditText;
 
 public class EditTextCodeChangeListener {
@@ -17,6 +19,19 @@ public class EditTextCodeChangeListener {
         limitLength = length;
 
         eText1.addTextChangedListener(textWatcher);
+
+        eText2.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if(keyCode == KeyEvent.KEYCODE_DEL){
+                    if(eText2.getText().length() == 0){
+                        eText1.requestFocus();
+                    }
+                }
+
+                return false;
+            }
+        });
     }
 
     public EditTextCodeChangeListener(EditText _eText1, int length){

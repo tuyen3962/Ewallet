@@ -10,16 +10,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.RequestServerAPI;
-import com.example.ewalletexample.Server.RequestServerFunction;
+import com.example.ewalletexample.Server.request.RequestServerAPI;
+import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 
@@ -32,10 +32,12 @@ import java.util.List;
 
 public class UserBankCardActivity extends AppCompatActivity {
 
+    ProgressBarManager progressBarManager;
     ListBankConnected banksConnected;
     ListView listBankConnected;
-    Button btnBack;
-    LinearLayout layoutAddNewBankAccount;
+    TextView tvBalance, tvConnectBankAccount;
+    Button btnConnectBankAccount;
+    LinearLayout layoutConnectBank;
     List<BankInfo> bankInfoList;
     String userid;
     long amount;
@@ -51,29 +53,41 @@ public class UserBankCardActivity extends AppCompatActivity {
     }
 
     void Initialize(){
-        btnBack = findViewById(R.id.btnBackMain);
-        layoutAddNewBankAccount = findViewById(R.id.layoutAddNewBankAccount);
+        tvBalance = findViewById(R.id.tvBalance);
+        layoutConnectBank = findViewById(R.id.layoutConnectBank);
+        tvConnectBankAccount = findViewById(R.id.tvConnectBankAccount);
+        btnConnectBankAccount = findViewById(R.id.btnConnectBankAccount);
         listBankConnected = findViewById(R.id.listBankAccountConnect);
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), tvConnectBankAccount, btnConnectBankAccount);
     }
 
     void LoadValueFromIntent(){
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         amount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+
+        SetBalance(amount);
     }
 
     private void LoadBankConnected(){
         try {
+            progressBarManager.ShowProgressBar("Loading");
             String json = HandlerJsonData.ExchangeToJsonString(new String[]{"userid:"+ userid});
             new GetListBankConnected().execute(ServerAPI.GET_BANK_LINKING_API.GetUrl(), json);
         } catch (JSONException e) {
             e.printStackTrace();
+            progressBarManager.HideProgressBar();
         }
+    }
+
+    void SetBalance(long amount){
+        tvBalance.setText(amount+"");
     }
 
     public void AddNewBankCard(View view){
         Intent intent = new Intent(UserBankCardActivity.this, ChooseBankConnectActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
         startActivity(intent);
     }
 
@@ -100,6 +114,14 @@ public class UserBankCardActivity extends AppCompatActivity {
         public void DataHandle(JSONObject jsonData) throws JSONException {
             bankInfoList = new ArrayList<>();
             JSONArray cardArray = jsonData.getJSONArray("cards");
+            if(cardArray.length() == 0){
+                layoutConnectBank.setVisibility(View.VISIBLE);
+                progressBarManager.HideProgressBar();
+                return;
+            }
+
+            layoutConnectBank.setVisibility(View.GONE);
+
             for(int i = 0; i < cardArray.length(); i++){
                 JSONObject card = cardArray.getJSONObject(i);
                 String cardName = card.getString("cardname");
@@ -112,6 +134,8 @@ public class UserBankCardActivity extends AppCompatActivity {
 
             banksConnected = new ListBankConnected(UserBankCardActivity.this, bankInfoList);
             listBankConnected.setAdapter(banksConnected);
+
+            progressBarManager.HideProgressBar();
         }
 
         @Override
@@ -154,7 +178,6 @@ public class UserBankCardActivity extends AppCompatActivity {
             TextView tvCardName = convertView.findViewById(R.id.tvcardName);
             TextView tvF6Card = convertView.findViewById(R.id.tvF6CardNo);
             TextView tvL4Card = convertView.findViewById(R.id.tvL4CardNo);
-            ImageView imgBank = convertView.findViewById(R.id.imgBank);
 
             BankInfo bankInfo = bankInfoList.get(position);
             tvCardName.setText(bankInfo.getCardName());
