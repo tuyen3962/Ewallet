@@ -19,12 +19,27 @@
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp">
 
-            <TextView
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:padding="5dp"
-                android:text="Danh sách các ngân hàng"/>
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tvBack"
+                    android:layout_width="30sp"
+                    android:layout_height="30sp"
+                    android:layout_centerVertical="true"
+                    android:layout_margin="5dp"
+                    android:drawableLeft="@drawable/ic_action_navigation_arrow_back" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:padding="5dp"
+                    android:layout_centerInParent="true"
+                    android:text="Danh sách các ngân hàng"/>
+            </RelativeLayout>
+
 
             <GridView
                 android:id="@+id/listBankSupport"
@@ -33,144 +48,190 @@
                 android:minHeight="35dp"
                 android:numColumns="3"/>
 
-
         </LinearLayout>
 
     </LinearLayout>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardBankDetail"
+    <LinearLayout
+        android:id="@+id/layoutBankAccountDetail"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:layout_alignParentBottom="true"
-        android:visibility="gone">
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:background="#CCFFFFFF"
+        android:visibility="visible">
 
-        <LinearLayout
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:visibility="visible">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <RelativeLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="3dp"
-                    android:layout_alignParentEnd="true"
-                    android:drawableRight="@drawable/ic_action_cancel"
-                    android:textSize="20dp" />
+                    android:layout_margin="5dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="3dp"
-                    android:layout_centerHorizontal="true"
-                    android:text="Tên ngân hàng"
-                    android:textSize="25dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="3dp"
+                        android:layout_alignParentEnd="true"
+                        android:drawableRight="@drawable/ic_action_cancel"
+                        android:textSize="20dp"
+                        android:onClick="ShowGridView"/>
 
-            </RelativeLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="3dp"
+                        android:layout_centerHorizontal="true"
+                        android:text="Tên ngân hàng"
+                        android:textSize="25dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:weightSum="3">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:textSize="20dp"
-                    android:text="Tên chủ thẻ" />
-
-                <EditText
-                    android:id="@+id/etFullNameBank"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:ems="10"
-                    android:hint="Nhập tên chủ thẻ"
-                    android:gravity="center"
-                    android:inputType="textPersonName" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:weightSum="3">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center|top"
-                    android:textSize="20dp"
-                    android:text="Chứng minh\n nhân dân" />
-
-                <EditText
-                    android:id="@+id/etCMNDCard"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:ems="10"
-                    android:hint="Nhập số CMND"
-                    android:gravity="center"
-                    android:inputType="textPersonName" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:weightSum="3">
+                </RelativeLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="20dp"
+                    android:textSize="25dp"
                     android:gravity="center"
+                    android:layout_margin="5dp"
+                    android:layout_marginLeft="15dp"
                     android:text="Mã thẻ" />
 
-                <EditText
-                    android:id="@+id/etCardNo"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:gravity="center"
-                    android:ems="10"
-                    android:inputType="textPersonName"
-                    android:hint="Nhập mã thẻ" />
+                    android:orientation="horizontal"
+                    android:layout_margin="5dp">
+
+                        <EditText
+                            android:id="@+id/etCardNo0"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:ems="10"
+                            android:layout_marginHorizontal="5dp"
+                            android:inputType="textPersonName"
+                            android:hint="XXXX" />
+
+                        <EditText
+                            android:id="@+id/etCardNo1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:layout_marginHorizontal="5dp"
+                            android:ems="10"
+                            android:inputType="textPersonName"
+                            android:hint="XXXX" />
+
+
+                        <EditText
+                            android:id="@+id/etCardNo2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:layout_marginHorizontal="5dp"
+                            android:ems="10"
+                            android:inputType="textPersonName"
+                            android:hint="XXXX" />
+
+
+                        <EditText
+                            android:id="@+id/etCardNo3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:layout_marginHorizontal="5dp"
+                            android:ems="10"
+                            android:inputType="textPersonName"
+                            android:hint="XXXX" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_margin="5dp"
+                    android:weightSum="3">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textSize="20dp"
+                        android:text="Tên chủ thẻ" />
+
+                    <EditText
+                        android:id="@+id/etFullNameBank"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2"
+                        android:ems="10"
+                        android:hint="Nhập tên chủ thẻ"
+                        android:gravity="center"
+                        android:inputType="textPersonName" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_margin="5dp"
+                    android:weightSum="3">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center|top"
+                        android:textSize="20dp"
+                        android:text="Chứng minh\n nhân dân" />
+
+                    <EditText
+                        android:id="@+id/etCMNDCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2"
+                        android:ems="10"
+                        android:hint="Nhập số CMND"
+                        android:gravity="center"
+                        android:inputType="textPersonName" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="end"
+                    android:layout_margin="5dp"
+                    android:weightSum="3">
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="4dp"
+                        android:text="Liên kết"
+                        android:onClick="CreateLinkAccountWithBank"/>
+
+                </LinearLayout>
+
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="end"
-                android:layout_margin="5dp"
-                android:weightSum="3">
+        </androidx.cardview.widget.CardView>
 
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="4dp"
-                    android:text="Liên kết"
-                    android:onClick="CreateLinkAccountWithBank"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
+    </LinearLayout>
 
 </RelativeLayout>

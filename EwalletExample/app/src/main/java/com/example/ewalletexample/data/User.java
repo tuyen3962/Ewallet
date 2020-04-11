@@ -21,6 +21,16 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
+    public User(String fullName, String phoneNumber, String pin){
+        this.phoneNumber = phoneNumber;
+        this.password = pin;
+        email = "";
+        imgAccountLink = "";
+        dateOfbirth = "";
+        address = "";
+        this.fullName = fullName;
+    }
+
     public User(UserModel model){
         setImgAccountLink(model.getImgLink());
         setFullName(model.getFullname());

@@ -57,7 +57,6 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
 
     void init(){
         etDetail = findViewById(R.id.etDetail);
-        tvDetail = findViewById(R.id.tvDetail);
         tvChangeTypeVerify = findViewById(R.id.tvChangeTypeVerify);
         tvError = findViewById(R.id.tvError);
     }

@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SubmitOrderActivity">
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/Grey">
+
+        <LinearLayout
+            android:id="@+id/sourceFundLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:padding="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textSize="30dp"
+                    android:text="Nguồn tiền"/>
+
+                <TextView
+                    android:id="@+id/tvBackInSourceFund"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:text="Trở về"
+                    android:textSize="20dp"
+                    android:gravity="center"
+                    android:drawableRight="@drawable/ic_action_home"/>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:orientation="horizontal"
+                android:background="@color/White"
+                android:padding="5dp">
+
+                <ImageView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="10dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Thông tin thẻ"
+                    android:textSize="16dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Chi tiết giao dịch"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:layout_marginVertical="5dp"
+                android:padding="5dp"/>
+
+            <TextView
+                android:id="@+id/tvBackInDetailTransaction"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_marginHorizontal="5dp"
+                android:text="Trở về"
+                android:textSize="20dp"
+                android:gravity="center"
+                android:drawableRight="@drawable/ic_action_home"/>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/White">
+
+            <LinearLayout
+                android:id="@+id/exchangeMoneyLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Chuyển đến"
+                    android:textSize="18sp"
+                    android:padding="5dp"/>
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:src="@color/Grey"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="Tên ví"
+                        android:textSize="18sp"
+                        android:layout_marginRight="5dp"
+                        android:padding="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="right"
+                        android:text="Tên ví"
+                        android:textSize="18sp"
+                        android:padding="10dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="Số điện thoại"
+                        android:textSize="18sp"
+                        android:layout_marginRight="5dp"
+                        android:padding="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="right"
+                        android:text="Số điện thoại"
+                        android:textSize="18sp"
+                        android:padding="10dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/withdrawLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Rút về NH liên kết"
+                    android:textSize="18sp"
+                    android:layout_marginRight="5dp"
+                    android:padding="10dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:text="Tên NH liên kết"
+                    android:textSize="18sp"
+                    android:padding="10dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/topupLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Nạp tiền từ"
+                    android:textSize="18sp"
+                    android:layout_marginRight="5dp"
+                    android:padding="10dp"/>
+
+                <TextView
+                    android:id="@+id/tvTopupBankFrom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:text="Tên NH"
+                    android:textSize="18sp"
+                    android:padding="10dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Số tiền"
+                    android:textSize="18sp"
+                    android:layout_marginRight="5dp"
+                    android:padding="10dp"/>
+
+                <TextView
+                    android:id="@+id/tvAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:text="Số tiền"
+                    android:textSize="18sp"
+                    android:padding="10dp"/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:src="@color/Grey"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Phí giao dịch"
+                    android:textSize="18sp"
+                    android:layout_marginRight="5dp"
+                    android:padding="10dp"/>
+
+                <TextView
+                    android:id="@+id/tvFeeTransaction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:text="Miễn phí"
+                    android:textSize="18sp"
+                    android:padding="10dp"/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:src="@color/Grey"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Tổng tiền"
+                    android:textSize="18sp"
+                    android:layout_marginRight="5dp"
+                    android:padding="10dp"/>
+
+                <TextView
+                    android:id="@+id/tvTotalAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:text="Tổng cộng"
+                    android:textSize="18sp"
+                    android:padding="10dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="bottom">
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Xác nhận"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="5dp"
+                android:background="@color/SoftRed"
+                android:onClick="SubmitOrderTransaction"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/verifyPasswordLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/SoftWhite"
+        android:gravity="bottom"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/SoftBlue">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="left"
+                    android:drawableStart="@drawable/ic_action_cancel"
+                    android:layout_marginLeft="15dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Nhập mã pin"
+                    android:gravity="center"
+                    android:textSize="20dp"
+                    android:onClick="RefuseVerifyPin"/>
+            </RelativeLayout>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@color/Grey"
+                android:layout_marginVertical="10dp"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_gravity="center"
+                android:background="@drawable/round_password">
+
+                <EditText
+                    android:id="@+id/etPass01"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:textSize="35dp"
+                    android:gravity="center"
+                    android:hint=""
+                    android:text="1"
+                    android:layout_marginLeft="25dp"
+                    android:layout_marginRight="10dp"/>
+
+                <EditText
+                    android:id="@+id/etPass02"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:textSize="35dp"
+                    android:gravity="center"
+                    android:hint=""
+                    android:text="1"
+                    android:layout_marginHorizontal="10dp"/>
+                <EditText
+                    android:id="@+id/etPass03"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:textSize="35dp"
+                    android:gravity="center"
+                    android:hint=""
+                    android:text="1"
+                    android:layout_marginHorizontal="10dp"/>
+
+                <EditText
+                    android:id="@+id/etPass04"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:textSize="35dp"
+                    android:gravity="center"
+                    android:hint=""
+                    android:text="1"
+                    android:layout_marginHorizontal="10dp"/>
+                <EditText
+                    android:id="@+id/etPass05"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:textSize="35dp"
+                    android:gravity="center"
+                    android:hint=""
+                    android:text="1"
+                    android:layout_marginHorizontal="10dp"/>
+
+                <EditText
+                    android:id="@+id/etPass06"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:inputType="textPassword"
+                    android:textSize="35dp"
+                    android:gravity="center"
+                    android:hint=""
+                    android:text="1"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="25dp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Quên mật khẩu"
+                android:layout_marginTop="30dp"
+                android:textColor="@color/Red"
+                android:layout_gravity="center"
+                android:layout_marginBottom="10dp"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20dp"
+                android:textColor="@color/White"
+                android:textStyle="bold"
+                android:background="@color/SoftRed"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginVertical="15dp"
+                android:text="Xác thực"
+                android:onClick="VerifyPin"/>
+
+        </LinearLayout>
+
+
+    </RelativeLayout>
+
+    <include layout="@layout/progress_bar"
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+</RelativeLayout>

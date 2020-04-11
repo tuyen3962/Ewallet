@@ -114,9 +114,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             String fullName = intent.getStringExtra(Symbol.FULLNAME.GetValue());
             String password = intent.getStringExtra(Symbol.PASSWORD.GetValue());
             String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-            String email = intent.getStringExtra(Symbol.EMAIL.GetValue());
-            String cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
-            user = new User(fullName,phone,password,email, cmnd);
+            user = new User(fullName,phone,password);
         }
     }
 
@@ -324,34 +322,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             userid = jsonData.getString("userid");
             //verification successful we will start the profile activity
             SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
-            String[] arrStr = new String[]{"userid:"+ user.getUserId(),"pin:","dob:","cmnd:"+ user.getCmnd(),"address:"};
-            String json = HandlerJsonData.ExchangeToJsonString(arrStr);
-            new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
-        }
 
-        @Override
-        public void ShowError(int errorCode, String message) {
-            Log.d("ERROR", message);
-        }
-    }
-
-    private class UpdateUserProfile extends RequestServerAPI implements RequestServerFunction{
-        public UpdateUserProfile(){
-            SetRequestServerFunction(this);
-        }
-
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if (code == ErrorCode.SUCCESS.GetValue()){
-                return  true;
-            }
-
-            ShowError(code, "");
-            return false;
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
             progressBarManager.HideProgressBar();
 
             //verification successful we will start the profile activity

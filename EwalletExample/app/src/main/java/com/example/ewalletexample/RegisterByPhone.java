@@ -26,7 +26,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterByPhone extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
 
-    EditText etFullname, etUserPhone, etPassword, etConfirmPass, etEmail, etCMND;
+    EditText etFullname, etUserPhone, etPassword, etConfirmPass;
     TextView tvWarning;
 
     DatabaseReference mDatabase;
@@ -47,18 +47,6 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
 
         @Override
         public void afterTextChanged(Editable editable) {
-//            String text = editable.toString();
-//            text.trim();
-//
-//            if(text.length() > 3){
-//                text = text.substring(0,2) + " " + text.substring(3)
-//            }
-//
-//            if(editable.length() >= 8){
-//                text = text.su
-//            }
-//
-//            edit
         }
     };
 
@@ -77,17 +65,13 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         etUserPhone = findViewById(R.id.etUserPhone);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPass = findViewById(R.id.etConfirmPassword);
-        etCMND = findViewById(R.id.etCMND);
-        etEmail = findViewById(R.id.etEmail);
         tvWarning = findViewById(R.id.tvWarning);
     }
 
     void AddTextWatcherIntoEditText(){
-        etFullname.addTextChangedListener(textWatcher);
         etUserPhone.addTextChangedListener(textWatcher);
         etPassword.addTextChangedListener(textWatcher);
         etConfirmPass.addTextChangedListener(textWatcher);
-        etEmail.addTextChangedListener(textWatcher);
     }
 
     public void RegisterEvent(View view){
@@ -110,12 +94,6 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
             return new Response(ErrorCode.VALIDATE_FULL_NAME_INVALID);
         }
 
-        String cmnd = etCMND.getText().toString();
-
-        if(TextUtils.isEmpty(cmnd) || !CheckInputField.CMNDIsValid(cmnd)){
-            return new Response(ErrorCode.VALIDATE_CMND_INVALID);
-        }
-
         String phone = etUserPhone.getText().toString();
 
         if(TextUtils.isEmpty(phone) && !CheckInputField.PhoneNumberIsValid(phone)){
@@ -125,13 +103,7 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         Response response = CheckPassword();
 
         if(response.GetStatus()){
-            String email = etEmail.getText().toString();
-            if(TextUtils.isEmpty(etEmail.getText().toString()) && !CheckInputField.EmailIsValid(email)){
-                return new Response(ErrorCode.VALIDATE_EMAIL_INVALID);
-            }
-            else{
-                return new Response(ErrorCode.SUCCESS);
-            }
+            return new Response(ErrorCode.SUCCESS);
         }
 
         return response;
@@ -160,9 +132,7 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_REGISTER.GetValue());
         intent.putExtra(Symbol.FULLNAME.GetValue(), etFullname.getText().toString());
         intent.putExtra(Symbol.PASSWORD.GetValue(), etPassword.getText().toString());
-        intent.putExtra(Symbol.EMAIL.GetValue(), etEmail.getText().toString());
         intent.putExtra(Symbol.PHONE.GetValue(), etUserPhone.getText().toString());
-        intent.putExtra(Symbol.CMND.GetValue(), etCMND.getText().toString());
 
         startActivity(intent);
     }
@@ -177,10 +147,8 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
     }
 
     private void ClearSpecificEditText(){
-        etEmail.setText("");
         etConfirmPass.setText("");
         etPassword.setText("");
-        etEmail.setText("");
     }
 
     @Override

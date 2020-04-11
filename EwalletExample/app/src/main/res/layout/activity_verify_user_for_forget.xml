@@ -17,45 +17,34 @@
         android:textSize="40sp" />
 
     <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="15dp"
-        android:layout_below="@id/tvIntroduce"
-        android:text="Xác nhận tài khoản"
-        android:textColor="@color/colorPrimary"
-        android:textSize="30sp" />
-
-    <TextView
         android:id="@+id/tvChangeTypeVerify"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="15dp"
-        android:layout_below="@id/textView1"
-        android:text="Điện thoại xác thực"
+        android:layout_below="@id/tvIntroduce"
+        android:text="Nhập số điện thoại để tiếp tục"
         android:textColor="@color/colorPrimary"
-        android:textSize="30sp"
+        android:textSize="25dp"
         android:onClick="ChangeTypeVerifyEvent"/>
 
-    <TextView
-        android:id="@+id/tvDetail"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tvChangeTypeVerify"
-        android:layout_marginTop="30dp"
-        android:layout_marginLeft="20dp"
-        android:text="Số điện thoại"
-        android:textSize="20dp"/>
+<!--    <TextView-->
+<!--        android:id="@+id/tvDetail"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@id/tvChangeTypeVerify"-->
+<!--        android:layout_marginTop="30dp"-->
+<!--        android:layout_marginLeft="20dp"-->
+<!--        android:text="Số điện thoại"-->
+<!--        android:textSize="20dp"/>-->
 
     <EditText
         android:id="@+id/etDetail"
-        android:layout_width="200dp"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_below="@id/tvChangeTypeVerify"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
         android:hint="Nhập số diện thoại"
         android:gravity="center"
         android:textSize="18dp"
@@ -65,10 +54,10 @@
         android:id="@+id/btnVerifyAccount"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tvDetail"
+        android:layout_below="@id/etDetail"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="20dp"
-        android:text="Xác thực"
+        android:layout_marginTop="30dp"
+        android:text="Tiếp tục"
         android:background="@drawable/edit_round_button"
         android:onClick="VerifyAccountEvent"/>
 
