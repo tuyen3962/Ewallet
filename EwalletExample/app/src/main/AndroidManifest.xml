@@ -7,7 +7,12 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".VerifyAccountActivity"></activity>
+        <activity android:name=".AddUserAutomatic" />
+        <activity android:name=".AddMobileCardAuto" />
+
+        <activity android:name=".SelectMobileCardFunctionActivity"></activity>
+        <activity android:name=".SearchUserExchangeActivity" />
+        <activity android:name=".VerifyAccountActivity" />
         <activity android:name=".TransactionDetailActivity" />
         <activity android:name=".SubmitOrderActivity" />
         <activity android:name=".TopupWalletActivity" />
@@ -37,10 +42,10 @@
                 android:resource="@xml/file_path" />
         </provider>
     </application>
-    <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature android:name="android.hardware.camera.flash" />
-
     <uses-feature android:name="android.hardware.camera" />
+
+    <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
