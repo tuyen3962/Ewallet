@@ -39,6 +39,7 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
 
     String userid, phone;
     long userAmount;
+    boolean hasChangeOperator;
 
     FirebaseDatabaseHandler<MobileCardModel> firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
@@ -67,6 +68,8 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
     }
 
     void Initialize(){
+        hasChangeOperator = false;
+
         arrMobileCardNetwork = MobileCard.GetInstance().GetMobileCardOperator();
 
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
@@ -80,7 +83,6 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
 
         layoutCardAmount = findViewById(R.id.layoutCardAmount);
         listAmounts = MobileCard.GetInstance().GetListAmountsByMobileCardOperator(arrMobileCardNetwork[0]);
-        mobileCardOperatorChosen = arrMobileCardNetwork[0];
         mobileCardAmountAdapter = new MobileCardAmountAdapter(this, listAmounts, this);
         InitializeRecycleView(layoutCardAmount,
                 new GridLayoutManager(this, 3),
@@ -101,12 +103,6 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public void SetCurrentMobileCardOperatorViewHolder(MobileCardOperatorAdapter.MobileCardOperatorViewHolder mobileCardOperatorViewHolder) {
-        currentMobileCardOperatorViewHolder = mobileCardOperatorViewHolder;
-        currentMobileCardOperatorViewHolder.SetBackgroundLayout(colorChosen);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void SelectMobileCardOperator(MobileCardOperatorAdapter.MobileCardOperatorViewHolder mobileCardOperatorViewHolder, MobileCardOperator mobileCardOperator) {
         if(mobileCardOperatorChosen != null && mobileCardOperatorChosen == mobileCardOperator){
@@ -120,10 +116,17 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
         SetMobileCardOperatorChosen(mobileCardOperator);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void SetCurrentMobileCardOperatorViewHolder(MobileCardOperatorAdapter.MobileCardOperatorViewHolder mobileCardOperatorViewHolder) {
+        currentMobileCardOperatorViewHolder = mobileCardOperatorViewHolder;
+        currentMobileCardOperatorViewHolder.SetBackgroundLayout(colorChosen);
+    }
+
     private void SetMobileCardOperatorChosen(MobileCardOperator mobileCardOperator){
         this.mobileCardOperatorChosen = mobileCardOperator;
         listAmounts = MobileCard.GetInstance().GetListAmountsByMobileCardOperator(mobileCardOperator);
         mobileCardAmountAdapter.notifyDataSetChanged();
+        hasChangeOperator = true;
     }
 
     @Override
@@ -134,7 +137,7 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void SelectMobileCardAmount(MobileCardAmountAdapter.MobileCardAmountViewHolder mobileCardAmountViewHolder, MobileCardAmount mobileCardAmount) {
-        if(currentAmount != null && currentAmount == mobileCardAmount){
+        if(currentAmount != null && currentAmount == mobileCardAmount && !hasChangeOperator){
             return;
         }
 
@@ -143,6 +146,9 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
         }
         SetCurrentMobileCardAmountViewHolder(mobileCardAmountViewHolder);
         currentAmount = mobileCardAmount;
+        if (hasChangeOperator){
+            hasChangeOperator = false;
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
