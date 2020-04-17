@@ -15,4 +15,14 @@ public enum SourceFund {
     public short GetCode(){
         return numberCode;
     }
+
+    public static SourceFund Find(short code){
+        for(SourceFund source : SourceFund.values()){
+            if(source.GetCode() == code){
+                return source;
+            }
+        }
+
+        return null;
+    }
 }

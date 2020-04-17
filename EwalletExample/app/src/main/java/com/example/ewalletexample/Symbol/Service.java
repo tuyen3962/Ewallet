@@ -1,9 +1,6 @@
 package com.example.ewalletexample.Symbol;
 
-public enum Code {
-    WALLET_SOURCE_FUND(1, "Ví"),
-    ATM_SOURCE_FUND(2, "Thẻ ATM"),
-
+public enum Service {
     WITHDRAW_SERVICE_TYPE(1,"Rút tiền"),
     TOPUP_SERVICE_TYPE(2, "Nạp tiền"),
     EXCHANGE_SERVICE_TYPE(3,"Chuyển tiền"),
@@ -12,12 +9,26 @@ public enum Code {
     private int numberCode;
     private String nameCode;
 
-    Code(int numberCode, String nameCode){
+    Service(int numberCode, String nameCode){
         this.numberCode = numberCode;
         this.nameCode = nameCode;
     }
 
     public int GetCode(){
         return numberCode;
+    }
+
+    public String GetMessage(){
+        return nameCode;
+    }
+
+    public static Service Find(int code){
+        for (Service service : Service.values()){
+            if(service.GetCode() == code){
+                return service;
+            }
+        }
+
+        return null;
     }
 }
