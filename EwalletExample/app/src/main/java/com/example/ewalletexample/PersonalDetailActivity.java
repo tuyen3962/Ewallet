@@ -420,7 +420,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         user.setImgAccountLink(serverFile);
         model.setImgLink(serverFile);
         LoadImageAccount();
-        firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue(), user.getUserId(), model);
+        firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), user.getUserId(), model);
     }
 
     @Override

@@ -34,7 +34,12 @@ public class UserModel implements Serializable {
     }
 
     public UserModel(){
-
+        this.phone = "";
+        this.phoneToken = "";
+        this.email = "";
+        this.emailToken = "";
+        this.imgLink = "";
+        this.fullname = "";
     }
 
     public String getImgLink() {

@@ -54,10 +54,16 @@ public class BankInfo {
         this.l4CardNo = l4CardNo;
     }
 
-    public String ExchangeToJsonData() throws JSONException {
+    public String ExchangeToJsonData() {
         String[] arr = new String[]{"cardname:"+cardName,"bankcode:"+bankCode,"f6cardno:"+f6CardNo,"l4cardno:"+l4CardNo};
 
-        return HandlerJsonData.ExchangeToJsonString(arr);
+        try {
+            return HandlerJsonData.ExchangeToJsonString(arr);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return "";
     }
 
     public void ReadJsonData(String jsonData) throws JSONException{
@@ -67,5 +73,15 @@ public class BankInfo {
         setBankCode(json.getString("bankcode"));
         setF6CardNo(json.getString("f6cardno"));
         setL4CardNo(json.getString("l4cardno"));
+    }
+
+    @Override
+    public String toString() {
+        return "BankInfo{" +
+                "cardName='" + cardName + '\'' +
+                ", bankCode='" + bankCode + '\'' +
+                ", f6CardNo='" + f6CardNo + '\'' +
+                ", l4CardNo='" + l4CardNo + '\'' +
+                '}';
     }
 }
