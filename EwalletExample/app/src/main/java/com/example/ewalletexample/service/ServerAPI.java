@@ -1,6 +1,8 @@
 package com.example.ewalletexample.service;
 
 public enum  ServerAPI {
+    CREATE_MOBILE_CARD("/mobile-card/create"),
+
     // support for login api
     LOGIN_API ("/um/login"),
     REGISTER_API("/um/register"),
@@ -27,9 +29,12 @@ public enum  ServerAPI {
     CREATE_EXCHANGE_MONEY_ORDER("/p2p-transfer/create-order"),
     GET_STATUS_EXCHANGE_MONEY_ORDER("/p2p-transfer/order-status"),
 
+    CREATE_MOBILE_CARD_ORDER("/mobile-card/create-order"),
+    GET_STATUS_MOBILE_CARD_ORDER("/mobile-card/order-status"),
+
     SUBMIT_TRANSACTION("/charge-order/submit-trans");
 
-    private String baseURL = "http://192.168.1.12:8080";
+    private String baseURL = "http://192.168.1.6:8080";
 
 
     private String url;
