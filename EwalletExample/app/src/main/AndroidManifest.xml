@@ -7,17 +7,17 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".BankCardDetailActivity"></activity>
         <activity android:name=".AddUserAutomatic" />
         <activity android:name=".AddMobileCardAuto" />
-
-        <activity android:name=".SelectMobileCardFunctionActivity"></activity>
+        <activity android:name=".ChooseBankConnectActivity" />
         <activity android:name=".SearchUserExchangeActivity" />
         <activity android:name=".VerifyAccountActivity" />
         <activity android:name=".TransactionDetailActivity" />
         <activity android:name=".SubmitOrderActivity" />
         <activity android:name=".TopupWalletActivity" />
         <activity android:name=".UserBankCardActivity" />
-        <activity android:name=".ChooseBankConnectActivity" />
+        <activity android:name=".SelectMobileCardFunctionActivity" />
         <activity android:name=".PersonalDetailActivity" />
         <activity android:name=".ResetPassword" />
         <activity android:name=".VerifyUserForForget" />
@@ -42,14 +42,14 @@
                 android:resource="@xml/file_path" />
         </provider>
     </application>
-    <uses-feature android:name="android.hardware.camera.flash" />
     <uses-feature android:name="android.hardware.camera" />
-
     <uses-feature android:name="android.hardware.camera.autofocus" />
-    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera.flash" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
 
 </manifest>

@@ -75,6 +75,15 @@ public class BankInfo {
         setL4CardNo(json.getString("l4cardno"));
     }
 
+    public String getCardNumber(){
+        String cardNumber = f6CardNo.substring(0, 4) + " " +
+                f6CardNo.substring(4) + "** " +
+                "****" +
+                l4CardNo;
+
+        return cardNumber;
+    }
+
     @Override
     public String toString() {
         return "BankInfo{" +

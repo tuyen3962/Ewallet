@@ -34,7 +34,7 @@ public enum  ServerAPI {
 
     SUBMIT_TRANSACTION("/charge-order/submit-trans");
 
-    private String baseURL = "http://192.168.1.6:8080";
+    private String baseURL = "http://192.168.1.13:8080";
 
 
     private String url;

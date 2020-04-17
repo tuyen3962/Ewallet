@@ -1,29 +1,35 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
+import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.data.BankSupport;
+import com.example.ewalletexample.data.BankInfo;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.AnimationManager;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
@@ -41,17 +47,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel> {
-
+    ProgressBarManager progressBarManager;
     FirebaseDatabaseHandler firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
-    GridView listBankSupportLayout;
+
+    RecyclerView rvBankSupportLayout;
+    ListBankSupportRecycleView listBankSupportRecycleView;
+
     LinearLayout listBankLayout, layoutBankAccountDetail;
+
     EditText etFullNameCard, etCMNDCard, etCardNo0, etCardNo1, etCardNo2, etCardNo3;
+    CodeEditText codeEditText;
     TextView tvBack;
-    private CodeEditText codeEditText;
-    private List<BankSupport> bankSupportList;
-    String bankCode, userid;
-    private UserModel model;
+
+    AnimationManager animationManager;
+
+    BankSupport[] bankSupportList;
+    BankSupport chosenBankConnect;
+    String userid;
+    UserModel model;
     long amount;
 
     boolean isShowing;
@@ -64,19 +78,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         Initialize();
         GetValueFromIntent();
 
-        new GetSupportBank().execute(ServerAPI.GET_LIST_BANK_SUPPORT.GetUrl(), "{}");
-
-        listBankSupportLayout.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if(!isShowing){
-                    isShowing = true;
-                    ShowView(layoutBankAccountDetail);
-                    HideGridView();
-                    bankCode = bankSupportList.get(position).getBankCode();
-                }
-            }
-        });
+//        new GetSupportBank().execute(ServerAPI.GET_LIST_BANK_SUPPORT.GetUrl(), "{}");
 
         tvBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,9 +91,20 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     void Initialize(){
         firebaseDatabaseHandler = new FirebaseDatabaseHandler(FirebaseDatabase.getInstance().getReference());
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
+        animationManager = new AnimationManager(this);
+
         layoutBankAccountDetail = findViewById(R.id.layoutBankAccountDetail);
-        listBankSupportLayout = findViewById(R.id.listBankSupport);
         listBankLayout = findViewById(R.id.listBankLayout);
+
+        rvBankSupportLayout = findViewById(R.id.rvListBankSupportLayout);
+        bankSupportList = BankSupport.values();
+        listBankSupportRecycleView = new ListBankSupportRecycleView(this, bankSupportList);
+        rvBankSupportLayout.setHasFixedSize(true);
+        rvBankSupportLayout.setLayoutManager(new GridLayoutManager(this, 3));
+        rvBankSupportLayout.setAdapter(listBankSupportRecycleView);
+
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnLinkAccount));
+
         etCMNDCard = findViewById(R.id.etCMNDCard);
         etFullNameCard = findViewById(R.id.etFullNameBank);
         tvBack = findViewById(R.id.tvBack);
@@ -114,20 +127,15 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     }
 
     private void HideGridView(){
-        listBankSupportLayout.setEnabled(false);
+        rvBankSupportLayout.setEnabled(false);
     }
 
     public void ShowGridView(View view){
-        listBankSupportLayout.setEnabled(true);
+        rvBankSupportLayout.setEnabled(true);
         listBankLayout.setBackground(null);
-        HideView(layoutBankAccountDetail);
+        animationManager.HideAnimationView(layoutBankAccountDetail);
         isShowing = false;
-        bankCode = "";
-    }
-
-    private void AddIntoBankSupportGridView(){
-        ListBankAdaper bankAdaper = new ListBankAdaper(this, bankSupportList);
-        listBankSupportLayout.setAdapter(bankAdaper);
+        chosenBankConnect = null;
     }
 
     public void CreateLinkAccountWithBank(View view){
@@ -143,61 +151,22 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     }
 
     private void SendRequestForLinkingBank(String cardID, String fullNameCard, String cmndCard){
-        String[] arr = new String[]{"userid:"+userid,"bankcode:"+bankCode,"cardno:"+cardID,
-                "fullname:"+fullNameCard,"cmnd:"+cmndCard, "phone:"+model.getPhone()};
+        progressBarManager.ShowProgressBar("Loading");
+        String[] arr = new String[]{"userid:"+userid,"bankcode:"+chosenBankConnect.getBankCode(),
+                "cardno:"+cardID, "fullname:"+fullNameCard,"cmnd:"+cmndCard, "phone:"+model.getPhone()};
 
         try {
             String jsonData = HandlerJsonData.ExchangeToJsonString(arr);
             new LinkAccountWithBank().execute(ServerAPI.LINK_BANK_CARD_API.GetUrl(), jsonData);
         } catch (JSONException e) {
+            progressBarManager.HideProgressBar();
             e.printStackTrace();
         }
     }
 
     public void ReturnToUserBankActivity(){
-        Intent intent = getIntent();
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
-        startActivity(intent);
-    }
-
-    private void ShowView(final View view){
-        Animation animation = AnimationUtils.loadAnimation(this, R.anim.slide_up);
-        //use this to make it longer:  animation.setDuration(1000);
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                view.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {}
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-            }
-        });
-
-        view.startAnimation(animation);
-    }
-
-    private void HideView(final View view){
-        Animation animation = AnimationUtils.loadAnimation(this, R.anim.slide_out_down);
-        //use this to make it longer:  animation.setDuration(1000);
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {}
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {}
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                view.setVisibility(View.GONE);
-            }
-        });
-
-        view.startAnimation(animation);
+        setResult(RESULT_CANCELED);
+        finish();
     }
 
     @Override
@@ -205,87 +174,116 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         this.model = data;
     }
 
-    private class ListBankAdaper extends BaseAdapter {
+    private class ListBankSupportRecycleView extends RecyclerView.Adapter<ListBankSupportRecycleView.BankSupportViewHolder>{
 
-        Context mContext;
-        List<BankSupport> mBankSupports;
+        private Context context;
+        private LayoutInflater inflater;
+        private BankSupport[] bankSupportList;
 
-        public ListBankAdaper(Context context, List<BankSupport> bankSupports){
-            mContext = context;
-            mBankSupports = bankSupports;
+        public ListBankSupportRecycleView(Context context, BankSupport[] supportList){
+            this.context = context;
+            inflater = LayoutInflater.from(context);
+            bankSupportList = supportList;
         }
 
-        @Override
-        public int getCount() {
-            return mBankSupports.size();
-        }
+        class BankSupportViewHolder extends RecyclerView.ViewHolder{
+            View view;
+            ImageView bankImg;
+            TextView tvBankName;
+            GradientDrawable gradientDrawable;
 
-        @Override
-        public Object getItem(int position) {
-            return mBankSupports.get(position);
-        }
+            public BankSupportViewHolder(View view){
+                super(view);
+                this.view = view.findViewById(R.id.bankSupportLayout);
+                gradientDrawable = (GradientDrawable) view.getBackground();
+                bankImg = view.findViewById(R.id.imgBank);
+                tvBankName = view.findViewById(R.id.tvBankName);
 
-        @Override
-        public long getItemId(int position) {
-            return mBankSupports.get(position).hashCode();
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            BankSupport bankSupport = mBankSupports.get(position);
-
-            if(convertView == null){
-                final LayoutInflater inflater = LayoutInflater.from(mContext);
-                convertView = inflater.inflate(R.layout.bank_support_item, null);
+                gradientDrawable.setShape(GradientDrawable.OVAL);
+                gradientDrawable.setStroke(2, Color.GRAY);
             }
 
-            convertView.getLayoutParams().height = 100;
+            public void SetBankText(String text){
+                tvBankName.setText(text);
+            }
 
-            ImageView bankImg = convertView.findViewById(R.id.imgBank);
-            firebaseStorageHandler.LoadAccountImageFromLink(bankSupport.getBankImage(), bankImg);
-            TextView tvBankName = convertView.findViewById(R.id.tvBankName);
+            public void LoadImageFromFirebase(FirebaseStorageHandler firebaseStorageHandler, String imageLink){
+                firebaseStorageHandler.LoadAccountImageFromLink(imageLink, bankImg);
+            }
 
-            tvBankName.setText(bankSupport.getBankName());
+            public void SetClickEvent(final BankSupport bankSupport){
+                view.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(!isShowing){
+                            isShowing = true;
+                            animationManager.ShowAnimationView(layoutBankAccountDetail);
+                            HideGridView();
+                            chosenBankConnect = bankSupport;
+                        }
+                    }
+                });
+            }
+        }
 
-            return convertView;
+        @NonNull
+        @Override
+        public BankSupportViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = inflater.inflate(R.layout.bank_support_item, parent, false);
+            BankSupportViewHolder holder = new BankSupportViewHolder(view);
+
+            return holder;
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull BankSupportViewHolder holder, int position) {
+            BankSupport support = bankSupportList[position];
+            holder.SetBankText(support.getBankName());
+            holder.LoadImageFromFirebase(firebaseStorageHandler, support.getBankLinkImage());
+            holder.SetClickEvent(support);
+        }
+
+        @Override
+        public int getItemCount() {
+            return bankSupportList.length;
         }
     }
 
-    class GetSupportBank extends RequestServerAPI implements RequestServerFunction{
-        public GetSupportBank(){
-            SetRequestServerFunction(this);
-        }
-
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-
-            return false;
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            bankSupportList = new ArrayList<>();
-
-            JSONArray mBankSupportArray = jsonData.getJSONArray("banks");
-            for(int i = 0; i < mBankSupportArray.length(); i++){
-                JSONObject mBankSupport = mBankSupportArray.getJSONObject(i);
-                String bankCode = mBankSupport.getString("bankcode");
-                String bankName = mBankSupport.getString("bankname");
-                String bankImage = mBankSupport.getString("bankimage");
-                bankSupportList.add(new BankSupport(bankCode, bankName, bankImage));
-            }
-
-            AddIntoBankSupportGridView();
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
-
-        }
-    }
+//    class GetSupportBank extends RequestServerAPI implements RequestServerFunction{
+//        public GetSupportBank(){
+//            SetRequestServerFunction(this);
+//        }
+//
+//        @Override
+//        public boolean CheckReturnCode(int code) {
+//            if(code == ErrorCode.SUCCESS.GetValue()){
+//                return true;
+//            }
+//
+//            return false;
+//        }
+//
+//        @Override
+//        public void DataHandle(JSONObject jsonData) throws JSONException {
+//            bankSupportList = new ArrayList<>();
+//
+//            JSONArray mBankSupportArray = jsonData.getJSONArray("banks");
+//            for(int i = 0; i < mBankSupportArray.length(); i++){
+//                JSONObject mBankSupport = mBankSupportArray.getJSONObject(i);
+//                String bankCode = mBankSupport.getString("bankcode");
+//                String bankName = mBankSupport.getString("bankname");
+//                String bankImage = mBankSupport.getString("bankimage");
+//                bankSupportList.add(new BankSupport(bankCode, bankName, bankImage));
+//            }
+//
+//            AddIntoBankSupportGridView();
+//        }
+//
+//        @Override
+//        public void ShowError(int errorCode, String message) {
+//
+//        }
+//    }
 
     class LinkAccountWithBank extends RequestServerAPI implements RequestServerFunction{
         public LinkAccountWithBank(){
@@ -302,16 +300,19 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         }
 
         @Override
-        public void DataHandle(JSONObject jsonData)  {
+        public void DataHandle(JSONObject jsonData) throws JSONException {
+            JSONObject bankInfoObject = jsonData.getJSONObject("bankInfo");
+
             Intent intent = getIntent();
-            intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
-            startActivity(intent);
+            intent.putExtra(Symbol.BANK_INFO.GetValue(), bankInfoObject.toString());
+            setResult(RESULT_OK, intent);
+            finish();
         }
 
         @Override
         public void ShowError(int errorCode, String message) {
-
+            progressBarManager.HideProgressBar();
+            Toast.makeText(ChooseBankConnectActivity.this, "Khong the lien ket voi tai khoan ngan hang", Toast.LENGTH_SHORT).show();
         }
     }
 }
