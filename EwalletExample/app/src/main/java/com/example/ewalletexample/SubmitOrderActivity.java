@@ -11,33 +11,36 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ewalletexample.Server.balance.BalanceResponse;
+import com.example.ewalletexample.Server.order.ExchangeMoneyOrder;
+import com.example.ewalletexample.Server.order.MobileCardOrder;
+import com.example.ewalletexample.Server.order.MobileCardOrderResponse;
 import com.example.ewalletexample.Server.order.TopupOrder;
-import com.example.ewalletexample.Server.request.RequestServerAPI;
-import com.example.ewalletexample.Server.request.RequestServerFunction;
-import com.example.ewalletexample.Symbol.Code;
-import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Server.order.WithdrawOrder;
+import com.example.ewalletexample.Symbol.Service;
+import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
-import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.code.CodeEditText;
-import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
+import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
+import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
-public class SubmitOrderActivity extends AppCompatActivity implements BalanceResponse {
+public class SubmitOrderActivity extends AppCompatActivity implements BalanceResponse, MobileCardOrderResponse {
 
-    String userid, amount, receiverid;
+    String userid, amount, receiverphone, receiverFullname, phone;
     long fee;
-    int codeServiceType;
-    short codeSourceFund;
+    Service service;
+    SourceFund source;
     ProgressBarManager progressBarManager;
     View exchangeMoneyLayout, withdrawView, topupView, sourceFundLayout, verifyPasswordLayout;
-    TextView tvAmount, tvTotalAmount, tvFeeTransaction, tvBackInDetailTransaction, tvBackInSourceFund, tvTopupBankFrom;
+    TextView tvAmount, tvTotalAmount, tvFeeTransaction, tvBackInDetailTransaction, tvBackInSourceFund, tvTopupBankFrom, tvWithdrawBankName, tvFullName, tvPhone;
     EditText etPass01, etPass02, etPass03, etPass04, etPass05, etPass06;
     CodeEditText codePassword;
     BankInfo bankInfo;
+    MobileCardOperator mobileCardOperator;
+    MobileCardAmount mobileCardAmount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +68,9 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         tvBackInDetailTransaction = findViewById(R.id.tvBackInDetailTransaction);
         tvBackInSourceFund = findViewById(R.id.tvBackInSourceFund);
         tvTopupBankFrom = findViewById(R.id.tvTopupBankFrom);
+        tvWithdrawBankName = findViewById(R.id.tvWithdrawBankName);
+        tvFullName = findViewById(R.id.tvFullName);
+        tvPhone = findViewById(R.id.tvPhone);
 
         etPass01 = findViewById(R.id.etPass01);
         etPass02 = findViewById(R.id.etPass02);
@@ -81,24 +87,36 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         amount = intent.getStringExtra(Symbol.AMOUNT_TRANSACTION.GetValue());
         fee = intent.getLongExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
-        codeServiceType = intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0);
-        codeSourceFund = intent.getShortExtra(Symbol.SOURCE_OF_FUND.GetValue(), Short.parseShort("0"));
+        service = Service.Find(intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0));
+        source = SourceFund.Find(intent.getShortExtra(Symbol.SOURCE_OF_FUND.GetValue(), Short.parseShort("0")));
 
-        if(codeServiceType == Code.EXCHANGE_SERVICE_TYPE.GetCode()){
-            receiverid = intent.getStringExtra(Symbol.RECEIVER_ID.GetValue());
+        if(service == Service.EXCHANGE_SERVICE_TYPE){
+            receiverphone = intent.getStringExtra(Symbol.RECEIVER_PHONE.GetValue());
+            receiverFullname = intent.getStringExtra(Symbol.RECEIVER_FULL_NAME.GetValue());
         }
-        else if(codeServiceType == Code.TOPUP_SERVICE_TYPE.GetCode()){
+        else if(service == Service.TOPUP_SERVICE_TYPE || service == Service.WITHDRAW_SERVICE_TYPE){
             try{
                 bankInfo = new BankInfo(intent.getStringExtra(Symbol.BANK_INFO.GetValue()));
             }catch (JSONException e){
                 Log.w("TAG", "GetValueFromIntent: " + e.getMessage());
             }
         }
+        else if(service == Service.MOBILE_CARD_SERVICE_TYPE){
+            phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+            mobileCardOperator = MobileCardOperator.FindOperator(intent.getStringExtra(Symbol.MOBILE_CODE.GetValue()));
+            mobileCardAmount = MobileCardAmount.FindAmount(intent.getStringExtra(Symbol.MOBILE_AMOUNT.GetValue()));
+        }
     }
 
     void InitializeText(){
-        if(codeServiceType == Code.TOPUP_SERVICE_TYPE.GetCode()){
+        if(service == Service.TOPUP_SERVICE_TYPE){
             tvTopupBankFrom.setText(bankInfo.getCardName());
+        }else if(service == Service.WITHDRAW_SERVICE_TYPE){
+            tvWithdrawBankName.setText(bankInfo.getCardName());
+        }
+        else if(service == Service.EXCHANGE_SERVICE_TYPE){
+            tvPhone.setText(receiverphone);
+            tvFullName.setText(receiverFullname);
         }
         tvAmount.setText(amount + "đ");
         if(fee == 0){
@@ -110,13 +128,13 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
     }
 
     void ShowLayoutByServiceCode(){
-        if(codeServiceType == Code.TOPUP_SERVICE_TYPE.GetCode()){
+        if(service == Service.TOPUP_SERVICE_TYPE){
             ShowTopupLayout();
-        } else if(codeServiceType == Code.EXCHANGE_SERVICE_TYPE.GetCode()){
-
-        } else if(codeServiceType == Code.WITHDRAW_SERVICE_TYPE.GetCode()){
-
-        } else if (codeServiceType == Code.MOBILE_CARD_SERVICE_TYPE.GetCode()){
+        } else if(service == Service.EXCHANGE_SERVICE_TYPE){
+            ShowExchangeMoneyLayout();
+        } else if(service == Service.WITHDRAW_SERVICE_TYPE){
+            ShowWithdrawLayout();
+        } else if (service == Service.MOBILE_CARD_SERVICE_TYPE){
 
         }
     }
@@ -166,12 +184,35 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
             return;
         }
 
-        TopupOrder topupOrder = new TopupOrder(userid,pin,amount,fee,codeSourceFund,bankInfo.ExchangeToJsonData(), this);
-        topupOrder.StartCreateTopupOrder();
+        CheckOrder(pin);
+    }
+
+    void CheckOrder(String pin) throws JSONException{
+        if (service == Service.TOPUP_SERVICE_TYPE){
+            TopupOrder topupOrder = new TopupOrder(userid,pin,amount,fee,source.GetCode(),bankInfo.ExchangeToJsonData(), this);
+            topupOrder.StartCreateTopupOrder();
+        }
+        else if(service == Service.WITHDRAW_SERVICE_TYPE){
+            WithdrawOrder withdrawOrder = new WithdrawOrder(userid, pin, amount, fee, source.GetCode(), bankInfo.ExchangeToJsonData(), this);
+            withdrawOrder.StartCreateWithdrawOrder();
+        }
+        else if(service == Service.EXCHANGE_SERVICE_TYPE){
+            ExchangeMoneyOrder exchangeMoneyOrder = new ExchangeMoneyOrder(userid, receiverphone, pin, amount, fee, source, this);
+            exchangeMoneyOrder.StartCreateExchangeMoneyOrder();
+        }
+        else if(service == Service.MOBILE_CARD_SERVICE_TYPE){
+            MobileCardOrder order = new MobileCardOrder(userid, pin, mobileCardAmount, mobileCardOperator, fee, phone, source.GetCode(), this);
+            order.StartCreateMobileCardOrder();
+        }
     }
 
     @Override
     public void GetBalanceResponse(long balance) {
 
+    }
+
+    @Override
+    public void ResponseMobileCard(String cardNumber, String seriNumber) {
+        Log.d("TAG", "ResponseMobileCard: " + cardNumber + " " + seriNumber);
     }
 }

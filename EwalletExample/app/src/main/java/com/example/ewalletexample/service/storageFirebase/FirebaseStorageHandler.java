@@ -103,6 +103,10 @@ public class FirebaseStorageHandler {
         imageProcessor.SetPictureInImageView(currentPhotoPath,imgView);
     }
 
+    public void SetPictureInImageView(ImageView imageView, String currentPhotoPath){
+        imageProcessor.SetPictureInImageView(currentPhotoPath,imageView);
+    }
+
     public Uri AddImageToGallery(String currentPhotoPath){
         return imageProcessor.AddImageToGallery(currentPhotoPath);
     }

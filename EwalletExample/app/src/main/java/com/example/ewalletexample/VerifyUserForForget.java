@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -106,7 +105,7 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     //check
     @Override
     public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
-        for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_FIREBASE_DATABASE.GetValue()).getChildren()){
+        for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue()).getChildren()){
             UserModel model = data.getValue(UserModel.class);
             if (model.getPhone().equalsIgnoreCase(etDetail.getText().toString())){
                 userid = data.getKey();

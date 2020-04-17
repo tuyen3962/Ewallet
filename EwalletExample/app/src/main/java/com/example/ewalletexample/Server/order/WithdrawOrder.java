@@ -8,7 +8,7 @@ import com.example.ewalletexample.Server.balance.BalanceResponse;
 import com.example.ewalletexample.Server.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
-import com.example.ewalletexample.Symbol.Code;
+import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.service.ServerAPI;
@@ -50,7 +50,7 @@ public class WithdrawOrder implements VerifyResponse, StatusOrder{
                         "bankcode:"+bankInfo.getBankCode(),"amount:"+Long.valueOf(amount)};
 
                 String json = HandlerJsonData.ExchangeToJsonString(arr);
-                new CreateWithdrawOrder().execute(ServerAPI.CREATE_TOPUP_ORDER.GetUrl(), json);
+                new CreateWithdrawOrder().execute(ServerAPI.CREATE_WITHDRAW_ORDER.GetUrl(), json);
             } catch (JSONException e){
 
             }
@@ -99,9 +99,10 @@ public class WithdrawOrder implements VerifyResponse, StatusOrder{
                 String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+codeSourceFund,
                         "bankcode:"+bankInfo.getBankCode(),"f6cardno:"+bankInfo.getF6CardNo(),
                         "l4cardno:"+bankInfo.getL4CardNo(),"amount:"+amount,"pin:"+pin,
-                        "servicetype:"+ Code.TOPUP_SERVICE_TYPE.GetCode()};
+                        "servicetype:"+ Service.WITHDRAW_SERVICE_TYPE.GetCode()};
 
                 String json = HandlerJsonData.ExchangeToJsonString(arr);
+                Log.d("TAG", "DataHandle: " + json);
                 new SubmitWithdrawOrder().execute(ServerAPI.SUBMIT_TRANSACTION.GetUrl(), json);
             } catch (JSONException e){
 
@@ -149,17 +150,17 @@ public class WithdrawOrder implements VerifyResponse, StatusOrder{
     }
 
     class GetStatusWithdrawOrderThread extends Thread{
-        StatusOrder statusTopupOrder;
+        StatusOrder statusWithdrawOrder;
         String jsonData;
 
         public GetStatusWithdrawOrderThread(StatusOrder getStatusTopupOrder, String json){
             jsonData = json;
-            statusTopupOrder = getStatusTopupOrder;
+            statusWithdrawOrder = getStatusTopupOrder;
         }
 
         @Override
         public void run(){
-            new GetStatusWithdrawOrder(statusTopupOrder).execute(ServerAPI.GET_STATUS_TOPUP_ORDER.GetUrl(), jsonData);
+            new GetStatusWithdrawOrder(statusWithdrawOrder).execute(ServerAPI.GET_STATUS_WITHDRAW_ORDER.GetUrl(), jsonData);
         }
     }
 

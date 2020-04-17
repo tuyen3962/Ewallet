@@ -8,7 +8,7 @@ import com.example.ewalletexample.Server.balance.BalanceResponse;
 import com.example.ewalletexample.Server.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
-import com.example.ewalletexample.Symbol.Code;
+import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.service.ServerAPI;
@@ -97,7 +97,7 @@ public class TopupOrder implements VerifyResponse, StatusOrder {
                 String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+codeSourceFund,
                         "bankcode:"+bankInfo.getBankCode(),"f6cardno:"+bankInfo.getF6CardNo(),
                         "l4cardno:"+bankInfo.getL4CardNo(),"amount:"+amount,"pin:"+pin,
-                        "servicetype:"+Code.TOPUP_SERVICE_TYPE.GetCode()};
+                        "servicetype:"+ Service.TOPUP_SERVICE_TYPE.GetCode()};
 
                 String json = HandlerJsonData.ExchangeToJsonString(arr);
                 new SubmitTopupOrder().execute(ServerAPI.SUBMIT_TRANSACTION.GetUrl(), json);
@@ -186,8 +186,6 @@ public class TopupOrder implements VerifyResponse, StatusOrder {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             Log.d("TAG", "GetStatusTopupOrder DataHandle: success" );
-//            GetBalanceAPI balanceAPI = new GetBalanceAPI(userid,response);
-//            balanceAPI.GetBalance();
         }
 
         @Override

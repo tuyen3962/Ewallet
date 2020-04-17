@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone">
+                android:visibility="visible">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -129,6 +129,7 @@
                         android:padding="10dp"/>
 
                     <TextView
+                        android:id="@+id/tvFullName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right"
@@ -152,6 +153,7 @@
                         android:padding="10dp"/>
 
                     <TextView
+                        android:id="@+id/tvPhone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="right"
@@ -178,6 +180,7 @@
                     android:padding="10dp"/>
 
                 <TextView
+                    android:id="@+id/tvWithdrawBankName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="right"

@@ -2,27 +2,19 @@ package com.example.ewalletexample;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
+import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 
 /**
@@ -34,7 +26,7 @@ public class HomeFragment extends Fragment {
 
     private String userid;
 
-    View topupLayout;
+    View topupLayout, withdrawLayout, exchangeMoneyLayout, buyMobileCardLayout;
     CircleImageView imgAccount;
     TextView tvBalance;
     MainActivity mainActivity;
@@ -81,6 +73,25 @@ public class HomeFragment extends Fragment {
                 TopupEvent();
             }
         });
+        withdrawLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WithdrawEvent();
+            }
+        });
+        exchangeMoneyLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ExchangeMoneyEvent();
+            }
+        });
+
+        buyMobileCardLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BuyMobileCard();
+            }
+        });
         ShowAccountImage();
         return view;
     }
@@ -89,6 +100,9 @@ public class HomeFragment extends Fragment {
         imgAccount = view.findViewById(R.id.imgAccount);
         tvBalance = view.findViewById(R.id.tvBalance);
         topupLayout = view.findViewById(R.id.topupLayout);
+        withdrawLayout = view.findViewById(R.id.withdrawLayout);
+        exchangeMoneyLayout = view.findViewById(R.id.exchangeMoneyLayout);
+        buyMobileCardLayout = view.findViewById(R.id.buyMobileCardLayout);
     }
 
     void ShowAccountImage(){
@@ -99,7 +113,30 @@ public class HomeFragment extends Fragment {
         Intent intent = new Intent(mainActivity, TopupWalletActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.TOPUP_SERVICE_TYPE.GetCode());
         startActivity(intent);
     }
 
+    public void WithdrawEvent(){
+        Intent intent = new Intent(mainActivity, TopupWalletActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.WITHDRAW_SERVICE_TYPE.GetCode());
+        startActivity(intent);
+    }
+
+    public void ExchangeMoneyEvent(){
+        Intent intent = new Intent(mainActivity, SearchUserExchangeActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        startActivity(intent);
+    }
+
+    public void BuyMobileCard(){
+        Intent intent = new Intent(mainActivity, SelectMobileCardFunctionActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserModel().getPhone());
+        startActivity(intent);
+    }
 }

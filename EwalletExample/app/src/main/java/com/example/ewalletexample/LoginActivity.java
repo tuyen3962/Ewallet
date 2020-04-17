@@ -1,8 +1,12 @@
 package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.ResponseBody;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -12,19 +16,26 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.ewalletexample.Server.balance.BalanceResponse;
+import com.example.ewalletexample.Server.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.Response;
+import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.CarrierNumber;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ServerAPI;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class LoginActivity extends AppCompatActivity {
+import java.io.IOException;
+
+public class LoginActivity extends AppCompatActivity implements BalanceResponse {
     EditText etUsername, etPassword;
     TextView tvError;
 
@@ -138,6 +149,17 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    private void GetBalance(){
+        GetBalanceAPI balanceAPI = new GetBalanceAPI(userid, this);
+        balanceAPI.GetBalance();
+    }
+
+    @Override
+    public void GetBalanceResponse(long balance) {
+        userAmount = balance;
+        SwitchToMainScreen();
+    }
+
     private class LoginThread extends RequestServerAPI implements RequestServerFunction {
         public LoginThread() {
             super();
@@ -160,10 +182,12 @@ public class LoginActivity extends AppCompatActivity {
         public void DataHandle(JSONObject jsonData) throws JSONException {
             userid = jsonData.getString("userid");
 
-            JSONObject json = new JSONObject();
-            json.put("userid", userid);
+            GetBalance();
 
-            new GetBalanceInMain().execute(ServerAPI.GET_BALANCE_API.GetUrl(), json.toString());
+//            JSONObject json = new JSONObject();
+//            json.put("userid", userid);
+//
+//            new GetBalanceInMain().execute(ServerAPI.GET_BALANCE_API.GetUrl(), json.toString());
         }
 
         @Override
@@ -174,7 +198,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
     }
-
+    
     class GetBalanceInMain extends RequestServerAPI implements RequestServerFunction {
         public GetBalanceInMain() {
             super();

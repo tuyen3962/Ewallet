@@ -1,6 +1,8 @@
 package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
+import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Context;
 import android.content.Intent;
@@ -16,15 +18,18 @@ import android.widget.TextView;
 
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
-import com.example.ewalletexample.Symbol.Code;
+import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
+import com.example.ewalletexample.model.UserSearchModel;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.TextBalanceFormat;
+import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
+import com.google.firebase.storage.FirebaseStorage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,9 +40,12 @@ import java.util.List;
 
 public class TopupWalletActivity extends AppCompatActivity {
 
+    FirebaseStorageHandler firebaseStorageHandler;
     ListBankConnected banksConnected;
     String userid;
     long userAmount;
+    View userProfileLayout, sourceFundLayout;
+    CircleImageView imgUserReceiver;
     List<BankInfo> bankInfoList;
     ProgressBarManager progressBarManager;
     ListView listBankConnected;
@@ -45,6 +53,8 @@ public class TopupWalletActivity extends AppCompatActivity {
     TextView tvErrorBalance;
     BankInfo bankChoose;
     TextBalanceFormat textBalanceFormat;
+    Service service;
+    UserSearchModel searchModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +76,10 @@ public class TopupWalletActivity extends AppCompatActivity {
         etBalance = findViewById(R.id.etBalance);
         tvErrorBalance = findViewById(R.id.tvErrorBalance);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar));
+        userProfileLayout = findViewById(R.id.userProfileLayout);
+        sourceFundLayout = findViewById(R.id.sourceFundLayout);
+        imgUserReceiver = findViewById(R.id.imgUserReceiver);
+        firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
 //        textBalanceFormat = new TextBalanceFormat(false, etBalance);
     }
 
@@ -73,10 +87,34 @@ public class TopupWalletActivity extends AppCompatActivity {
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+        int serviceType = intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0);
+        service = Service.Find(serviceType);
+        getSupportActionBar().setTitle(service.GetMessage());
+        if (service == Service.TOPUP_SERVICE_TYPE || service == Service.WITHDRAW_SERVICE_TYPE){
+            ShowTopupAndWithdrawLayout();
+        }
+        else {
+            searchModel = new UserSearchModel(intent.getStringExtra(Symbol.USER_SEARCH_MODEL.GetValue()));
+            if(searchModel.getImgLink().equalsIgnoreCase("")){
+                imgUserReceiver.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_account, null));
+            } else {
+                firebaseStorageHandler.LoadAccountImageFromLink(searchModel.getImgLink(), imgUserReceiver);
+            }
+            ShowExchangeMoneyLayout();
+        }
     }
 
-    public void StartTopupTransaction(View view){
-//        Toast.makeText(TopupWalletActivity.this, textBalanceFormat.GetTextBalance(),Toast.LENGTH_SHORT).show();
+    void ShowExchangeMoneyLayout(){
+        userProfileLayout.setVisibility(View.VISIBLE);
+        sourceFundLayout.setVisibility(View.GONE);
+    }
+
+    void ShowTopupAndWithdrawLayout(){
+        userProfileLayout.setVisibility(View.GONE);
+        sourceFundLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void StartTransaction(View view){
         HideErrorBalance();
         String amountTransaction = etBalance.getText().toString();
         if (amountTransaction.isEmpty()){
@@ -84,23 +122,30 @@ public class TopupWalletActivity extends AppCompatActivity {
             return;
         }
 
-        if(bankChoose == null){
+        if(bankChoose == null && service != Service.EXCHANGE_SERVICE_TYPE){
             ShowErrorBalance("Chọn ngân hàng để thực hiện giao dịch");
             return;
         }
 
-        try {
-            Intent intent = new Intent(TopupWalletActivity.this, SubmitOrderActivity.class);
-            intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), amountTransaction);
-            intent.putExtra(Symbol.BANK_INFO.GetValue(), bankChoose.ExchangeToJsonData());
-            intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
-            intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Code.TOPUP_SERVICE_TYPE.GetCode());
+        Intent intent = new Intent(TopupWalletActivity.this, SubmitOrderActivity.class);
+        intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), amountTransaction);
+        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
+        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), service.GetCode());
+
+        if(service == Service.EXCHANGE_SERVICE_TYPE){
+            intent.putExtra(Symbol.RECEIVER_PHONE.GetValue(), searchModel.getPhone());
+            intent.putExtra(Symbol.RECEIVER_FULL_NAME.GetValue(), searchModel.getFullName());
+            intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
+        } else if(service == Service.TOPUP_SERVICE_TYPE){
             intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.ATM_SOURCE_FUND.GetCode());
-            intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-            startActivity(intent);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            intent.putExtra(Symbol.BANK_INFO.GetValue(), bankChoose.ExchangeToJsonData());
+        } else if(service == Service.WITHDRAW_SERVICE_TYPE){
+            intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
+            intent.putExtra(Symbol.BANK_INFO.GetValue(), bankChoose.ExchangeToJsonData());
         }
+
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        startActivity(intent);
     }
 
     void LoadListBankConnected(){
