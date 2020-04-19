@@ -38,7 +38,8 @@ public enum  Symbol {
     BANK_INFO("BANK_INFO"),
 
     CHILD_NAME_USERS_FIREBASE_DATABASE("users"),
-    CHILD_NAME_CARDS_FIREBASE_DATABASE("cards");
+    CHILD_NAME_CARDS_FIREBASE_DATABASE("cards"),
+    CHILD_NAME_TRANSACTION("transaction");
 
     private String value;
 

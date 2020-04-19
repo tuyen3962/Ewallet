@@ -1,13 +1,11 @@
 package com.example.ewalletexample.Server.order;
 
-import android.util.Log;
-
 import com.example.ewalletexample.Server.VerifyPin.VerifyPinAPI;
-import com.example.ewalletexample.Server.VerifyPin.VerifyResponse;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Service;
+import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.MobileCardModel;
 import com.example.ewalletexample.service.ServerAPI;
@@ -15,6 +13,7 @@ import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
 import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -25,28 +24,15 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class MobileCardOrder implements VerifyResponse , HandleDataFromFirebaseDatabase<MobileCardModel> {
-    private MobileCardOrderResponse mobileCardOrderResponse;
-    private String userid, pin, phone, cardnumber, serinumber;
-    private long orderid, fee;
-    private short codeSourceFund;
-    private FirebaseDatabaseHandler<MobileCardModel> firebaseDatabaseHandler;
-    private VerifyPinAPI verifyPinAPI;
+public class MobileCardOrder extends Order {
+    private String cardnumber, serinumber;
     private MobileCardOperator operator;
-    private MobileCardAmount amount;
+    private MobileCardAmount mobileCardAmount;
 
-    public MobileCardOrder(String userid, String pin, MobileCardAmount amount, MobileCardOperator mobileCode, long fee, String phone, short codeSourceFund, MobileCardOrderResponse response) {
-        this.userid = userid;
-        this.pin = pin;
-        this.phone = phone;
-        this.amount = amount;
+    public MobileCardOrder(String userid, String pin, MobileCardAmount mobileCardAmount, MobileCardOperator mobileCode, long fee, SourceFund codeSourceFund, OrderResponse response) {
+        super(userid, pin, mobileCardAmount.GetAmount(), fee, codeSourceFund, Service.MOBILE_CARD_SERVICE_TYPE, response);
+        this.mobileCardAmount = mobileCardAmount;
         this.operator = mobileCode;
-        this.fee = fee;
-        this.codeSourceFund = codeSourceFund;
-        verifyPinAPI = new VerifyPinAPI(userid, pin, this);
-        this.mobileCardOrderResponse = response;
-
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
     }
 
     public void StartCreateMobileCardOrder(){
@@ -54,147 +40,177 @@ public class MobileCardOrder implements VerifyResponse , HandleDataFromFirebaseD
     }
 
     @Override
-    public void VerifyPinResponse(boolean isSuccess) {
-        if(isSuccess){
-            try {
-                String[] arr = new String[]{"userid:"+userid,"amount:"+Long.valueOf(amount.GetAmount()), "phone:"+ phone, "cardtype:"+operator.GetMobileCode()};
-                String json = HandlerJsonData.ExchangeToJsonString(arr);
-                new CreateMobileCardOrder().execute(ServerAPI.CREATE_MOBILE_CARD_ORDER.GetUrl(), json);
-            } catch (JSONException e){
-
-            }
-        }
+    protected void VerifyPinSuccess() throws JSONException {
+        String[] arr = new String[]{"userid:"+userid,"amount:"+Long.valueOf(mobileCardAmount.GetAmount()), "cardtype:"+operator.GetMobileCode()};
+        String json = HandlerJsonData.ExchangeToJsonString(arr);
+        CreateOrder(ServerAPI.CREATE_MOBILE_CARD_ORDER, json);
     }
 
     @Override
-    public void HandleDataModel(MobileCardModel model) {
-        if (model != null){
-            model.DecreaseMobileCardAvailable(amount);
-            Map<String, Object> map = model.GetMapObject();
-            firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue(),
-                    operator.GetMobileCode(),
-                    map);
+    protected void CreateOrderSuccess() throws JSONException {
+        String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+sourceFund.GetCode(),
+                "bankcode:", "f6cardno:", "l4cardno:","amount:"+ mobileCardAmount.GetAmount(),"pin:"+pin,
+                "servicetype:"+ Service.MOBILE_CARD_SERVICE_TYPE.GetCode()};
 
-            mobileCardOrderResponse.ResponseMobileCard(cardnumber, serinumber);
-            return;
-        }
-
-
+        String json = HandlerJsonData.ExchangeToJsonString(arr);
+        SubmitOrder(json);
     }
 
     @Override
-    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
-        if(dataSnapshot.child(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue()).hasChild(operator.GetMobileCode())){
-            MobileCardModel model = dataSnapshot.child(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue()).child(operator.GetMobileCode()).getValue(MobileCardModel.class);
-            firebaseDatabaseHandler.UnregisterValueListener(model);
-            return;
-        }
-
-        firebaseDatabaseHandler.UnregisterValueListener(null);
+    protected void SubmitOrderSuccess() {
+        GetStausOrder(ServerAPI.GET_STATUS_MOBILE_CARD_ORDER);
     }
 
     @Override
-    public void HandlerDatabaseError(DatabaseError databaseError) {
-
+    protected void GetDataFromJsonFromStatusOrder(JSONObject json) throws JSONException {
+        cardnumber = json.getString("cardnumber");
+        serinumber = json.getString("serinumber");
+        listResponseObjects.add(cardnumber);
+        listResponseObjects.add(serinumber);
+        new ReduceNumberCardThread(operator, mobileCardAmount).run();
     }
 
-    class CreateMobileCardOrder extends RequestServerAPI implements RequestServerFunction {
-        public CreateMobileCardOrder(){
-            SetRequestServerFunction(this);
+    class ReduceNumberCardThread extends Thread implements HandleDataFromFirebaseDatabase<MobileCardModel>{
+        private MobileCardOperator operator;
+        private MobileCardAmount mobileCardAmount;
+        private FirebaseDatabaseHandler<MobileCardModel> firebaseDatabaseHandler;
+
+        public ReduceNumberCardThread(MobileCardOperator operator, MobileCardAmount amount){
+            this.operator = operator;
+            this.mobileCardAmount = amount;
+            firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
         }
 
         @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-
-            return false;
+        public void run(){
+            this.firebaseDatabaseHandler.RegisterDataListener();
         }
 
         @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            orderid = jsonData.getLong("orderid");
-            try {
-                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+codeSourceFund,
-                        "bankcode:", "f6cardno:", "l4cardno:","amount:"+amount.GetAmount(),"pin:"+pin,
-                        "servicetype:"+ Service.MOBILE_CARD_SERVICE_TYPE.GetCode()};
-
-                String json = HandlerJsonData.ExchangeToJsonString(arr);
-                new SubmitMobileCardOrder().execute(ServerAPI.SUBMIT_TRANSACTION.GetUrl(), json);
-            } catch (JSONException e){
-
+        public void HandleDataModel(MobileCardModel model) {
+            if (model != null){
+                model.DecreaseMobileCardAvailable(mobileCardAmount);
+                Map<String, Object> map = model.GetMapObject();
+                firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue(),
+                        operator.GetMobileCode(),
+                        map);
             }
         }
 
         @Override
-        public void ShowError(int errorCode, String message) {
-
-        }
-    }
-
-    class SubmitMobileCardOrder extends RequestServerAPI implements RequestServerFunction{
-        public SubmitMobileCardOrder(){
-            SetRequestServerFunction(this);
-        }
-
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
+        public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
+            if(dataSnapshot.child(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue()).hasChild(operator.GetMobileCode())){
+                MobileCardModel model = dataSnapshot.child(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue()).child(operator.GetMobileCode()).getValue(MobileCardModel.class);
+                firebaseDatabaseHandler.UnregisterValueListener(model);
+                return;
             }
 
-            return false;
+            firebaseDatabaseHandler.UnregisterValueListener(null);
         }
 
         @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            int bankreturncode = jsonData.getInt("bankreturncode");
-//            long transactionid = jsonData.getLong("transactionid");
-            try {
-                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid};
-
-                String json = HandlerJsonData.ExchangeToJsonString(arr);
-                new GetStatusMobileCardOrder().execute(ServerAPI.GET_STATUS_MOBILE_CARD_ORDER.GetUrl(), json);
-            } catch (JSONException e){
-
-            }
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
+        public void HandlerDatabaseError(DatabaseError databaseError) {
 
         }
     }
 
-    class GetStatusMobileCardOrder extends RequestServerAPI implements RequestServerFunction{
+//    class CreateMobileCardOrder extends RequestServerAPI implements RequestServerFunction {
+//        public CreateMobileCardOrder(){
+//            SetRequestServerFunction(this);
+//        }
+//
+//        @Override
+//        public boolean CheckReturnCode(int code) {
+//            if(code == ErrorCode.SUCCESS.GetValue()){
+//                return true;
+//            }
+//
+//            return false;
+//        }
+//
+//        @Override
+//        public void DataHandle(JSONObject jsonData) throws JSONException {
+//            orderid = jsonData.getLong("orderid");
+//            try {
+//                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+codeSourceFund,
+//                        "bankcode:", "f6cardno:", "l4cardno:","amount:"+ mobileCardAmount.GetAmount(),"pin:"+pin,
+//                        "servicetype:"+ Service.MOBILE_CARD_SERVICE_TYPE.GetCode()};
+//
+//                String json = HandlerJsonData.ExchangeToJsonString(arr);
+//                new SubmitMobileCardOrder().execute(ServerAPI.SUBMIT_TRANSACTION.GetUrl(), json);
+//            } catch (JSONException e){
+//
+//            }
+//        }
+//
+//        @Override
+//        public void ShowError(int errorCode, String message) {
+//
+//        }
+//    }
 
-        public GetStatusMobileCardOrder(){
-            SetRequestServerFunction(this);
-        }
+//    class SubmitMobileCardOrder extends RequestServerAPI implements RequestServerFunction{
+//        public SubmitMobileCardOrder(){
+//            SetRequestServerFunction(this);
+//        }
+//
+//        @Override
+//        public boolean CheckReturnCode(int code) {
+//            if(code == ErrorCode.SUCCESS.GetValue()){
+//                return true;
+//            }
+//
+//            return false;
+//        }
+//
+//        @Override
+//        public void DataHandle(JSONObject jsonData) throws JSONException {
+//            int bankreturncode = jsonData.getInt("bankreturncode");
+////            long transactionid = jsonData.getLong("transactionid");
+//            try {
+//                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid};
+//
+//                String json = HandlerJsonData.ExchangeToJsonString(arr);
+//                new GetStatusMobileCardOrder().execute(ServerAPI.GET_STATUS_MOBILE_CARD_ORDER.GetUrl(), json);
+//            } catch (JSONException e){
+//
+//            }
+//        }
+//
+//        @Override
+//        public void ShowError(int errorCode, String message) {
+//
+//        }
+//    }
 
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-            else if(code > ErrorCode.SUCCESS.GetValue()){
-                return false;
-            }
-
-            return false;
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            cardnumber = jsonData.getString("cardnumber");
-            serinumber = jsonData.getString("serinumber");
-            firebaseDatabaseHandler.RegisterDataListener();
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
-
-        }
-    }
+//    class GetStatusMobileCardOrder extends RequestServerAPI implements RequestServerFunction{
+//
+//        public GetStatusMobileCardOrder(){
+//            SetRequestServerFunction(this);
+//        }
+//
+//        @Override
+//        public boolean CheckReturnCode(int code) {
+//            if(code == ErrorCode.SUCCESS.GetValue()){
+//                return true;
+//            }
+//            else if(code > ErrorCode.SUCCESS.GetValue()){
+//                return false;
+//            }
+//
+//            return false;
+//        }
+//
+//        @Override
+//        public void DataHandle(JSONObject jsonData) throws JSONException {
+//            cardnumber = jsonData.getString("cardnumber");
+//            serinumber = jsonData.getString("serinumber");
+//            firebaseDatabaseHandler.RegisterDataListener();
+//        }
+//
+//        @Override
+//        public void ShowError(int errorCode, String message) {
+//
+//        }
+//    }
 }

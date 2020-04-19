@@ -14,6 +14,7 @@ import com.example.ewalletexample.Server.balance.BalanceResponse;
 import com.example.ewalletexample.Server.order.ExchangeMoneyOrder;
 import com.example.ewalletexample.Server.order.MobileCardOrder;
 import com.example.ewalletexample.Server.order.MobileCardOrderResponse;
+import com.example.ewalletexample.Server.order.OrderResponse;
 import com.example.ewalletexample.Server.order.TopupOrder;
 import com.example.ewalletexample.Server.order.WithdrawOrder;
 import com.example.ewalletexample.Symbol.Service;
@@ -27,7 +28,9 @@ import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 
 import org.json.JSONException;
 
-public class SubmitOrderActivity extends AppCompatActivity implements BalanceResponse, MobileCardOrderResponse {
+import java.util.List;
+
+public class SubmitOrderActivity extends AppCompatActivity implements BalanceResponse, MobileCardOrderResponse, OrderResponse {
 
     String userid, amount, receiverphone, receiverFullname, phone;
     long fee;
@@ -189,20 +192,20 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
 
     void CheckOrder(String pin) throws JSONException{
         if (service == Service.TOPUP_SERVICE_TYPE){
-            TopupOrder topupOrder = new TopupOrder(userid,pin,amount,fee,source.GetCode(),bankInfo.ExchangeToJsonData(), this);
-            topupOrder.StartCreateTopupOrder();
+            TopupOrder topupOrder = new TopupOrder(userid,pin,amount,fee,source,bankInfo, this);
+            topupOrder.StartCreateOrder();
         }
         else if(service == Service.WITHDRAW_SERVICE_TYPE){
-            WithdrawOrder withdrawOrder = new WithdrawOrder(userid, pin, amount, fee, source.GetCode(), bankInfo.ExchangeToJsonData(), this);
-            withdrawOrder.StartCreateWithdrawOrder();
+            WithdrawOrder withdrawOrder = new WithdrawOrder(userid, pin, amount, fee, source, bankInfo, this);
+            withdrawOrder.StartCreateOrder();
         }
         else if(service == Service.EXCHANGE_SERVICE_TYPE){
             ExchangeMoneyOrder exchangeMoneyOrder = new ExchangeMoneyOrder(userid, receiverphone, pin, amount, fee, source, this);
-            exchangeMoneyOrder.StartCreateExchangeMoneyOrder();
+            exchangeMoneyOrder.StartCreateOrder();
         }
         else if(service == Service.MOBILE_CARD_SERVICE_TYPE){
-            MobileCardOrder order = new MobileCardOrder(userid, pin, mobileCardAmount, mobileCardOperator, fee, phone, source.GetCode(), this);
-            order.StartCreateMobileCardOrder();
+            MobileCardOrder order = new MobileCardOrder(userid, pin, mobileCardAmount, mobileCardOperator, fee, source, this);
+            order.StartCreateOrder();
         }
     }
 
@@ -214,5 +217,15 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
     @Override
     public void ResponseMobileCard(String cardNumber, String seriNumber) {
         Log.d("TAG", "ResponseMobileCard: " + cardNumber + " " + seriNumber);
+    }
+
+    @Override
+    public void response(boolean isSuccess, int code, List<String> objectList) {
+        if(isSuccess){
+            Log.d("TAG", "response: " + code + " " + objectList.get(0));
+            if(service == Service.MOBILE_CARD_SERVICE_TYPE){
+                Log.d("TAG", "response: " + code + " " + objectList.get(1) + " " + objectList.get(2));
+            }
+        }
     }
 }

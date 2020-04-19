@@ -18,14 +18,20 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
 
     ValueEventListener databaseValueEvent;
 
+    private Symbol symbol;
     private String keyModel;
     private Class<T> tClass;
     private ResponseModelByKey response;
     ValueEventListener findDataEventListener = new ValueEventListener() {
         @Override
         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-            T model = dataSnapshot.child(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue()).child(keyModel).getValue(tClass);
-            UnregisterFindValue(model);
+            if(dataSnapshot.hasChild(symbol.GetValue()) && dataSnapshot.child(symbol.GetValue()).hasChild(keyModel)){
+                T model = dataSnapshot.child(symbol.GetValue()).child(keyModel).getValue(tClass);
+                UnregisterFindValue(model);
+                return;
+            }
+
+            UnregisterFindValue(null);
         }
 
         @Override
@@ -71,24 +77,8 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
         dataHandler.HandleDataModel(model);
     }
 
-    public T GetUserModelByKey(DataSnapshot dataSnapshot, String key, Class<T> tClass){
-        if(ContainsKey(dataSnapshot.child(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue()), key)){
-            return dataSnapshot.child(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue()).child(key).getValue(tClass);
-        }
-
-        return null;
-    }
-
-    private boolean ContainsKey(DataSnapshot dataSnapshot, String key){
-        return dataSnapshot.hasChild(key);
-    }
-
     public void PushDataIntoDatabase(String childName, String id, T data){
         mDatabase.child(childName).child(id).setValue(data);
-    }
-
-    public void PushDataIntoDatabase(String childName, T data){
-        mDatabase.child(childName).push().setValue(data);
     }
 
     public void UpdateData(String childName, String id, T data){
@@ -99,7 +89,8 @@ public class FirebaseDatabaseHandler<T> implements DatabaseValueListenerFunction
         mDatabase.child(childName).child(id).updateChildren(map);
     }
 
-    public void GetUserModelByKey(String key, Class<T> tClass, ResponseModelByKey response){
+    public void GetModelByKey(Symbol symbol, String key, Class<T> tClass, ResponseModelByKey response){
+        this.symbol = symbol;
         keyModel = key;
         this.tClass = tClass;
         mDatabase.addValueEventListener(findDataEventListener);

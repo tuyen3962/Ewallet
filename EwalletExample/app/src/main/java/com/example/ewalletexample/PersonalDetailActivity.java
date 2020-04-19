@@ -138,7 +138,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         user.setUserId(userid);
         user.setFullName(fullname);
         user.setImgAccountLink(imgLink);
-        firebaseDatabaseHandler.GetUserModelByKey(userid, UserModel.class, this);
+        firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
     }
 
     @Override
