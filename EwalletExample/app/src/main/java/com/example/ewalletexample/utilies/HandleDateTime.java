@@ -42,4 +42,18 @@ public class HandleDateTime {
 
         return c.getActualMaximum(Calendar.DAY_OF_MONTH) + "-"+(c.get(Calendar.MONTH) + 1) + "-"+c.get(Calendar.YEAR);
     }
+
+    public static int GetMonthOfDate(String currentTime) throws ParseException {
+        Date date = dayFormatter.parse(currentTime);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar.get(Calendar.MONTH) + 1;
+    }
+
+    public static int GetYearOfDate(String currentTime) throws ParseException {
+        Date date = dayFormatter.parse(currentTime);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar.get(Calendar.YEAR);
+    }
 }

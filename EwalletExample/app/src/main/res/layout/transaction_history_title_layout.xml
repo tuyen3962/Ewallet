@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/layoutMonthTransaction"
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvMonthTransaction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="tong thu"
+        android:layout_marginTop="5dp"
+        android:textSize="20dp"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/tvMoney"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="tong thu"
+        android:textSize="25dp"
+        android:textStyle="bold"
+        android:layout_marginVertical="5dp"
+        android:gravity="center"/>
+
+    <ImageView
+        android:id="@+id/lineChoose"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="@color/Black"/>
+</LinearLayout>
