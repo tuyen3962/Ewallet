@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
 
-        firebaseDatabaseHandler.GetUserModelByKey(userid, UserModel.class,this);
+        firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class,this);
     }
 
     void LoadListBankInfo(){

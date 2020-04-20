@@ -25,7 +25,7 @@
         android:textColor="@color/Red"
         android:layout_below="@+id/tvRegisterByPhone"
         android:textSize="28sp"
-        android:visibility="visible"/>
+        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/tvFullName"
@@ -114,16 +114,34 @@
         android:textSize="18dp"
         android:layout_marginRight="20dp"/>
 
-    <Button
-        android:id="@+id/btnRegister"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/etConfirmPassword"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="25dp"
-        android:background="@drawable/edit_round_button"
-        android:gravity="center"
-        android:onClick="RegisterEvent"
-        android:text="Đăng kí" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:background="@drawable/edit_round_button"
+            android:gravity="center"
+            android:onClick="RegisterEvent"
+            android:text="Đăng kí" />
+
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:background="@drawable/edit_round_button"
+            android:gravity="center"
+            android:onClick="CancelEvent"
+            android:text="Hủy bỏ" />
+
+    </LinearLayout>
 
 </RelativeLayout>

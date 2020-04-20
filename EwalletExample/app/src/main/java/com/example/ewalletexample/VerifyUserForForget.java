@@ -26,15 +26,13 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class VerifyUserForForget extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
 
-    private final String tvDetailPhone = "Số điện thoại";
     private final String hintEtDetailPhone = "Nhập số điện thoại";
 
-    private final String tvDetailEmail = "Email";
     private final String hintEtDetailEmail = "Nhập email";
 
     FirebaseAuth auth;
     DatabaseReference mDatabase;
-    TextView tvDetail, tvChangeTypeVerify, tvError;
+    TextView tvChangeTypeVerify, tvError;
     EditText etDetail;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     boolean verifyAccountByPhone;
@@ -48,13 +46,13 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
         auth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
-        init();
+        Initialize();
 
         ShowUIVerifyForgetByPhone();
         verifyAccountByPhone = true;
     }
 
-    void init(){
+    void Initialize(){
         etDetail = findViewById(R.id.etDetail);
         tvChangeTypeVerify = findViewById(R.id.tvChangeTypeVerify);
         tvError = findViewById(R.id.tvError);
@@ -102,7 +100,6 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
         }
     }
 
-    //check
     @Override
     public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
         for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue()).getChildren()){
@@ -157,12 +154,10 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     }
 
     private void ShowUIVerifyForgetByPhone(){
-        tvDetail.setText(tvDetailPhone);
         etDetail.setHint(hintEtDetailPhone);
     }
 
     private void ShowUIVerifyForgetByEmail(){
-        tvDetail.setText(tvDetailEmail);
         etDetail.setHint(hintEtDetailEmail);
     }
 

@@ -33,7 +33,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
 
     CircleImageView imgAccount;
     Button btnVisibilyBalance;
-    LinearLayout layoutUserAccount, layoutSetting, layoutBankAccount;
+    LinearLayout layoutUserAccount, layoutSetting, layoutBankAccount, layoutHistoryTransaction;
     TextView tvBalance, tvFullName, tvPhone, tvNumCardConnected, tvEmail;
 
     private MainActivity mainActivity;
@@ -79,6 +79,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         layoutSetting.setOnClickListener(this);
         layoutUserAccount.setOnClickListener(this);
         layoutBankAccount.setOnClickListener(this);
+        layoutHistoryTransaction.setOnClickListener(this);
 
         SetTextviewDetail();
 
@@ -96,6 +97,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         tvEmail = view.findViewById(R.id.tvEmail);
         tvNumCardConnected = view.findViewById(R.id.tvNumCard);
         tvPhone = view.findViewById(R.id.tvPhone);
+        layoutHistoryTransaction = view.findViewById(R.id.layoutHistoryTransaction);
     }
 
     void SetTextviewDetail(){
@@ -117,6 +119,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             mainActivity.SwitchToPersonalDetailActivity();
         }else if(v.getId() == layoutBankAccount.getId()){
             mainActivity.SwitchToBankConnectedActivity();
+        }else if(v.getId() == layoutHistoryTransaction.getId()){
+            ShowTransactionHistory();
         }
     }
 
@@ -132,5 +136,13 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
 
     void ShowAccountImage(){
         mainActivity.SetImageViewByUri(imgAccount);
+    }
+
+    void ShowTransactionHistory() {
+        Intent intent = new Intent(mainActivity, HistoryTransactionActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.userAmount);
+        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserModel().getPhone());
+        startActivity(intent);
     }
 }

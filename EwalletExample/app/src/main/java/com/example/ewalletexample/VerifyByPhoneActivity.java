@@ -56,7 +56,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     CodeEditText codeEditText;
     Button btnVerifyPhone, btnResendVerifyCode;
-    TextView tvError;
+    TextView tvError, txVerifyPhone;
     ProgressBarManager progressBarManager;
 
     CountDownTimer countDown;
@@ -70,11 +70,9 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         setContentView(R.layout.activity_verify_by_phone);
 
         auth = FirebaseAuth.getInstance();
-        GetValueFromIntent();
-
-        SendVerifyCodeToPhoneNumber();
-
         Initalize();
+        GetValueFromIntent();
+        SendVerifyCodeToPhoneNumber();
 
         SetupCountDownTimer();
         countDown.start();
@@ -82,7 +80,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
     void Initalize(){
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone);
 
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
@@ -93,6 +90,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         tvError = findViewById(R.id.tvError);
         btnVerifyPhone = findViewById(R.id.btnVerifyPhone);
         btnResendVerifyCode = findViewById(R.id.btnResendVerifyPhone);
+        txVerifyPhone = findViewById(R.id.txVerifyPhone);
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone);
         AddTextWatcherEventToEditText();
     }
 
@@ -109,6 +108,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
             userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
             user = new User(phone);
+            btnVerifyPhone.setText("Tiếp tục");
+            txVerifyPhone.setText("Nhập mã code đổi mật khẩu");
         }
         else{
             String fullName = intent.getStringExtra(Symbol.FULLNAME.GetValue());

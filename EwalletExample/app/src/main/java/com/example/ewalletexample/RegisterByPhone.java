@@ -74,6 +74,10 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         etConfirmPass.addTextChangedListener(textWatcher);
     }
 
+    public void CancelEvent(View view){
+        startActivity(new Intent(RegisterByPhone.this, LoginActivity.class));
+    }
+
     public void RegisterEvent(View view){
         Response response = InputFieldIsValid();
 
