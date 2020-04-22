@@ -38,7 +38,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TopupWalletActivity extends AppCompatActivity {
+public class ServiceWalletActivity extends AppCompatActivity {
 
     FirebaseStorageHandler firebaseStorageHandler;
     ListBankConnected banksConnected;
@@ -127,7 +127,7 @@ public class TopupWalletActivity extends AppCompatActivity {
             return;
         }
 
-        Intent intent = new Intent(TopupWalletActivity.this, SubmitOrderActivity.class);
+        Intent intent = new Intent(ServiceWalletActivity.this, SubmitOrderActivity.class);
         intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), amountTransaction);
         intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), service.GetCode());
@@ -201,7 +201,7 @@ public class TopupWalletActivity extends AppCompatActivity {
                 bankInfoList.add(bankInfo);
             }
 
-            banksConnected = new ListBankConnected(TopupWalletActivity.this, bankInfoList);
+            banksConnected = new ListBankConnected(ServiceWalletActivity.this, bankInfoList);
             listBankConnected.setAdapter(banksConnected);
 
             progressBarManager.HideProgressBar();

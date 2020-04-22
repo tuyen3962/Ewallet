@@ -106,7 +106,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         if(model != null){
             tvFullName.setText(model.getFullname());
             tvPhone.setText(model.getPhone());
-            tvNumCardConnected.setText(mainActivity.GetNumCardConnected() + " thẻ liên kết");
+//            tvNumCardConnected.setText(mainActivity.GetNumCardConnected() + " thẻ liên kết");
             tvEmail.setText(model.getEmail());
         }
     }
@@ -132,6 +132,11 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         else{
             tvBalance.setText("******");
         }
+    }
+
+    public void setBalanceText(String balance){
+        tvBalance = getView().findViewById(R.id.tvBalance);
+        tvBalance.setText(balance);
     }
 
     void ShowAccountImage(){

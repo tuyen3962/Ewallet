@@ -28,6 +28,8 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
+import com.example.ewalletexample.Server.user.update.UpdateUserAPI;
+import com.example.ewalletexample.Server.user.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
@@ -40,6 +42,8 @@ import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.TextVisibilityManagement;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
@@ -52,7 +56,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 
-public class PersonalDetailActivity extends AppCompatActivity implements AlertDialogTakePictureFunction, ResponseMethod, ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener {
+public class PersonalDetailActivity extends AppCompatActivity implements AlertDialogTakePictureFunction, ResponseMethod,
+        ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener, WebsocketResponse, UpdateUserResponse {
     private final static String DIALOG_TAG = "DIALOG";
     private final static int TAKE_PHOTO_REQUEST = 100;
     private final static int PICK_IMAGE_REQUEST = 101;
@@ -74,12 +79,16 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
     private UserModel model;
     private AlertDialogTakePicture dialogTakePicture;
     private User user;
-    long userAmount;
 
     private String currentPhotoPath;
     private File photoFile;
     private Uri photoUri;
     private boolean canTakePhoto = false, canPickImage = false;
+    WebsocketClient client;
+    long balance;
+    boolean changeBalance, uploadImage;
+
+    UpdateUserAPI updateAPI;
 
     DatePickerDialog datePickerDialog;
 
@@ -98,6 +107,10 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
     }
 
     void Initialize(){
+        uploadImage = false;
+        changeBalance = false;
+        balance = 0;
+        client = new WebsocketClient(this);
         datePickerDialog = new DatePickerDialog(this,this,1998,1,1);
         btnCancelEditUserDetail = findViewById(R.id.btnCancelEditUserDetail);
         btnVerifyUploadImage = findViewById(R.id.btnVerifyUploadImage);
@@ -133,12 +146,20 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         String fullname = intent.getStringExtra(Symbol.FULLNAME.GetValue());
         String userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         String imgLink = intent.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue());
-        Log.d("TAG", "LoadDataFromIntent: " + imgLink);
-        userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         user.setUserId(userid);
         user.setFullName(fullname);
         user.setImgAccountLink(imgLink);
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
+
+        updateAPI = new UpdateUserAPI(user.getUserId(), this);
+    }
+
+    @Override
+    public void UpdateWallet(String userid, long balance) {
+        if(userid.equalsIgnoreCase(user.getUserId())){
+            balance = balance;
+            changeBalance = true;
+        }
     }
 
     @Override
@@ -205,12 +226,12 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
     }
 
     public void BackToMainEvent(View view){
-        Intent intent = new Intent(PersonalDetailActivity.this,MainActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+        Intent intent = new Intent();
         intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
-        intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
-        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-        startActivity(intent);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     public void CancelUploadImageEvent(View view){
@@ -219,6 +240,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
     }
 
     public void VerifyUploadImageEvent(View view){
+        uploadImage = true;
+        progressBarManager.ShowProgressBar("Cập nhật");
         firebaseStorageHandler.UploadImage(photoUri, this);
         ShowButtonCancelEditImageAccount();
     }
@@ -247,23 +270,16 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         ShowButtonEditUserDetail();
     }
 
-    //Unfinish
     public void FinishEditUserDetailEvent(View view) {
+        uploadImage = false;
+        progressBarManager.ShowProgressBar("Loading");
         String dob = tvDateOfBirth.getText().toString();
-        String cmnd = tvCMND.getText().toString();
         String address = etAddress.getText().toString();
-
-        String[] arrStr = new String[]{"userid:"+ user.getUserId(),"pin:","dob:" + dob,"cmnd:"+ cmnd,"address:"+ address};
-        try {
-            String json = HandlerJsonData.ExchangeToJsonString(arrStr);
-            progressBarManager.ShowProgressBar("Loading");
-            new UpdateUserProfileThread().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        updateAPI.setDateOfBirth(dob);
+        updateAPI.setAddress(address);
+        updateAPI.UpdateUser();
     }
 
-    //Finish
     public void CancelEditUserDetailEvent(View view){
         HideEditTextUserDetail();
         ShowTextViewUserDetail();
@@ -421,6 +437,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         model.setImgLink(serverFile);
         LoadImageAccount();
         firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), user.getUserId(), model);
+        updateAPI.setImageProfile(serverFile);
+        updateAPI.UpdateUser();
     }
 
     @Override
@@ -434,19 +452,9 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
         tvDateOfBirth.setText(currentDateString);
     }
 
-    class UpdateUserProfileThread extends RequestServerAPI implements RequestServerFunction{
-
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-
-            return false;
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
+    @Override
+    public void UpdateSuccess() {
+        if(!uploadImage){
             user.setDateOfbirth(tvDateOfBirth.getText().toString());
             user.setCmnd(tvCMND.getText().toString());
             user.setAddress(etAddress.getText().toString());
@@ -454,10 +462,11 @@ public class PersonalDetailActivity extends AppCompatActivity implements AlertDi
             ShowTextViewUserDetail();
             ShowButtonCancelEditUserDetail();
         }
+        progressBarManager.HideProgressBar();
+    }
 
-        @Override
-        public void ShowError(int errorCode, String message) {
+    @Override
+    public void UpdateFail() {
 
-        }
     }
 }

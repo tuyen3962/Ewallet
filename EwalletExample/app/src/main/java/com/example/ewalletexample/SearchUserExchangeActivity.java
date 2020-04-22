@@ -75,7 +75,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
 
     @Override
     public void SelectUserExchangeMoney(UserSearchModel model) {
-        Intent intent = new Intent(SearchUserExchangeActivity.this, TopupWalletActivity.class);
+        Intent intent = new Intent(SearchUserExchangeActivity.this, ServiceWalletActivity.class);
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.EXCHANGE_SERVICE_TYPE.GetCode());
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);

@@ -15,10 +15,12 @@ import com.example.ewalletexample.Server.bank.unlink.UnlinkBankResponse;
 import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.service.websocket.WebsocketResponse;
 
 import org.json.JSONException;
 
-public class BankCardDetailActivity extends AppCompatActivity implements BankMappingCallback<Object> {
+public class BankCardDetailActivity extends AppCompatActivity implements BankMappingCallback<Object>, WebsocketResponse {
 
     String userid;
     BankInfo bankInfo;
@@ -26,6 +28,9 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     TextView tvBankName, tvCardNumber, tvStatus;
     ImageView imgBank;
     UnlinkBankConnectedAPI unlinkBankAPI;
+    WebsocketClient client;
+    boolean changeBalance;
+    long balance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +43,9 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     }
 
     void Initialize(){
+        changeBalance = false;
+        balance = 0;
+        client = new WebsocketClient(this);
         tvBankName = findViewById(R.id.tvBankName);
         tvCardNumber = findViewById(R.id.tvCardNumber);
         tvStatus = findViewById(R.id.tvStatus);
@@ -65,7 +73,10 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     }
 
     void ReturnPreviousActivity(){
-        setResult(RESULT_CANCELED);
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        setResult(RESULT_CANCELED, intent);
         finish();
     }
 
@@ -79,11 +90,21 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
             String bankInfoString = bankInfo.ExchangeToJsonData();
             Intent intent = new Intent();
             intent.putExtra(Symbol.BANK_INFO.GetValue(), bankInfoString);
+            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
             setResult(RESULT_OK, intent);
             finish();
         }
         else {
             Toast.makeText(this, "Huy lien ket that bai", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void UpdateWallet(String userid, long balance) {
+        if(userid.equalsIgnoreCase(this.userid)){
+            this.balance = balance;
+            changeBalance = true;
         }
     }
 }

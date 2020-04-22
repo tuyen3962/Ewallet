@@ -1,6 +1,7 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
@@ -18,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
@@ -26,6 +28,8 @@ import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandl
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.storageFirebase.ResponseImageUri;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -34,8 +38,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements ResponseImageUri, ResponseModelByKey<UserModel> {
-
+public class MainActivity extends AppCompatActivity implements ResponseImageUri, ResponseModelByKey<UserModel>, WebsocketResponse {
+    private static String HOME = "HOME", MY_WALLET = "MY_WALLET";
     String userid;
     long userAmount;
     BottomNavigationView bottomNavigation;
@@ -45,19 +49,20 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
     int numBankConnected;
     Uri imageUri;
     UserModel model;
+    WebsocketClient websocket;
 
     BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
             new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.navigation_main:
-                            openFragment(HomeFragment.newInstance(userid));
+                            openFragment(HomeFragment.newInstance(userid), HOME);
                             return true;
                         case R.id.navigation_history:
 //                            openFragment(SmsFragment.newInstance("", ""));
                             return true;
                         case R.id.navigation_wallet:
-                            openFragment(MyWalletFragement.newInstance(userid));
+                            openFragment(MyWalletFragement.newInstance(userid), MY_WALLET);
                             return true;
                     }
                     return false;
@@ -74,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
     }
 
     void Initialize(){
+        websocket = new WebsocketClient(this);
+        storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
         bottomNavigation = findViewById(R.id.bottom_navigation);
         bottomNavigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
@@ -90,8 +97,26 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class,this);
     }
 
+    @Override
+    public void UpdateWallet(String userid, long balance) {
+        runOnUiThread(() -> {
+            if(this.userid.equalsIgnoreCase(userid)){
+                userAmount = balance;
+                HomeFragment fragment = (HomeFragment) getSupportFragmentManager()
+                        .findFragmentByTag(HOME);
+                if(fragment != null){
+                    fragment.setBalanceText(String.valueOf(balance));
+                }
+                MyWalletFragement myWalletFragement = (MyWalletFragement) getSupportFragmentManager()
+                        .findFragmentByTag(MY_WALLET);
+                if(myWalletFragement != null){
+                    myWalletFragement.setBalanceText(String.valueOf(balance));
+                }
+            }
+        });
+    }
+
     void LoadListBankInfo(){
-//        progressBarManager.ShowProgressBar("Loading");
         JSONObject jsonObject = new JSONObject();
 
         try{
@@ -103,29 +128,33 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
         }
     }
 
-    void GetImageUri(){
-        storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
-        if(!model.getImgLink().isEmpty()){
-            storageHandler.GetUriImageFromServerFile(model.getImgLink(), this);
-        }
-    }
-
-    @Override
-    public void GetImageUri(Uri imageUri) {
-        this.imageUri = imageUri;
-        openFragment(HomeFragment.newInstance(userid));
-        LoadListBankInfo();
-    }
-
     @Override
     public void GetModel(UserModel data) {
         model = data;
         GetImageUri();
     }
 
-    public void openFragment(Fragment fragment) {
+    void GetImageUri(){
+        if(!model.getImgLink().isEmpty()){
+            storageHandler.GetUriImageFromServerFile(model.getImgLink(), this);
+        } else {
+            this.imageUri = null;
+            openFragment(HomeFragment.newInstance(userid), HOME);
+            progressBarManager.HideProgressBar();
+        }
+    }
+
+    @Override
+    public void GetImageUri(Uri imageUri) {
+        this.imageUri = imageUri;
+        openFragment(HomeFragment.newInstance(userid), HOME);
+
+        progressBarManager.HideProgressBar();
+    }
+
+    public void openFragment(Fragment fragment, String tag) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.mainLayoutFragment, fragment);
+        transaction.replace(R.id.mainLayoutFragment, fragment, tag);
         transaction.addToBackStack(null);
         transaction.commit();
     }
@@ -152,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
     }
 
     public void SetBalanceText(TextView tvBalance){
-        tvBalance.setText("$" + userAmount);
+        tvBalance.setText(userAmount + "");
     }
 
     public void SwitchToPersonalDetailActivity(){
@@ -160,8 +189,7 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
         intent.putExtra(Symbol.FULLNAME.GetValue(), model.getFullname());
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), model.getImgLink());
-        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-        startActivity(intent);
+        startActivityForResult(intent, RequestCode.MODIFY_INFORMATION);
     }
 
     public void SwitchToBankConnectedActivity(){
@@ -176,6 +204,25 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
             intent.putExtra(Symbol.USER_ID.GetValue(), userid);
             intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
             startActivity(intent);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        websocket.disconnect();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RequestCode.MODIFY_INFORMATION && requestCode == RESULT_OK){
+            String imageLink = data.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue());
+            storageHandler.GetUriImageFromServerFile(imageLink, this);
+            boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if(changeBalance){
+                userAmount = data.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+            }
         }
     }
 

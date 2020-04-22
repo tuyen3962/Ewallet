@@ -24,9 +24,7 @@ import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.ErrorCode;
-import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.AnimationManager;
@@ -39,12 +37,8 @@ import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel> {
     ProgressBarManager progressBarManager;
@@ -94,6 +88,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         animationManager = new AnimationManager(this);
 
         layoutBankAccountDetail = findViewById(R.id.layoutBankAccountDetail);
+        layoutBankAccountDetail.setVisibility(View.GONE);
         listBankLayout = findViewById(R.id.listBankLayout);
 
         rvBankSupportLayout = findViewById(R.id.rvListBankSupportLayout);
@@ -123,7 +118,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         amount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
 
-        firebaseDatabaseHandler.GetUserModelByKey(userid, UserModel.class, this);
+        firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
     }
 
     private void HideGridView(){
@@ -146,7 +141,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         if(cardNo.isEmpty() || fullname.isEmpty() || cmnd.isEmpty()){
             return;
         }
-
+        Log.d("TAG", "CreateLinkAccountWithBank: " + chosenBankConnect.getBankCode() + " " + cardNo + " " + fullname + " " + cmnd);
         SendRequestForLinkingBank(cardNo, fullname, cmnd);
     }
 

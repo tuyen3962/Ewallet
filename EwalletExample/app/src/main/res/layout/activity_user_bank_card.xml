@@ -52,7 +52,6 @@
             </RelativeLayout>
 
             <TextView
-                android:id="@+id/tvBalance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
@@ -63,6 +62,7 @@
                 android:layout_marginVertical="5dp"/>
 
             <TextView
+                android:id="@+id/tvBalance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
@@ -228,7 +228,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="10dp"
-            android:visibility="visible"/>
+            android:visibility="gone"/>
 
         <LinearLayout
             android:id="@+id/layoutConnectBank"

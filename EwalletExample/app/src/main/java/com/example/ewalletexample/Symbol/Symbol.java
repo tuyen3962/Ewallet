@@ -1,6 +1,8 @@
 package com.example.ewalletexample.Symbol;
 
 public enum  Symbol {
+    BASE_ADDRESS("192.168.15.113"),
+
     REASION_VERIFY("REASONVERIFY"),
     REASON_VERIFY_FOR_FORGET("FORGETPASSWORD"),
     REASON_VERIFY_FOR_REGISTER("REGISTER"),
@@ -20,6 +22,8 @@ public enum  Symbol {
     DOB("DATE_OF_BIRTH"),
     NUM_CARD_CONNECT_BANK("NUM_CARD"),
     BANK_CODE("BANK_CODE"),
+
+    CHANGE_BALANCE("CHANGE_BALANCE"),
 
     MOBILE_CODE("MOBILE_CODE"),
     MOBILE_AMOUNT("MOBILE_AMOUNT"),

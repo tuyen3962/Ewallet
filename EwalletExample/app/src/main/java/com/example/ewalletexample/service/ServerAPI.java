@@ -1,5 +1,7 @@
 package com.example.ewalletexample.service;
 
+import com.example.ewalletexample.Symbol.Symbol;
+
 public enum  ServerAPI {
     CREATE_MOBILE_CARD("/mobile-card/create"),
 
@@ -36,7 +38,7 @@ public enum  ServerAPI {
 
     SUBMIT_TRANSACTION("/charge-order/submit-trans");
 
-    private String baseURL = "http://192.168.1.10:8080";
+    private String baseURL = "http://" + Symbol.BASE_ADDRESS.GetValue() + ":8080";
 
 
     private String url;

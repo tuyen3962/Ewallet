@@ -26,13 +26,15 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.google.firebase.storage.FirebaseStorage;
 
 import org.json.JSONException;
 
 import java.util.List;
 
-public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>> {
+public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, WebsocketResponse {
     FirebaseStorageHandler storageHandler;
 
     ListBankConnectedAPI listBankAPI;
@@ -46,8 +48,10 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     RecyclerView listBankConnected;
     List<BankInfo> bankInfoList;
 
+    WebsocketClient client;
+
     String userid;
-    long amount;
+    long balance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +64,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     }
 
     void Initialize(){
+        client = new WebsocketClient(this);
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
 
         tvBalance = findViewById(R.id.tvBalance);
@@ -74,13 +79,13 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         listBankConnected.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
         listBankAPI = new ListBankConnectedAPI(this, userid);
-        SetBalance(amount);
+        SetBalance(balance);
     }
 
     void LoadValueFromIntent(){
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
-        amount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+        balance = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
     }
 
     private void LoadBankConnected(){
@@ -95,14 +100,14 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     public void AddNewBankCard(View view){
         Intent intent = new Intent(UserBankCardActivity.this, ChooseBankConnectActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         startActivityForResult(intent, RequestCode.CONNECT_BANK_CODE);
     }
 
     public void BackToMain(View view){
         Intent intent = new Intent(UserBankCardActivity.this, MainActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         startActivity(intent);
     }
 
@@ -121,13 +126,32 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         else {
             if (callback != null){
                 bankInfoList = callback;
-                layoutConnectBank.setVisibility(View.GONE);
-                banksConnected = new ListBankConnectedRecycleView(UserBankCardActivity.this, bankInfoList);
-                listBankConnected.setAdapter(banksConnected);
+                SetLayoutBankConnect();
             }
         }
 
         progressBarManager.HideProgressBar();
+    }
+
+    public void SetLayoutBankConnect(){
+        if(bankInfoList.size() > 0){
+            layoutConnectBank.setVisibility(View.GONE);
+            banksConnected = new ListBankConnectedRecycleView(UserBankCardActivity.this, bankInfoList);
+            listBankConnected.setAdapter(banksConnected);
+        } else {
+            layoutConnectBank.setVisibility(View.VISIBLE);
+            listBankConnected.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void UpdateWallet(String userid, long balance) {
+        runOnUiThread(()->{
+            if(userid.equalsIgnoreCase(this.userid)){
+                this.balance = balance;
+                SetBalance(balance);
+            }
+        });
     }
 
     private class ListBankConnectedRecycleView extends RecyclerView.Adapter<ListBankConnectedRecycleView.BankConnectedViewHolder>{
@@ -236,8 +260,30 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
                 }
             }
         } else if(requestCode == RequestCode.UNLINK_BANK_CODE){
-            if (resultCode == RESULT_OK){
+            boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if (changeBalance){
+                this.balance = data.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+            }
 
+            if(resultCode == RESULT_OK){
+                String bankInfoString = data.getStringExtra(Symbol.BANK_INFO.GetValue());
+                try {
+                    BankInfo bankInfo = new BankInfo(bankInfoString);
+                    int index = -1;
+                    for (int i = 0; i < bankInfoList.size(); i++){
+                        BankInfo info = bankInfoList.get(i);
+                        if(bankInfo.equal(info)){
+                            index = i;
+                            break;
+                        }
+                    }
+                    if(index != -1){
+                        bankInfoList.remove(index);
+                        SetLayoutBankConnect();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

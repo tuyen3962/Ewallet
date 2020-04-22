@@ -1,5 +1,7 @@
 package com.example.ewalletexample.Server.bank.unlink;
 
+import android.util.Log;
+
 import com.example.ewalletexample.Server.bank.BankMappingCallback;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
@@ -24,6 +26,7 @@ public class UnlinkBankConnectedAPI {
 
     public void StartUnlink(){
         try {
+            Log.d("TAG", "StartUnlink: " + userid + " " + bankInfo.toString());
             String[] arr = new String[]{"userid:"+ userid, "bankcode:"+ bankInfo.getBankCode(),
                     "f6cardno:"+bankInfo.getF6CardNo(), "l4cardno:" + bankInfo.getL4CardNo()};
             String json = HandlerJsonData.ExchangeToJsonString(arr);

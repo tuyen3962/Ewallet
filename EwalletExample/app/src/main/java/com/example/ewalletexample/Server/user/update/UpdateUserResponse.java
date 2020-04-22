@@ -1,4 +1,4 @@
-package com.example.ewalletexample.Server.update;
+package com.example.ewalletexample.Server.user.update;
 
 public interface UpdateUserResponse {
     void UpdateSuccess();

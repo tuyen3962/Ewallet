@@ -96,6 +96,11 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    public void setBalanceText(String balance){
+        tvBalance = getView().findViewById(R.id.tvBalance);
+        tvBalance.setText(balance);
+    }
+
     void Initialize(View view){
         imgAccount = view.findViewById(R.id.imgAccount);
         tvBalance = view.findViewById(R.id.tvBalance);
@@ -110,7 +115,7 @@ public class HomeFragment extends Fragment {
     }
 
     public void TopupEvent(){
-        Intent intent = new Intent(mainActivity, TopupWalletActivity.class);
+        Intent intent = new Intent(mainActivity, ServiceWalletActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.TOPUP_SERVICE_TYPE.GetCode());
@@ -118,7 +123,7 @@ public class HomeFragment extends Fragment {
     }
 
     public void WithdrawEvent(){
-        Intent intent = new Intent(mainActivity, TopupWalletActivity.class);
+        Intent intent = new Intent(mainActivity, ServiceWalletActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.WITHDRAW_SERVICE_TYPE.GetCode());

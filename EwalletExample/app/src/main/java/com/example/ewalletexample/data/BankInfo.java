@@ -84,6 +84,16 @@ public class BankInfo {
         return cardNumber;
     }
 
+    public boolean equal(BankInfo info){
+        if(info.getL4CardNo().equalsIgnoreCase(this.l4CardNo) && info.getF6CardNo().equalsIgnoreCase(this.f6CardNo) &&
+                info.getBankCode().equalsIgnoreCase(this.bankCode) && info.getCardName().equalsIgnoreCase(this.cardName)){
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     @Override
     public String toString() {
         return "BankInfo{" +

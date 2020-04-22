@@ -1,6 +1,5 @@
-package com.example.ewalletexample.Server.update;
+package com.example.ewalletexample.Server.user.update;
 
-import com.example.ewalletexample.PersonalDetailActivity;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
@@ -14,15 +13,15 @@ import org.json.JSONObject;
 public class UpdateUserAPI {
     private UpdateUserResponse response;
     private String userid;
-    private String fullName;
     private String cmnd;
     private String address;
     private String dateOfBirth;
     private String pin;
+    private String imageProfile;
+    private String imageID;
 
     public UpdateUserAPI(User user, UpdateUserResponse response){
         userid = user.getUserId();
-        fullName = user.getFullName();
         cmnd = user.getCmnd();
         address = user.getAddress();
         dateOfBirth = user.getDateOfbirth();
@@ -35,19 +34,40 @@ public class UpdateUserAPI {
         this.response = response;
     }
 
-    public void UpdateUserPin(){
-        try {
-            String[] arrStr = new String[]{"userid:"+ userid,"pin:"+pin,"dob:","cmnd:","address:"};
-            String json = HandlerJsonData.ExchangeToJsonString(arrStr);
-            new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    public UpdateUserAPI(String userid, UpdateUserResponse response){
+        this.userid = userid;
+        this.address = "";
+        this.dateOfBirth = "";
+        this.cmnd = "";
+        this.imageID = "";
+        this.imageProfile = "";
+        this.response = response;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setDateOfBirth(String dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public void setPin(String pin) {
+        this.pin = pin;
+    }
+
+    public void setImageProfile(String imageProfile) {
+        this.imageProfile = imageProfile;
+    }
+
+    public void setImageID(String imageID) {
+        this.imageID = imageID;
     }
 
     public void UpdateUser(){
         try {
-            String[] arrStr = new String[]{"userid:"+ userid,"pin:","dob:"+dateOfBirth,"cmnd:"+ cmnd,"address:"+ address};
+            String[] arrStr = new String[]{"userid:"+ userid,"pin:"+pin,"dob:"+dateOfBirth,
+                    "cmnd:"+ cmnd,"address:"+ address, "image_profile:"+imageProfile,"image_id:"+imageID};
             String json = HandlerJsonData.ExchangeToJsonString(arrStr);
             new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
         } catch (JSONException e) {
