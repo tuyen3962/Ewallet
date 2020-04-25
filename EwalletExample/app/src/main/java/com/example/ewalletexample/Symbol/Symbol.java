@@ -1,7 +1,7 @@
 package com.example.ewalletexample.Symbol;
 
 public enum  Symbol {
-    BASE_ADDRESS("192.168.15.113"),
+    BASE_ADDRESS("192.168.1.3"),
 
     REASION_VERIFY("REASONVERIFY"),
     REASON_VERIFY_FOR_FORGET("FORGETPASSWORD"),
@@ -22,6 +22,10 @@ public enum  Symbol {
     DOB("DATE_OF_BIRTH"),
     NUM_CARD_CONNECT_BANK("NUM_CARD"),
     BANK_CODE("BANK_CODE"),
+
+    IMAGE_ID("IMAGE_ID"),
+
+    STATUS("STATUS"),
 
     CHANGE_BALANCE("CHANGE_BALANCE"),
 

@@ -1,17 +1,15 @@
 package com.example.ewalletexample;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +17,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.service.BalanceVisible;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 public class MyWalletFragement extends Fragment implements View.OnClickListener{
     private String userid;
@@ -73,15 +67,13 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         View view = inflater.inflate(R.layout.fragment_my_wallet, container, false);
 
         Initialize(view);
-        ShowAccountImage();
-
+        SetupUI();
         btnVisibilyBalance.setOnClickListener(this);
         layoutSetting.setOnClickListener(this);
         layoutUserAccount.setOnClickListener(this);
         layoutBankAccount.setOnClickListener(this);
         layoutHistoryTransaction.setOnClickListener(this);
 
-        SetTextviewDetail();
 
         return view;
     }
@@ -100,14 +92,19 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         layoutHistoryTransaction = view.findViewById(R.id.layoutHistoryTransaction);
     }
 
+    void SetupUI(){
+        mainActivity.SetImageUriForImageView(imgAccount);
+        tvBalance.setText(mainActivity.GetUserBalance() + "");
+        SetTextviewDetail();
+    }
+
     void SetTextviewDetail(){
-        mainActivity.SetBalanceText(tvBalance);
-        UserModel model = mainActivity.GetUserModel();
-        if(model != null){
-            tvFullName.setText(model.getFullname());
-            tvPhone.setText(model.getPhone());
+        User user = mainActivity.GetUserInformation();
+        if(user != null){
+            tvFullName.setText(user.getFullName());
+            tvPhone.setText(user.getPhoneNumber());
 //            tvNumCardConnected.setText(mainActivity.GetNumCardConnected() + " thẻ liên kết");
-            tvEmail.setText(model.getEmail());
+            tvEmail.setText(user.getEmail());
         }
     }
 
@@ -116,7 +113,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         if(v.getId() == btnVisibilyBalance.getId()){
             SetVisibilityWalletAmount();
         }else if(v.getId() == layoutUserAccount.getId()){
-            mainActivity.SwitchToPersonalDetailActivity();
+            SwitchToPersonalDetailActivity();
         }else if(v.getId() == layoutBankAccount.getId()){
             mainActivity.SwitchToBankConnectedActivity();
         }else if(v.getId() == layoutHistoryTransaction.getId()){
@@ -127,27 +124,40 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     private void SetVisibilityWalletAmount(){
         BalanceVisible.SwitchBalanceVisible();
         if (BalanceVisible.IsBalanceVisible()){
-            tvBalance.setText("123456");
+            tvBalance.setText(mainActivity.GetUserBalance() + "");
         }
         else{
             tvBalance.setText("******");
         }
     }
 
-    public void setBalanceText(String balance){
-        tvBalance = getView().findViewById(R.id.tvBalance);
-        tvBalance.setText(balance);
-    }
-
-    void ShowAccountImage(){
-        mainActivity.SetImageViewByUri(imgAccount);
-    }
-
     void ShowTransactionHistory() {
         Intent intent = new Intent(mainActivity, HistoryTransactionActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.userAmount);
-        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserModel().getPhone());
+        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserInformation().getPhoneNumber());
         startActivity(intent);
+    }
+
+    public void SwitchToPersonalDetailActivity(){
+        Intent intent = new Intent(mainActivity, PersonalDetailActivity.class);
+        intent.putExtra(Symbol.USER.GetValue(), mainActivity.GetUserInformation().ExchangeToJson());
+        startActivityForResult(intent, RequestCode.MODIFY_INFORMATION);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == RequestCode.MODIFY_INFORMATION && resultCode == ((Activity)mainActivity).RESULT_OK){
+            boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if(changeBalance){
+                mainActivity.SetUserBalance(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
+            }
+            String imageLink = mainActivity.GetUserInformation().getImgAccountLink();
+            mainActivity.SetUserInformationByJson(data.getStringExtra(Symbol.USER.GetValue()));
+            if(!imageLink.equalsIgnoreCase(mainActivity.GetUserInformation().getImgAccountLink())){
+                mainActivity.FindImageUriFromInternet();
+            }
+        }
     }
 }

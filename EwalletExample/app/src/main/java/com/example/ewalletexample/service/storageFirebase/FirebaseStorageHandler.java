@@ -1,7 +1,9 @@
 package com.example.ewalletexample.service.storageFirebase;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -45,6 +47,8 @@ public class FirebaseStorageHandler {
     public FirebaseStorageHandler(FirebaseStorage storage, Context applicationContext){
         storageReference = storage.getReference();
         currentContext = applicationContext;
+        fileProcessor = new FileProcessor(applicationContext);
+        imageProcessor = new ImageProcessor(applicationContext);
     }
 
     public void LoadAccountImageFromLink(String linkImg, final ResponseMethod method){
@@ -72,6 +76,21 @@ public class FirebaseStorageHandler {
             @Override
             public void onFailure(@NonNull Exception e) {
                 imgview.setImageDrawable(ResourcesCompat.getDrawable(currentContext.getResources(), R.drawable.ic_action_account, null));
+            }
+        });
+    }
+
+    public void LoadAccountImageFromLink(String linkImg, LoadImageResponse response, final ImageView imgview){
+        storageReference.child(linkImg).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+//                Glide.with(currentContext).load(uri).into(imgview);
+                response.LoadSuccess(uri);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                response.LoadFail();
             }
         });
     }
@@ -112,7 +131,7 @@ public class FirebaseStorageHandler {
     }
 
     public void UploadImage(Uri filePath, final ResponseMethod method){
-        final String serverFile = "images/"+ UUID.randomUUID().toString();
+        final String serverFile = "images/"+ System.currentTimeMillis();
 
         storageReference.child(serverFile).putFile(filePath).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -126,9 +145,23 @@ public class FirebaseStorageHandler {
             public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                 if(task.isSuccessful()){
                     method.HideProgressBar();
-                    imgView.setImageBitmap(null);
+                    Log.d("TAG", "onComplete: "+ serverFile);
                     method.GetImageServerFile(serverFile);
                 }
+            }
+        });
+    }
+
+    public void DeleteFileInStorage(String imageLink){
+        storageReference.child(imageLink).delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.d("TAG", "onSuccess: deleted");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d("TAG", "onSuccess: failed");
             }
         });
     }

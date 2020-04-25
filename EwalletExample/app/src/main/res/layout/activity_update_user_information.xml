@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".UpdateUserInformationActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1">
+
+                <!--                    <de.hdodenhof.circleimageview.CircleImageView-->
+                <!--                        android:layout_width="wrap_content"-->
+                <!--                        android:layout_height="wrap_content"-->
+                <!--                        android:src="@drawable/ic_action_person"-->
+                <!--                        android:layout_alignParentEnd="true"-->
+                <!--                        android:layout_alignParentBottom="true"-->
+                <!--                        android:layout_marginRight="18dp"-->
+                <!--                        android:layout_marginBottom="5dp"/>-->
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/imgAccount"
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginEnd="156dp"
+                    android:layout_marginBottom="0dp"
+                    android:padding="2dp"
+                    android:src="@drawable/ic_action_person"
+                    app:civ_border_color="@color/Black"
+                    app:civ_border_width="1dp"
+                    android:onClick="UploadImageEvent"/>
+
+                <TextView
+                    android:id="@+id/tvBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginTop="10dp"
+                    android:padding="2dp"
+                    android:text="Tro ve"
+                    android:drawableRight="@drawable/ic_action_home"
+                    android:textStyle="bold"
+                    android:textSize="22sp"
+                    android:onClick="BackPreviousActivity"/>
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/tvFullName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="2dp"
+                android:text="FULLNAME"
+                android:textStyle="bold"
+                android:textSize="22sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="2dp"
+                android:text="Cập nhật ảnh đại diện"
+                android:textSize="18dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Thông tin cá nhân"
+                android:textSize="25dp"
+                android:textStyle="bold"
+                android:layout_marginVertical="5dp"
+                android:textColor="@color/Black"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ngày sinh"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/Black"
+                android:layout_marginVertical="5dp"/>
+
+            <LinearLayout
+                android:id="@+id/dateOfBirthLayout"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:layout_marginVertical="5dp"
+                android:onClick="ShowDatePickerDialog">
+
+                <TextView
+                    android:id="@+id/tvDay"
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:text="23"
+                    android:textSize="23dp"
+                    android:gravity="center"
+                    android:backgroundTint="@color/Grey"
+                    android:textColor="@color/Black"
+                    android:background="@drawable/frame_background" />
+
+                <TextView
+                    android:layout_width="30dp"
+                    android:layout_height="match_parent"
+                    android:text="/"
+                    android:textSize="23dp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/tvMonth"
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:text="23"
+                    android:textSize="23dp"
+                    android:gravity="center"
+                    android:backgroundTint="@color/Grey"
+                    android:textColor="@color/Black"
+                    android:background="@drawable/frame_background" />
+
+                <TextView
+                    android:layout_width="30dp"
+                    android:layout_height="match_parent"
+                    android:text="/"
+                    android:textSize="23dp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/tvYear"
+                    android:layout_width="80dp"
+                    android:layout_height="match_parent"
+                    android:text="1998"
+                    android:textSize="23dp"
+                    android:gravity="center"
+                    android:backgroundTint="@color/Grey"
+                    android:textColor="@color/Black"
+                    android:background="@drawable/frame_background" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Địa chỉ"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/Black"
+                android:layout_marginVertical="5dp"/>
+
+            <EditText
+                android:id="@+id/etAddress"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:textSize="18sp"
+                android:textColor="@color/Black"
+                android:background="@drawable/frame_background"
+                android:backgroundTint="@color/Grey"
+                android:layout_marginVertical="5dp"
+                android:hint="Nhập địa chỉ của bạn"
+                android:padding="6dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="5dp">
+
+                <Button
+                    android:id="@+id/btnUpload"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:text="Cập nhật"
+                    android:textStyle="bold"
+                    android:textSize="20dp"
+                    android:textColor="@color/White"
+                    android:background="@color/colorAccent"
+                    android:onClick="UpdateUserInfo"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <include
+        android:id="@+id/progressBar"
+        layout="@layout/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+</RelativeLayout>

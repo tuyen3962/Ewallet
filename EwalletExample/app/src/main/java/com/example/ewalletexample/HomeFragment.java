@@ -65,8 +65,7 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         Initialize(view);
-        mainActivity.SetBalanceText(tvBalance);
-
+        SetupUI();
         topupLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -92,13 +91,7 @@ public class HomeFragment extends Fragment {
                 BuyMobileCard();
             }
         });
-        ShowAccountImage();
         return view;
-    }
-
-    public void setBalanceText(String balance){
-        tvBalance = getView().findViewById(R.id.tvBalance);
-        tvBalance.setText(balance);
     }
 
     void Initialize(View view){
@@ -110,14 +103,15 @@ public class HomeFragment extends Fragment {
         buyMobileCardLayout = view.findViewById(R.id.buyMobileCardLayout);
     }
 
-    void ShowAccountImage(){
-        mainActivity.SetImageViewByUri(imgAccount);
+    public void SetupUI(){
+        mainActivity.SetImageUriForImageView(imgAccount);
+        tvBalance.setText(mainActivity.GetUserBalance() + "");
     }
 
     public void TopupEvent(){
         Intent intent = new Intent(mainActivity, ServiceWalletActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.TOPUP_SERVICE_TYPE.GetCode());
         startActivity(intent);
     }
@@ -125,7 +119,7 @@ public class HomeFragment extends Fragment {
     public void WithdrawEvent(){
         Intent intent = new Intent(mainActivity, ServiceWalletActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.WITHDRAW_SERVICE_TYPE.GetCode());
         startActivity(intent);
     }
@@ -133,15 +127,15 @@ public class HomeFragment extends Fragment {
     public void ExchangeMoneyEvent(){
         Intent intent = new Intent(mainActivity, SearchUserExchangeActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
         startActivity(intent);
     }
 
     public void BuyMobileCard(){
         Intent intent = new Intent(mainActivity, SelectMobileCardFunctionActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserAmount());
-        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserModel().getPhone());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
+        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserInformation().getPhoneNumber());
         startActivity(intent);
     }
 }

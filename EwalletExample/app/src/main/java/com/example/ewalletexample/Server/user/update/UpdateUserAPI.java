@@ -19,14 +19,8 @@ public class UpdateUserAPI {
     private String pin;
     private String imageProfile;
     private String imageID;
-
-    public UpdateUserAPI(User user, UpdateUserResponse response){
-        userid = user.getUserId();
-        cmnd = user.getCmnd();
-        address = user.getAddress();
-        dateOfBirth = user.getDateOfbirth();
-        this.response = response;
-    }
+    private String email;
+    private int status;
 
     public UpdateUserAPI(String userid, String pin, UpdateUserResponse response){
         this.userid = userid;
@@ -41,6 +35,9 @@ public class UpdateUserAPI {
         this.cmnd = "";
         this.imageID = "";
         this.imageProfile = "";
+        pin = "";
+        email = "";
+        status = -1;
         this.response = response;
     }
 
@@ -64,10 +61,22 @@ public class UpdateUserAPI {
         this.imageID = imageID;
     }
 
+    public void setCmnd(String cmnd) {
+        this.cmnd = cmnd;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
     public void UpdateUser(){
         try {
             String[] arrStr = new String[]{"userid:"+ userid,"pin:"+pin,"dob:"+dateOfBirth,
-                    "cmnd:"+ cmnd,"address:"+ address, "image_profile:"+imageProfile,"image_id:"+imageID};
+                    "cmnd:"+ cmnd,"address:"+ address, "image_profile:"+imageProfile,"image_id:"+imageID,"email:"+email,"status:"+status};
             String json = HandlerJsonData.ExchangeToJsonString(arrStr);
             new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), json);
         } catch (JSONException e) {
@@ -76,6 +85,10 @@ public class UpdateUserAPI {
     }
 
     class UpdateUserProfile extends RequestServerAPI implements RequestServerFunction {
+        public UpdateUserProfile(){
+            SetRequestServerFunction(this);
+        }
+
 
         @Override
         public boolean CheckReturnCode(int code) {
