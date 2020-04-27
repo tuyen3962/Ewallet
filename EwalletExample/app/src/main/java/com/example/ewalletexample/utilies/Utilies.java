@@ -14,6 +14,8 @@ import android.widget.TextView;
 
 import com.example.ewalletexample.R;
 
+import java.util.Random;
+
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -48,5 +50,15 @@ public class Utilies {
 
     public static void SetImageDrawable(Context context, ImageView imageView){
         imageView.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_action_person, null));
+    }
+
+    public static String GetStringNumberByLength(int length){
+        Random random = new Random();
+        String result = "";
+        for (int i = 0 ; i < length; i++){
+            result += String.valueOf(random.nextInt(10));
+        }
+
+        return result;
     }
 }

@@ -4,6 +4,10 @@
     <string name="title_gifts">Gifts</string>
     <string name="title_cart">Cart</string>
     <string name="title_profile">Profile</string>
+    <string name="email_address">hatuyen3962@gmail.com</string>
+    <string name="password_email">tuyen74120</string>
+    <string name="subject_email">Gửi OTP để xác thực email</string>
+    <string name="content_email">Mã OTP cho email xác thực: </string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
