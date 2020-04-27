@@ -148,17 +148,9 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri 
     }
 
     public void SwitchToBankConnectedActivity(){
-        if(numBankConnected == 0){
-            Intent intent = new Intent(MainActivity.this, ChooseBankConnectActivity.class);
-            intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
-            intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-            startActivity(intent);
-        }
-        else{
-            Intent intent = new Intent(MainActivity.this, UserBankCardActivity.class);
-            intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
-            intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-            startActivity(intent);
-        }
+        Intent intent = new Intent(MainActivity.this, UserBankCardActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
+        startActivity(intent);
     }
 }

@@ -116,7 +116,6 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
 
     public void UploadUserInfo(View view){
         Intent intent = new Intent(PersonalDetailActivity.this, UpdateUserInformationActivity.class);
-        Log.d("TAG", "UploadUserInfo: " + user.getUserId());
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.ADDRESS.GetValue(), user.getAddress());
         intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
@@ -133,6 +132,13 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgID());
         intent.putExtra(Symbol.STATUS.GetValue(), user.getStatus());
         startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
+    }
+
+    public void UpdateUserEmail(View view){
+        Intent intent = new Intent(PersonalDetailActivity.this, UpdateEmailActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+        intent.putExtra(Symbol.EMAIL.GetValue(), user.getEmail());
+        startActivityForResult(intent, RequestCode.UPDATE_EMAIL);
     }
 
     public void BackToMainEvent(View view){
@@ -171,6 +177,17 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
             user.setImgID(data.getStringExtra(Symbol.IMAGE_ID.GetValue()));
             user.setCmnd(data.getStringExtra(Symbol.CMND.GetValue()));
             user.setStatus(data.getIntExtra(Symbol.STATUS.GetValue(), -1));
+            FillUserProfile();
+        } else if(requestCode == RequestCode.UPDATE_EMAIL){
+            boolean change = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if(change){
+                this.balance = data.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+            }
+
+            if(resultCode == RESULT_OK){
+                user.setEmail(data.getStringExtra(Symbol.EMAIL.GetValue()));
+                FillUserProfile();
+            }
         }
     }
 

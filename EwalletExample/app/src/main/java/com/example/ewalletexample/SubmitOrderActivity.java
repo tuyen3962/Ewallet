@@ -124,10 +124,12 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         tvAmount.setText(amount + "đ");
         if(fee == 0){
             tvFeeTransaction.setText("Free");
+            tvTotalAmount.setText(amount + "đ");
         }else{
             tvFeeTransaction.setText(fee + "đ");
+            long total = Long.parseLong(amount) + fee;
+            tvTotalAmount.setText(total + "đ");
         }
-        tvTotalAmount.setText((amount + fee) + "đ");
     }
 
     void ShowLayoutByServiceCode(){

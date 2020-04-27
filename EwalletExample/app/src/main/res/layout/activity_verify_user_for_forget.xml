@@ -25,18 +25,8 @@
         android:layout_below="@id/tvIntroduce"
         android:text="Nhập số điện thoại để tiếp tục"
         android:textColor="@color/colorPrimary"
-        android:textSize="25dp"
-        android:onClick="ChangeTypeVerifyEvent"/>
-
-<!--    <TextView-->
-<!--        android:id="@+id/tvDetail"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_below="@id/tvChangeTypeVerify"-->
-<!--        android:layout_marginTop="30dp"-->
-<!--        android:layout_marginLeft="20dp"-->
-<!--        android:text="Số điện thoại"-->
-<!--        android:textSize="20dp"/>-->
+        android:textSize="25dp"/>
+<!--        android:onClick="ChangeTypeVerifyEvent"/>-->
 
     <EditText
         android:id="@+id/etDetail"

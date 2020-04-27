@@ -1,15 +1,20 @@
 package com.example.ewalletexample;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.drm.DrmStore;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.ewalletexample.Symbol.ErrorCode;
@@ -19,6 +24,7 @@ import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.utilies.Utilies;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -47,6 +53,7 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
 
         @Override
         public void afterTextChanged(Editable editable) {
+
         }
     };
 
@@ -56,6 +63,9 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
         setContentView(R.layout.activity_register_by_phone);
         mDatabase = FirebaseDatabase.getInstance().getReference();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
+
+        Utilies.SetTitle(this, this,"Đăng kí");
+
         Intialize();
         AddTextWatcherIntoEditText();
     }
@@ -161,15 +171,15 @@ public class RegisterByPhone extends AppCompatActivity implements HandleDataFrom
             SwitchToVerifyByPhoneActivity();
         }
         else{
-            ShowWarningText(ErrorCode.VALIDATE_PHONE_DUPLICATE.GetMessage());
             ClearSpecificEditText();
+            ShowWarningText(ErrorCode.VALIDATE_PHONE_DUPLICATE.GetMessage());
         }
     }
 
     @Override
     public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
         String phone = etUserPhone.getText().toString();
-        if(dataSnapshot.child("users").getChildrenCount() > 0){
+        if(dataSnapshot.child("users").getChildrenCount() == 0){
             firebaseDatabaseHandler.UnregisterValueListener(null);
             return;
         }

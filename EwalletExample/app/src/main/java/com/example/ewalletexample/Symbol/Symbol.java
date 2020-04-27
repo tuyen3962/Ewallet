@@ -1,7 +1,7 @@
 package com.example.ewalletexample.Symbol;
 
 public enum  Symbol {
-    BASE_ADDRESS("192.168.1.3"),
+    BASE_ADDRESS("192.168.15.113"),
 
     REASION_VERIFY("REASONVERIFY"),
     REASON_VERIFY_FOR_FORGET("FORGETPASSWORD"),

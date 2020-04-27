@@ -6,6 +6,14 @@
     android:orientation="horizontal"
     android:paddingHorizontal="5dp">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Load more"
+        android:textSize="25dp"
+        android:gravity="center"
+        android:visibility="gone"/>
+
     <de.hdodenhof.circleimageview.CircleImageView
         android:layout_width="50dp"
         android:layout_height="match_parent"

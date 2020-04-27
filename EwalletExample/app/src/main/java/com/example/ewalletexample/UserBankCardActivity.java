@@ -32,6 +32,7 @@ import com.google.firebase.storage.FirebaseStorage;
 
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, WebsocketResponse {
@@ -64,6 +65,8 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     }
 
     void Initialize(){
+        bankInfoList = new ArrayList<>();
+
         client = new WebsocketClient(this);
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
 
@@ -125,7 +128,8 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         }
         else {
             if (callback != null){
-                bankInfoList = callback;
+                bankInfoList.clear();
+                bankInfoList.addAll(callback);
                 SetLayoutBankConnect();
             }
         }
@@ -136,8 +140,9 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     public void SetLayoutBankConnect(){
         if(bankInfoList.size() > 0){
             layoutConnectBank.setVisibility(View.GONE);
-            banksConnected = new ListBankConnectedRecycleView(UserBankCardActivity.this, bankInfoList);
+            banksConnected = new ListBankConnectedRecycleView(this, bankInfoList);
             listBankConnected.setAdapter(banksConnected);
+            listBankConnected.setVisibility(View.VISIBLE);
         } else {
             layoutConnectBank.setVisibility(View.VISIBLE);
             listBankConnected.setVisibility(View.GONE);
@@ -231,7 +236,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
             holder.SetCardName(info.getCardName());
             holder.SetF6CardNo(info.getF6CardNo());
             holder.SetL4CardNo(info.getL4CardNo());
-            holder.SetBackgroundColor(support.GetBackgroundColorCode());
+//            holder.SetBackgroundColor(support.GetBackgroundColorCode());
             holder.LoadBankImage(storageHandler, support.getBankLinkImage());
             holder.SetClickEvent(info);
         }

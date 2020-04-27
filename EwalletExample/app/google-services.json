@@ -8,6 +8,43 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:453445837649:android:1f7b4cf7b4c2c37871a970",
+        "android_client_info": {
+          "package_name": "com.example.ewallet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "453445837649-n22oflf4gt0s6ghk931spv2797uj7iec.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ewallet",
+            "certificate_hash": "acf8a1719d0a6c6b04fb5b7f437df7ae27a6ebc2"
+          }
+        },
+        {
+          "client_id": "453445837649-ljq33jb4ua6e9o23gcn1ne8101i4p5g1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBy_jKM2JmWcZgCpxcq47ghW2lIfxM_QE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "453445837649-ljq33jb4ua6e9o23gcn1ne8101i4p5g1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:453445837649:android:df616910bb855e7371a970",
         "android_client_info": {
           "package_name": "com.example.ewalletexample"
@@ -15,7 +52,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "453445837649-pofcv0muu5h4r50poht9ourf40tmafs8.apps.googleusercontent.com",
+          "client_id": "453445837649-4rslcn5uq7us4s75rkckslmthu8bueal.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.ewalletexample",

@@ -25,7 +25,7 @@
         android:textColor="@color/Red"
         android:layout_below="@+id/tvRegisterByPhone"
         android:textSize="28sp"
-        android:visibility="gone"/>
+        android:visibility="visible"/>
 
     <TextView
         android:id="@+id/tvFullName"
@@ -90,7 +90,8 @@
         android:hint="Nhập mật khẩu"
         android:gravity="center"
         android:textSize="18dp"
-        android:layout_marginRight="20dp"/>
+        android:layout_marginRight="20dp"
+        android:inputType="textPassword"/>
 
     <TextView
         android:id="@+id/tvConfirmPass"
@@ -112,7 +113,8 @@
         android:hint="Nhập lại mật khẩu"
         android:gravity="center"
         android:textSize="18dp"
-        android:layout_marginRight="20dp"/>
+        android:layout_marginRight="20dp"
+        android:inputType="textPassword"/>
 
     <LinearLayout
         android:layout_width="match_parent"

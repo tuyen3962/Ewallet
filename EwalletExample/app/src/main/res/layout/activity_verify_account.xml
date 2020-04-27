@@ -73,7 +73,6 @@
                 android:textColor="@color/Black"
                 android:background="@drawable/frame_background"
                 android:backgroundTint="#D6D6D6"
-                android:textColorHint="@color/Black"
                 android:textSize="23dp"/>
 
         </LinearLayout>

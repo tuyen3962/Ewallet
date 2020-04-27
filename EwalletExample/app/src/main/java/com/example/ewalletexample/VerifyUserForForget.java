@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -31,7 +32,6 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     private final String hintEtDetailEmail = "Nhập email";
 
     FirebaseAuth auth;
-    DatabaseReference mDatabase;
     TextView tvChangeTypeVerify, tvError;
     EditText etDetail;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
@@ -42,20 +42,17 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_verify_user_for_forget);
-
-        auth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
         Initialize();
-
-        ShowUIVerifyForgetByPhone();
-        verifyAccountByPhone = true;
     }
 
     void Initialize(){
+        verifyAccountByPhone = true;
         etDetail = findViewById(R.id.etDetail);
         tvChangeTypeVerify = findViewById(R.id.tvChangeTypeVerify);
         tvError = findViewById(R.id.tvError);
+        auth = FirebaseAuth.getInstance();
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
+        ShowUIVerifyForgetByPhone();
     }
 
     public void ChangeTypeVerifyEvent(View view){
@@ -81,6 +78,7 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     private void VerifyAccountByPhone(String phone){
         if(!CheckInputField.PhoneNumberIsValid(phone)){
             ShowErrorText("Số điện thoại không hợp lệ");
+            return;
         }
         firebaseDatabaseHandler.RegisterDataListener();
     }
@@ -88,6 +86,7 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     @Override
     public void HandleDataModel(UserModel model){
         if(model != null){
+            Log.d("TAG", "HandleDataModel: " + userid);
             Intent intent = new Intent(VerifyUserForForget.this, VerifyByPhoneActivity.class);
             intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_FORGET.GetValue());
             intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());

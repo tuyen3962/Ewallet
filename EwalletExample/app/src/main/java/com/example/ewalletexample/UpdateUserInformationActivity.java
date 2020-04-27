@@ -237,7 +237,9 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
 
     public void VerifyUploadImage(){
         progressBarManager.ShowProgressBar("Cập nhật");
-        storageHandler.DeleteFileInStorage(user.getImgAccountLink());
+        if(!user.getImgAccountLink().isEmpty()){
+            storageHandler.DeleteFileInStorage(user.getImgAccountLink());
+        }
         storageHandler.UploadImage(photoUri, this);
     }
 

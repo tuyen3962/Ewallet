@@ -104,7 +104,11 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             tvFullName.setText(user.getFullName());
             tvPhone.setText(user.getPhoneNumber());
 //            tvNumCardConnected.setText(mainActivity.GetNumCardConnected() + " thẻ liên kết");
-            tvEmail.setText(user.getEmail());
+            if(user.getEmail().isEmpty()){
+                tvEmail.setText("");
+                return;
+            }
+            tvEmail.setText(user.getEmail() + "(Đã xác thực)");
         }
     }
 

@@ -85,39 +85,10 @@ public class HistoryTransactionActivity extends AppCompatActivity implements Ban
         if (response){
             transactionDetailList.clear();
             transactionDetailList.addAll(callback);
-            Log.d("TAG", "MappingResponse: " + callback.size() + " " + transactionDetailList.size());
             transactionDetailAdapter = new TransactionDetailAdapter(this, transactionDetailList);
             rvTransactionDetail.setHasFixedSize(true);
             rvTransactionDetail.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
             rvTransactionDetail.setAdapter(transactionDetailAdapter);
-//            CoverTransactionByMonth();
-//            SetLayoutMonthTransaction();
-        }
-    }
-
-    void CoverTransactionByMonth(){
-        monthTransactionsList = new ArrayList<>();
-        Map<String, List<TransactionDetail>> listTransactionByMonth = new HashMap<>();
-
-        for (TransactionDetail detail : transactionDetailList){
-            String dateDetail = detail.getChargetime().getMonthYear();
-            List<TransactionDetail> detailList;
-            if(listTransactionByMonth.containsKey(dateDetail)){
-                detailList = listTransactionByMonth.get(dateDetail);
-            } else {
-                detailList = new ArrayList<>();
-            }
-            detailList.add(detail);
-            listTransactionByMonth.put(dateDetail, detailList);
-        }
-
-        Iterator<String> dateIterable = listTransactionByMonth.keySet().iterator();
-        while (dateIterable.hasNext()){
-            String date = dateIterable.next();
-            List<TransactionDetail> transactionDetails = listTransactionByMonth.get(date);
-            MonthTransaction monthTransaction = new  MonthTransaction(transactionDetails);
-            monthTransaction.CalulateTotalCost();
-            monthTransactionsList.add(monthTransaction);
         }
     }
 

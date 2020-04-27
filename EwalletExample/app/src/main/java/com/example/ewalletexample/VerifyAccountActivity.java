@@ -230,6 +230,11 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     public void VerifyInformation(View view){
+        if(!user.getImgID().isEmpty()){
+            String[] images = user.getImgID().split(",");
+            firebaseStorageHandler.DeleteFileInStorage(images[0]);
+            firebaseStorageHandler.DeleteFileInStorage(images[1]);
+        }
         firebaseStorageHandler.UploadImage(frontPhotoUri, this);
     }
 
@@ -254,6 +259,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             backPhotoPath = serverFile;
             progressBarManager.ShowProgressBar("Loading");
             user.setStatus(0);
+            user.setCmnd(etCMND.getText().toString());
             user.setImgID(frontPhotoPath+","+backPhotoPath);
             updateAPI.setCmnd(etCMND.getText().toString());
             updateAPI.setStatus(0);

@@ -257,7 +257,8 @@
                         android:layout_weight="3"
                         android:gravity="center_vertical|right"
                         android:text="email"
-                        android:textSize="20sp" />
+                        android:textSize="20sp"
+                        android:onClick="UpdateUserEmail"/>
                 </LinearLayout>
 
             </LinearLayout>
