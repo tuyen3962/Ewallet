@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import com.bumptech.glide.Glide;
+import com.example.ewalletexample.Server.balance.BalanceResponse;
+import com.example.ewalletexample.Server.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
@@ -31,6 +33,7 @@ import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 
@@ -38,16 +41,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity implements ResponseImageUri {
+public class MainActivity extends AppCompatActivity implements ResponseImageUri, BalanceResponse, ResponseModelByKey<UserModel> {
     private static String HOME = "HOME", MY_WALLET = "MY_WALLET";
     long userAmount;
+    FirebaseAuth auth;
     BottomNavigationView bottomNavigation;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler storageHandler;
     ProgressBarManager progressBarManager;
-    int numBankConnected;
     Uri imageUri;
     User user;
+    UserModel model;
 
     BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
             new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -72,8 +76,16 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Setup();
         Initialize();
         LoadDataFromIntent();
+    }
+
+    void Setup(){
+        auth = FirebaseAuth.getInstance();
+        if(auth.getCurrentUser() != null){
+            auth.signOut();;
+        }
     }
 
     void Initialize(){
@@ -86,16 +98,12 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri 
 
     private void LoadDataFromIntent(){
         progressBarManager.ShowProgressBar("Loading");
-
-        Intent intent = getIntent();
-        userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
-        String json = intent.getStringExtra(Symbol.USER.GetValue());
         user = new User();
-        if(!json.isEmpty()){
-            user.ReadJson(json);
-        }
-        user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
-        FindImageUriFromInternet();
+        Intent intent = getIntent();
+        user.ReadJson(intent.getStringExtra(Symbol.USER.GetValue()));
+        GetBalanceAPI balanceAPI = new GetBalanceAPI(user.getUserId(), this);
+        balanceAPI.GetBalance();
+        firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
     }
 
     public void FindImageUriFromInternet(){
@@ -152,5 +160,17 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri 
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
         startActivity(intent);
+    }
+
+    @Override
+    public void GetBalanceResponse(long balance) {
+        userAmount = balance;
+        FindImageUriFromInternet();
+    }
+
+    @Override
+    public void GetModel(UserModel data) {
+        this.model = data;
+        auth.signInWithCustomToken(model.getPhoneToken());
     }
 }

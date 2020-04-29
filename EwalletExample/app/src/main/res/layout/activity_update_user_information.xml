@@ -23,15 +23,6 @@
                 android:layout_gravity="center"
                 android:layout_weight="1">
 
-                <!--                    <de.hdodenhof.circleimageview.CircleImageView-->
-                <!--                        android:layout_width="wrap_content"-->
-                <!--                        android:layout_height="wrap_content"-->
-                <!--                        android:src="@drawable/ic_action_person"-->
-                <!--                        android:layout_alignParentEnd="true"-->
-                <!--                        android:layout_alignParentBottom="true"-->
-                <!--                        android:layout_marginRight="18dp"-->
-                <!--                        android:layout_marginBottom="5dp"/>-->
-
                 <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/imgAccount"
                     android:layout_width="100dp"
@@ -101,7 +92,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Ngày sinh"
-                android:textSize="18sp"
+                android:textSize="20dp"
                 android:textStyle="bold"
                 android:textColor="@color/Black"
                 android:layout_marginVertical="5dp"/>
@@ -166,22 +157,54 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Địa chỉ"
-                android:textSize="18sp"
+                android:textSize="20dp"
                 android:textStyle="bold"
                 android:textColor="@color/Black"
                 android:layout_marginVertical="5dp"/>
 
-            <EditText
-                android:id="@+id/etAddress"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/input_address_layout"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:textSize="18sp"
-                android:textColor="@color/Black"
-                android:background="@drawable/frame_background"
-                android:backgroundTint="@color/Grey"
+                android:layout_height="wrap_content"
+                android:hint="Nhập địa chỉ"
                 android:layout_marginVertical="5dp"
-                android:hint="Nhập địa chỉ của bạn"
-                android:padding="6dp"/>
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textColor="@color/Black" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Email"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                android:textColor="@color/Black"
+                android:layout_marginVertical="5dp"/>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/input_email_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nhập email"
+                android:layout_marginVertical="5dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textColor="@color/Black" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
 
             <LinearLayout
                 android:layout_width="match_parent"

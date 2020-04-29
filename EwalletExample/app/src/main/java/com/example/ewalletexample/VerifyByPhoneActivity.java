@@ -18,13 +18,13 @@ import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
+import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
-import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -32,10 +32,8 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.FirebaseDatabase;
 
 import org.json.JSONException;
@@ -49,13 +47,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
 
     private User user;
-    private String reason, verifyForget, userid;
-
-    private String mVerificationId;
+    private String reason, verifyForget, mVerificationId;
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     CodeEditText codeEditText;
-    Button btnVerifyPhone, btnResendVerifyCode;
+    Button btnVerifyPhone, btnResendVerifyCode, btnChangePhone;
     TextView tvError, txVerifyPhone;
     ProgressBarManager progressBarManager;
 
@@ -63,13 +59,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     boolean canResendCode;
 
     PhoneAuthProvider.ForceResendingToken token;
+    SharedPreferenceLocal local;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_verify_by_phone);
 
-        auth = FirebaseAuth.getInstance();
         Initalize();
         GetValueFromIntent();
         SendVerifyCodeToPhoneNumber();
@@ -79,8 +75,10 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     }
 
     void Initalize(){
+        local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
+        auth = FirebaseAuth.getInstance();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-
+        user = new User();
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
         etCode03 = findViewById(R.id.etCode03);
@@ -105,17 +103,23 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         reason = intent.getStringExtra(Symbol.REASION_VERIFY.GetValue());
         if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_FORGET.GetValue())){
             verifyForget = intent.getStringExtra(Symbol.VERRIFY_FORGET.GetValue());
-            String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-            userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
-            user = new User(phone);
+            user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
+            user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
             btnVerifyPhone.setText("Tiếp tục");
             txVerifyPhone.setText("Nhập mã code đổi mật khẩu");
         }
-        else{
-            String fullName = intent.getStringExtra(Symbol.FULLNAME.GetValue());
-            String password = intent.getStringExtra(Symbol.PASSWORD.GetValue());
-            String phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-            user = new User(fullName,phone,password);
+        else if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_LOGIN.GetValue())){
+            user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
+            user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
+            user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
+            btnVerifyPhone.setText("Tiếp tục");
+            txVerifyPhone.setText("Nhập mã code");
+        } else {
+            user.setPassword(intent.getStringExtra(Symbol.PASSWORD.GetValue()));
+            user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
+            user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
+            btnVerifyPhone.setText("Xác thực");
+            txVerifyPhone.setText("Nhập mã code");
         }
     }
 
@@ -143,15 +147,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
     void SetActiveForButtonResend(boolean active){
         btnResendVerifyCode.setEnabled(active);
-    }
-
-    String GetCode(){
-        return etCode01.getText().toString() +
-                etCode02.getText().toString() +
-                 etCode03.getText().toString() +
-                  etCode04.getText().toString() +
-                   etCode05.getText().toString() +
-                    etCode06.getText().toString();
     }
 
     void SendVerifyCodeToPhoneNumber(){
@@ -192,13 +187,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         @Override
         public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
-
-            //Getting the code sent by SMS
             String code = phoneAuthCredential.getSmsCode();
-            Toast.makeText(VerifyByPhoneActivity.this, code, Toast.LENGTH_LONG).show();
-            //sometime the code is not detected automatically
-            //in this case the code will be null
-            //so user has to manually enter the code
         }
 
         @Override
@@ -216,7 +205,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     };
 
     public void VerifyVerificationCode(View view){
-        String code = GetCode();
+        String code = codeEditText.GetCombineText();
         if(TextUtils.isEmpty(code) || code.length() < 6){
             ShowErrorText("Xin nhap code");
             return;
@@ -228,21 +217,18 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         signInWithPhoneAuthCredential(credential);
     }
 
+    public void ChangePhone(View view){
+        startActivity(new Intent(VerifyByPhoneActivity.this, EnterPhoneStartAppActivity.class));
+    }
+
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(VerifyByPhoneActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
-                                progressBarManager.SetMessage("Saving");
-                                SendRequestRegisterToServer();
-                            }
-                            else{
-                                SendUserDetailForResetPassword();
-                            }
+                            VerifySuccess();
                         } else {
-
                             //verification unsuccessful.. display an error message
                             String message = "Somthing is wrong, we will fix it soon...";
                             progressBarManager.HideProgressBar();
@@ -255,26 +241,36 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
                 });
     }
 
-    private void SendUserDetailForResetPassword(){
-        FirebaseUser firebaseUser = auth.getCurrentUser();
-        if(firebaseUser != null){
-            auth.signOut();
+    private void VerifySuccess(){
+        if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
+            progressBarManager.SetMessage("Saving");
+            SendRequestRegister();
         }
+        else if (reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_LOGIN.GetValue())){
+            SendRequestLogin();
+        } else if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_FORGET.GetValue())){
+            SendUserDetailForResetPassword();
+        }
+    }
+
+    private void SendRequestLogin(){
+        Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
+        intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
+        intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
+        startActivity(intent);
+    }
+
+    private void SendUserDetailForResetPassword(){
         progressBarManager.HideProgressBar();
 
         Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
         intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         startActivity(intent);
     }
 
-    private void ShowErrorText(String message){
-        tvError.setText(message);
-        tvError.setVisibility(View.VISIBLE);
-    }
-
-    private void SendRequestRegisterToServer(){
+    private void SendRequestRegister(){
         JSONObject postData = new JSONObject();
 
         try {
@@ -288,19 +284,9 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         }
     }
 
-    private void SaveUserProfileAndLogOutTheCurrentFirebaseUser(String userID){
-        FirebaseUser firebaseUser = auth.getCurrentUser();
-
-        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                .setDisplayName(user.getFullName())
-                .build();
-
-        if(firebaseUser != null){
-            firebaseUser.updateProfile(profileUpdates);
-            UserModel model = new UserModel(user.getFullName(), user.getPhoneNumber(), firebaseUser.getUid(), user.getEmail());
-            firebaseDatabaseHandler.PushDataIntoDatabase("users",userID, model);
-            auth.signOut();
-        }
+    private void ShowErrorText(String message){
+        tvError.setText(message);
+        tvError.setVisibility(View.VISIBLE);
     }
 
     private class RegisterEvent extends RequestServerAPI implements RequestServerFunction {
@@ -320,16 +306,16 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            userid = jsonData.getString("userid");
-            //verification successful we will start the profile activity
-            SaveUserProfileAndLogOutTheCurrentFirebaseUser(userid);
-
+            user.setUserId(jsonData.getString("userid"));
+            local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
+            local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
+            local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
+            local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 0);
             progressBarManager.HideProgressBar();
 
-            //verification successful we will start the profile activity
-            Intent intent = new Intent(VerifyByPhoneActivity.this, MainActivity.class);
-            intent.putExtra(Symbol.USER_ID.GetValue(),userid);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), 0);
+            //Fill information
+            Intent intent = new Intent(VerifyByPhoneActivity.this, UpdateUserInformationActivity.class);
+            intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
             intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
             startActivity(intent);
         }

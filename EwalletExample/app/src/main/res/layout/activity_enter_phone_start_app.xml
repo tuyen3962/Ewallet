@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".EnterPhoneStartAppActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="Nhập số điện thoại"
+            android:gravity="center"
+            android:textSize="22dp"
+            android:textStyle="bold"
+            android:textColor="@color/Black"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Dùng số điện thoại để đăng ký hoặc"
+            android:gravity="center"
+            android:textSize="16dp"
+            android:textColor="@color/Black"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="đăng nhập vào ví"
+            android:gravity="center"
+            android:textSize="16dp"
+            android:textColor="@color/Black"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/etPhoneNumber"
+            android:layout_marginTop="20dp"
+            android:layout_marginHorizontal="80dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập số điện thoại ở đây"
+            app:boxBackgroundMode="outline"
+            android:textAlignment="center"
+            app:errorTextColor="@color/Red"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnContinue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:background="@drawable/round"
+            android:backgroundTint="#5DCAFB"
+            android:drawableRight="@drawable/ic_action_arrow_right"
+            android:text="Tiếp tục"
+            android:onClick="CheckPhoneNumber"/>
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/progress_bar"
+        android:id="@+id/progressBar"
+        android:visibility="gone"/>
+
+</RelativeLayout>

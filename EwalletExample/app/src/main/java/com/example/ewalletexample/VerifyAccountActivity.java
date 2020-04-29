@@ -23,11 +23,14 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.ewalletexample.Server.balance.BalanceResponse;
+import com.example.ewalletexample.Server.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.user.update.UpdateUserAPI;
 import com.example.ewalletexample.Server.user.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
+import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.ResponseMethod;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.storageFirebase.LoadImageResponse;
@@ -44,7 +47,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     FirebaseStorageHandler firebaseStorageHandler;
     ProgressBarManager progressBarManager;
     User user;
-    TextView tvFullName;
+    TextView tvFullName, tvBack;
     EditText etCMND;
     View btnVerify;
     ImageView imgFrontIdentifierCard, imgBackIdentifierCard;
@@ -53,6 +56,8 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     Uri frontPhotoUri, backPhotoUri;
     UpdateUserAPI updateAPI;
     boolean hasUploadTwoImages;
+    SharedPreferenceLocal local;
+    String update;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +72,9 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void Initialize(){
         frontPhotoUri = null;
         backPhotoUri = null;
+        local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         tvFullName = findViewById(R.id.tvFullName);
+        tvBack = findViewById(R.id.tvBack);
         etCMND = findViewById(R.id.etCMND);
         imgFrontIdentifierCard = findViewById(R.id.imgFrontIdentifierCard);
         imgBackIdentifierCard = findViewById(R.id.imgBackIdentifierCard);
@@ -80,13 +87,20 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     void GetValueFromIntent(){
-        Intent intent = getIntent();
         user = new User();
-        user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
-        user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
-        user.setCmnd(intent.getStringExtra(Symbol.CMND.GetValue()));
-        user.setImgID(intent.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue()));
-        user.setStatus(intent.getIntExtra(Symbol.STATUS.GetValue(), -1));
+        Intent intent = getIntent();
+        update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            user.ReadJson(intent.getStringExtra(Symbol.USER.GetValue()));
+            tvBack.setText("Skip");
+            tvFullName.setCompoundDrawables(null,null,null,null);
+        } else {
+            user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
+            user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
+            user.setCmnd(intent.getStringExtra(Symbol.CMND.GetValue()));
+            user.setImgID(intent.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue()));
+            user.setStatus(intent.getIntExtra(Symbol.STATUS.GetValue(), -1));
+        }
     }
 
     void FillUserProfile(){
@@ -102,8 +116,12 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     public void BackPreviousActivity(View view){
-        setResult(RESULT_CANCELED);
-        finish();
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            SwitchToMain();
+        } else {
+            setResult(RESULT_CANCELED);
+            finish();
+        }
     }
 
     void LoadImage(){
@@ -270,17 +288,30 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
 
     @Override
     public void UpdateSuccess() {
-        Intent intent = new Intent();
-        intent.putExtra(Symbol.IMAGE_ID.GetValue(), user.getImgID());
-        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
-        intent.putExtra(Symbol.STATUS.GetValue(), user.getStatus());
-        setResult(RESULT_OK, intent);
-        finish();
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            SwitchToMain();
+        } else {
+            Intent intent = new Intent();
+            intent.putExtra(Symbol.IMAGE_ID.GetValue(), user.getImgID());
+            intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+            intent.putExtra(Symbol.STATUS.GetValue(), user.getStatus());
+            setResult(RESULT_OK, intent);
+            finish();
+        }
     }
 
     @Override
     public void UpdateFail() {
 
+    }
+
+    void SwitchToMain(){
+        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
+        local.WriteValueByKey(Symbol.KEY_USER_PHONE.GetValue(), user.ExchangeToJson());
+        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 1);
+        Intent intent = new Intent(VerifyAccountActivity.this, MainActivity.class);
+        intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+        startActivity(intent);
     }
 
     class BlurImage implements LoadImageResponse {

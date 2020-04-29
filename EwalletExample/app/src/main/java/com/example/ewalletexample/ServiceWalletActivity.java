@@ -26,7 +26,6 @@ import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserSearchModel;
 import com.example.ewalletexample.service.ServerAPI;
-import com.example.ewalletexample.service.TextBalanceFormat;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.storage.FirebaseStorage;
@@ -52,7 +51,6 @@ public class ServiceWalletActivity extends AppCompatActivity {
     EditText etBalance;
     TextView tvErrorBalance;
     BankInfo bankChoose;
-    TextBalanceFormat textBalanceFormat;
     Service service;
     UserSearchModel searchModel;
 

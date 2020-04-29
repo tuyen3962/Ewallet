@@ -29,9 +29,11 @@ import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.CarrierNumber;
 import com.example.ewalletexample.service.CheckInputField;
+import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.ServerAPI;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -42,15 +44,14 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class LoginActivity extends AppCompatActivity implements BalanceResponse {
+public class LoginActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
-    EditText etUsername, etPassword;
+    MaterialTextView tvFullname, tvPhone;
+    EditText etPassword;
     TextView tvError;
     User user;
     ProgressBarManager progressBarManager;
-    private String userid;
-    private long userAmount;
-
+    SharedPreferenceLocal local;
     TextWatcher textWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -76,31 +77,52 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         setContentView(R.layout.activity_login_ui);
 
         InitLayoutProperties();
+        GetValueFromIntent();
     }
 
     void InitLayoutProperties(){
+        local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         mAuth = FirebaseAuth.getInstance();
+        if(mAuth.getCurrentUser() != null){
+            mAuth.signOut();
+        }
 
-        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnLogin));
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar),
+                findViewById(R.id.btnLogin), findViewById(R.id.btnLogout), findViewById(R.id.btnForgetPass));
 
-        etUsername = findViewById(R.id.etUsername);
+        tvFullname = findViewById(R.id.tvFullName);
+        tvPhone = findViewById(R.id.tvPhone);
+
         etPassword = findViewById(R.id.etPassword);
 
-        etUsername.addTextChangedListener(textWatcher);
         etPassword.addTextChangedListener(textWatcher);
         tvError = findViewById(R.id.tvError);
+        user = new User();
+    }
+
+    void GetValueFromIntent(){
+        Intent intent = getIntent();
+        user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
+        user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
+
+        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
+        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 0);
+        local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
+        local.DeleteKey(Symbol.KEY_USER_PHONE.GetValue());
+
+        tvFullname.setText(user.getFullName());
+        tvPhone.setText(user.getPhoneNumber());
     }
 
     public void UserLoginEvent(View view){
         progressBarManager.ShowProgressBar("Loading");
 
-        String username = etUsername.getText().toString();
         String password = etPassword.getText().toString();
 
-        Response response = CheckUsernameAndPassword(username,password);
+        Response response = CheckUsernameAndPassword(password);
 
         if(response.GetStatus()){
-            SendLoginRequest(username,password);
+            SendLoginRequest(password);
         }
         else{
             progressBarManager.HideProgressBar();
@@ -108,14 +130,8 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         }
     }
 
-    Response CheckUsernameAndPassword(String username, String password){
-        if(TextUtils.isEmpty(username)){
-            return new Response(ErrorCode.VALIDATE_PHONE_INVALID);
-        }
-        else if(!CheckInputField.PhoneNumberIsValid(username)){
-            return new Response(ErrorCode.VALIDATE_PHONE_INVALID);
-        }
-        else if(TextUtils.isEmpty(password)){
+    Response CheckUsernameAndPassword(String password){
+        if(TextUtils.isEmpty(password)){
             return new Response(ErrorCode.VALIDATE_PIN_INVALID);
         }
         else if(!CheckInputField.PasswordIsValid(password)){
@@ -125,11 +141,11 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         return new Response(ErrorCode.SUCCESS);
     }
 
-    private void SendLoginRequest(String username, String password){
+    private void SendLoginRequest(String password){
         JSONObject json = new JSONObject();
 
         try{
-            json.put("phone",username);
+            json.put("phone",user.getPhoneNumber());
             json.put("pin",password);
 
             new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
@@ -143,8 +159,9 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         startActivity(new Intent(LoginActivity.this, VerifyUserForForget.class));
     }
 
-    public void UserRegisterEvent(View view){
-        startActivity(new Intent(LoginActivity.this, RegisterByPhone.class));
+    public void UserLogoutPhoneEvent(View view){
+        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), -1);
+        startActivity(new Intent(LoginActivity.this, EnterPhoneStartAppActivity.class));
     }
 
     private void ShowErrorText(String message){
@@ -152,21 +169,12 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         tvError.setText(message);
     }
 
-    private void GetBalance(){
-        GetBalanceAPI balanceAPI = new GetBalanceAPI(userid, this);
-        balanceAPI.GetBalance();
-    }
-
-    @Override
-    public void GetBalanceResponse(long balance) {
-        userAmount = balance;
-        SwitchToMainScreen();
-    }
-
     private void SwitchToMainScreen() {
+        local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
+        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 1);
+        local.WriteValueByKey(Symbol.KEY_USER_PHONE.GetValue(), user.ExchangeToJson());
+
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
         startActivity(intent);
     }
@@ -191,7 +199,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             user = new User();
-            userid = jsonData.getString("userid");
+            user.setUserId(jsonData.getString("userid"));
             user.setFullName(jsonData.getString("fullname"));
             user.setAddress(jsonData.getString("address"));
             user.setPhoneNumber(jsonData.getString("phone"));
@@ -202,7 +210,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
             user.setImgAccountLink(jsonData.getString("image_profile"));
             user.setStatus(jsonData.getInt("status"));
 
-            GetBalance();
+            SwitchToMainScreen();
         }
 
         @Override

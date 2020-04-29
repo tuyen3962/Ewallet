@@ -35,7 +35,6 @@ public class ResetPassword extends AppCompatActivity {
     private EditText etPassword, etConfirmPassword;
     private TextView tvUsername, tvError;
 
-    private boolean isFinishVerifyEmail = false;
     private String reason, email, phone, userid;
 
     @Override

@@ -3,127 +3,170 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="160dp"
-        android:layout_marginTop="50dp"
-        android:text="VDT"
-        android:textColor="@color/colorPrimary"
-        android:textSize="40sp" />
-
-    <TextView
-        android:id="@+id/txVerifyPhone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/textView4"
-        android:layout_centerInParent="true"
-        android:layout_marginTop="20dp"
-        android:text="Xac thuc bang dien thoai"
-        android:textSize="25dp" />
-
-    <TextView
-        android:id="@+id/tvCode"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/txVerifyPhone"
-        android:layout_marginStart="35dp"
-        android:layout_marginTop="30dp"
-        android:layout_centerHorizontal="true"
-        android:text="Code"
-        android:textSize="30dp" />
+    android:layout_height="match_parent"
+    tools:context=".VerifyByPhoneActivity">
 
     <LinearLayout
-        android:id="@+id/codeLayout"
+        android:id="@+id/layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tvCode"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/etCode01"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:layout_gravity="center"
+            android:text="VDT"
+            android:textColor="@color/colorPrimary"
+            android:textSize="40sp" />
+
+        <TextView
+            android:id="@+id/txVerifyPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_gravity="center"
+            android:textColor="@color/Black"
+            android:text="Xác thực số điện thoại"
             android:gravity="center"
-            android:ems="10"
-            android:inputType="number" />
+            android:textSize="25dp" />
 
-        <EditText
-            android:id="@+id/etCode02"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
+        <TextView
+            android:id="@+id/tvCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_gravity="center"
+            android:textColor="@color/Black"
+            android:text="OTP"
+            android:textSize="30dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:gravity="center"
-            android:ems="10"
-            android:inputType="number" />
+            android:layout_gravity="center"
+            android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/etCode03"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etCode01"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:layout_marginHorizontal="5dp"
+                    android:textSize="35dp"
+                    android:inputType="number" />
+
+                <EditText
+                    android:id="@+id/etCode02"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:gravity="center"
+                    android:textSize="35dp"
+                    android:inputType="number" />
+
+                <EditText
+                    android:id="@+id/etCode03"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:gravity="center"
+                    android:textSize="35dp"
+                    android:inputType="number" />
+
+                <EditText
+                    android:id="@+id/etCode04"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:gravity="center"
+                    android:textSize="35dp"
+                    android:inputType="number" />
+
+                <EditText
+                    android:id="@+id/etCode05"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:gravity="center"
+                    android:textSize="35dp"
+                    android:inputType="number" />
+
+                <EditText
+                    android:id="@+id/etCode06"
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="5dp"
+                    android:gravity="center"
+                    android:textSize="35dp"
+                    android:inputType="number" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:weightSum="5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnResendVerifyPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gửi lại"
+                    android:enabled="false"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_weight="1"
+                    android:textSize="18sp"
+                    android:onClick="ResendVerifyCodeEvent"/>
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"/>
+
+                <Button
+                    android:id="@+id/btnChangePhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:text="Đổi SDT"
+                    android:textSize="18sp"
+                    android:layout_weight="1"
+                    android:onClick="ChangePhone"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/buttonLayout"
+            android:layout_below="@+id/codeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
             android:gravity="center"
-            android:ems="10"
-            android:inputType="number" />
-
-        <EditText
-            android:id="@+id/etCode04"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:ems="10"
-            android:inputType="number" />
-
-        <EditText
-            android:id="@+id/etCode05"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:ems="10"
-            android:inputType="number" />
-
-        <EditText
-            android:id="@+id/etCode06"
-            android:layout_width="40dp"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:ems="10"
-            android:inputType="number" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/buttonLayout"
-        android:layout_below="@+id/codeLayout"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:gravity="center"
-        android:layout_marginTop="30dp"
-        android:orientation="horizontal">
+            android:layout_marginTop="30dp"
+            android:orientation="horizontal">
 
 
-        <Button
-            android:id="@+id/btnVerifyPhone"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_below="@id/codeLayout"
-            android:background="@drawable/edit_round_button"
-            android:layout_marginHorizontal="10dp"
-            android:text="Xac thuc"
-            android:onClick="VerifyVerificationCode"/>
-
-        <Button
-            android:id="@+id/btnResendVerifyPhone"
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:layout_below="@id/codeLayout"
-            android:layout_marginHorizontal="10dp"
-            android:enabled="false"
-            android:background="@drawable/edit_round_button_disable"
-            android:text="Gửi lại"
-            android:onClick="ResendVerifyCodeEvent"/>
+            <Button
+                android:id="@+id/btnVerifyPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="10dp"
+                android:text="Xac thuc"
+                android:textSize="18sp"
+                android:backgroundTint="@color/colorAccent"
+                android:onClick="VerifyVerificationCode"/>
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -132,7 +175,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="30sp"
-        android:layout_below="@+id/buttonLayout"
+        android:layout_below="@id/layout"
         android:layout_centerHorizontal="true"
         android:textColor="@color/SoftRed"
         android:text="Code"

@@ -1,203 +1,121 @@
 package com.example.ewalletexample;
 
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.drm.DrmStore;
-import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.model.UserModel;
-import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
-import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
-import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.service.editText.ErrorTextWatcher;
 import com.example.ewalletexample.utilies.Utilies;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textview.MaterialTextView;
 
-public class RegisterByPhone extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel> {
+public class RegisterByPhone extends AppCompatActivity {
 
-    EditText etFullname, etUserPhone, etPassword, etConfirmPass;
-    TextView tvWarning;
-
-    DatabaseReference mDatabase;
-    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
-
-    private TextWatcher textWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            if(tvWarning.getVisibility() == View.VISIBLE){
-                HideWarningTextview();
-            }
-        }
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-
-        }
-    };
+    TextInputLayout inputLayoutFullName, inputLayoutPassword, inputLayoutConfirmPassword;
+    TextInputEditText etFullName, etPassword, etConfirmPass;
+    MaterialTextView tvPhone;
+//    ErrorTextWatcher inputFullName, inputPassword, inputConfirmPassword;
+    String phone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_by_phone);
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(mDatabase, this);
-
-        Utilies.SetTitle(this, this,"Đăng kí");
 
         Intialize();
-        AddTextWatcherIntoEditText();
+        GetValueFromIntent();
     }
 
     void Intialize(){
-        etFullname = findViewById(R.id.etFullName);
-        etUserPhone = findViewById(R.id.etUserPhone);
+        inputLayoutFullName = findViewById(R.id.input_layout_fullname);
+        inputLayoutConfirmPassword = findViewById(R.id.input_layout_confirm_password);
+        inputLayoutPassword = findViewById(R.id.input_layout_password);
+
+        etFullName = findViewById(R.id.etFullname);
+        tvPhone = findViewById(R.id.tvPhone);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPass = findViewById(R.id.etConfirmPassword);
-        tvWarning = findViewById(R.id.tvWarning);
+//        inputFullName = new ErrorTextWatcher(inputLayoutFullName, etFullName);
+//        inputPassword = new ErrorTextWatcher(inputLayoutPassword, etPassword);
+//        inputConfirmPassword = new ErrorTextWatcher(inputLayoutConfirmPassword, etConfirmPass);
     }
 
-    void AddTextWatcherIntoEditText(){
-        etUserPhone.addTextChangedListener(textWatcher);
-        etPassword.addTextChangedListener(textWatcher);
-        etConfirmPass.addTextChangedListener(textWatcher);
+    void GetValueFromIntent(){
+        Intent intent = getIntent();
+        phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+        tvPhone.setText(phone);
     }
 
     public void CancelEvent(View view){
-        startActivity(new Intent(RegisterByPhone.this, LoginActivity.class));
+        startActivity(new Intent(RegisterByPhone.this, EnterPhoneStartAppActivity.class));
     }
 
     public void RegisterEvent(View view){
-        Response response = InputFieldIsValid();
-
-        if(response.GetStatus()){
-            firebaseDatabaseHandler.RegisterDataListener();
-        }
-        else{
-            ShowWarningText(response.GetMessage());
-            ClearSpecificEditText();
-        }
-
-    }
-
-    private Response InputFieldIsValid(){
-        String fullName = etFullname.getText().toString();
-
-        if(TextUtils.isEmpty(fullName)){
-            return new Response(ErrorCode.VALIDATE_FULL_NAME_INVALID);
-        }
-
-        String phone = etUserPhone.getText().toString();
-
-        if(TextUtils.isEmpty(phone) && !CheckInputField.PhoneNumberIsValid(phone)){
-            return new Response(ErrorCode.VALIDATE_PHONE_INVALID);
-        }
-
-        Response response = CheckPassword();
-
-        if(response.GetStatus()){
-            return new Response(ErrorCode.SUCCESS);
-        }
-
-        return response;
-    }
-
-    private Response CheckPassword(){
-        String pass = etPassword.getText().toString();
+        String fullname = etFullName.getText().toString();
+        String password = etPassword.getText().toString();
         String confirmPass = etConfirmPass.getText().toString();
 
-        if (TextUtils.isEmpty(pass) || TextUtils.isEmpty(confirmPass)){
-            return new Response(ErrorCode.EMPTY_PIN);
+        if(InputFieldIsValid(fullname, password, confirmPass)){
+            SwitchToVerifyByPhoneActivity(fullname, password);
+        } else {
+            ClearSpecificEditText();
         }
-        else if(!CheckInputField.PasswordIsValid(pass) || !CheckInputField.PasswordIsValid(confirmPass)){
-            return new Response(ErrorCode.VALIDATE_PIN_INVALID);
+    }
+
+    private boolean InputFieldIsValid(String fullName, String password, String confirmPass){
+        if(TextUtils.isEmpty(fullName)){
+            inputLayoutFullName.setError(ErrorCode.VALIDATE_FULL_NAME_INVALID.GetMessage());
+            return false;
         }
-        else if(pass.equalsIgnoreCase(confirmPass)){
-            return new Response(ErrorCode.SUCCESS);
+
+        return CheckPassword(password, confirmPass);
+    }
+
+    private boolean CheckPassword(String password, String confirmPass){
+        if (TextUtils.isEmpty(password)){
+            etPassword.setError(ErrorCode.EMPTY_PIN.GetMessage());
+            return false;
+        } else if (TextUtils.isEmpty(confirmPass)){
+            etConfirmPass.setError(ErrorCode.EMPTY_PIN.GetMessage());
+            return false;
+        }
+        else if(!CheckInputField.PasswordIsValid(password)){
+            etPassword.setError(ErrorCode.VALIDATE_PIN_INVALID.GetMessage());
+            return false;
+        } else if(!CheckInputField.PasswordIsValid(confirmPass)){
+            etConfirmPass.setError(ErrorCode.VALIDATE_PIN_INVALID.GetMessage());
+            return false;
+        }
+        else if(password.equalsIgnoreCase(confirmPass)){
+            return true;
         }
         else{
-            return new Response(ErrorCode.UNVALID_PIN_AND_CONFIRM_PIN);
+            etPassword.setError(ErrorCode.UNVALID_PIN_AND_CONFIRM_PIN.GetMessage());
+            etConfirmPass.setError(ErrorCode.UNVALID_PIN_AND_CONFIRM_PIN.GetMessage());
+            return false;
         }
     }
 
-    private void SwitchToVerifyByPhoneActivity(){
+    private void SwitchToVerifyByPhoneActivity(String fullName, String password){
         Intent intent = new Intent(RegisterByPhone.this, VerifyByPhoneActivity.class);
         intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_REGISTER.GetValue());
-        intent.putExtra(Symbol.FULLNAME.GetValue(), etFullname.getText().toString());
-        intent.putExtra(Symbol.PASSWORD.GetValue(), etPassword.getText().toString());
-        intent.putExtra(Symbol.PHONE.GetValue(), etUserPhone.getText().toString());
+        intent.putExtra(Symbol.FULLNAME.GetValue(), fullName);
+        intent.putExtra(Symbol.PASSWORD.GetValue(), password);
+        intent.putExtra(Symbol.PHONE.GetValue(), phone);
 
         startActivity(intent);
-    }
-
-    private void ShowWarningText(String message){
-        tvWarning.setText(message);
-        tvWarning.setVisibility(View.VISIBLE);
-    }
-
-    private void HideWarningTextview(){
-        tvWarning.setVisibility(View.GONE);
     }
 
     private void ClearSpecificEditText(){
         etConfirmPass.setText("");
         etPassword.setText("");
-    }
-
-    @Override
-    public void HandleDataModel(UserModel data) {
-        if(data == null){
-            SwitchToVerifyByPhoneActivity();
-        }
-        else{
-            ClearSpecificEditText();
-            ShowWarningText(ErrorCode.VALIDATE_PHONE_DUPLICATE.GetMessage());
-        }
-    }
-
-    @Override
-    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
-        String phone = etUserPhone.getText().toString();
-        if(dataSnapshot.child("users").getChildrenCount() == 0){
-            firebaseDatabaseHandler.UnregisterValueListener(null);
-            return;
-        }
-        else  {
-            for(DataSnapshot data : dataSnapshot.child("users").getChildren()){
-                UserModel model = data.getValue(UserModel.class);
-                if(model.getPhone().equalsIgnoreCase(phone)){
-                    firebaseDatabaseHandler.UnregisterValueListener(model);
-                    return;
-                }
-            }
-        }
-
-        firebaseDatabaseHandler.UnregisterValueListener(null);
-    }
-
-    @Override
-    public void HandlerDatabaseError(DatabaseError databaseError) {
-
     }
 }

@@ -55,7 +55,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     FirebaseStorageHandler storageHandler;
     View btnUpload, dateOfBirthLayout;
 
-    TextView tvFullname, tvMonth, tvYear, tvDay;
+    TextView tvFullname, tvMonth, tvYear, tvDay, tvBack;
     EditText etAddress;
     CircleImageView imgAccount;
     ProgressBarManager progressBarManager;
@@ -74,7 +74,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     UpdateUserAPI updateAPI;
 
     DatePickerDialog datePickerDialog;
-
+    String update;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +100,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         tvDay = findViewById(R.id.tvDay);
         tvMonth = findViewById(R.id.tvMonth);
         tvYear = findViewById(R.id.tvYear);
+        tvBack = findViewById(R.id.tvBack);
 
         tvFullname = findViewById(R.id.tvFullName);
         etAddress = findViewById(R.id.etAddress);
@@ -115,18 +116,19 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     void GetValueFromIntent(){
         user = new User();
         Intent intent = getIntent();
-        user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
-        user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
-        user.setImgAccountLink(intent.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue()));
-        user.setAddress(intent.getStringExtra(Symbol.ADDRESS.GetValue()));
-        user.setDateOfbirth(intent.getStringExtra(Symbol.DOB.GetValue()));
-        Log.d("TAG", "GetModelByKey GetValueFromIntent: " + user.getUserId());
+        update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
+        user.ReadJson(intent.getStringExtra(Symbol.USER.GetValue()));
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            tvBack.setCompoundDrawables(null, null,getDrawable(R.drawable.ic_action_arrow_right),null);
+            tvBack.setText("Skip");
+        } else  if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
+            tvBack.setCompoundDrawables(null, null,getDrawable(R.drawable.ic_action_home),null);
+            tvBack.setText("Trở về");
+            LoadImageAccount();
+        }
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
         FillUserDetail();
-        LoadImageAccount();
         updateAPI = new UpdateUserAPI(user.getUserId(), this);
-        updateAPI.setPin("");
-        updateAPI.setEmail("");
     }
 
     void FillUserDetail(){
@@ -290,14 +292,21 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
             LoadImageAccount();
         }
         else {
-            Intent intent = new Intent();
-            intent.putExtra(Symbol.ADDRESS.GetValue(), user.getAddress());
-            intent.putExtra(Symbol.DOB.GetValue(), user.getDateOfbirth());
-            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
-            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-            setResult(RESULT_OK, intent);
-            finish();
+            if (update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+                Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
+                intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
+                intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+                startActivity(intent);
+            } else if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
+                Intent intent = new Intent();
+                intent.putExtra(Symbol.ADDRESS.GetValue(), user.getAddress());
+                intent.putExtra(Symbol.DOB.GetValue(), user.getDateOfbirth());
+                intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
+                intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+                intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+                setResult(RESULT_OK, intent);
+                finish();
+            }
         }
     }
 
@@ -373,11 +382,18 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     }
 
     public void BackPreviousActivity(View view){
-        Intent intent = new Intent();
-        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-        setResult(RESULT_CANCELED, intent);
-        finish();
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
+            intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
+            intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+            startActivity(intent);
+        } else {
+            Intent intent = new Intent();
+            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
+            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+            setResult(RESULT_CANCELED, intent);
+            finish();
+        }
     }
 }

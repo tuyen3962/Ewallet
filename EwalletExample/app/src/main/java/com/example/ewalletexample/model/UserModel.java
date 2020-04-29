@@ -6,6 +6,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserModel implements Serializable {
     private String phone;
@@ -14,6 +16,7 @@ public class UserModel implements Serializable {
     private String emailToken;
     private String fullname;
     private String imgLink;
+    private List<String> friends;
 
     public UserModel(String phone, String phoneToken, String email, String emailToken, String fullname, String imgLink) {
         this.phone = phone;
@@ -22,6 +25,7 @@ public class UserModel implements Serializable {
         this.emailToken = emailToken;
         this.fullname = fullname;
         this.imgLink = imgLink;
+        friends = new ArrayList<>();
     }
 
     public UserModel(String fullname, String phone, String phoneToken, String email){
@@ -31,6 +35,7 @@ public class UserModel implements Serializable {
         this.emailToken = "";
         this.imgLink = "";
         this.fullname = fullname;
+        friends = new ArrayList<>();
     }
 
     public UserModel(){
@@ -40,6 +45,7 @@ public class UserModel implements Serializable {
         this.emailToken = "";
         this.imgLink = "";
         this.fullname = "";
+        friends = new ArrayList<>();
     }
 
     public String getImgLink() {
@@ -99,5 +105,17 @@ public class UserModel implements Serializable {
 
     public void setEmailToken(String emailToken) {
         this.emailToken = emailToken;
+    }
+
+    public void setFriends(List<String> friend){
+        this.friends = friend;
+    }
+
+    public List<String> getFriends(){
+        return this.friends;
+    }
+
+    public void addNewFriend(String friendId){
+        friends.add(friendId);
     }
 }
