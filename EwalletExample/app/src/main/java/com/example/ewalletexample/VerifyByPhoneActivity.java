@@ -35,6 +35,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,6 +49,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
     private User user;
     private String reason, verifyForget, mVerificationId;
+    private Gson gson;
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     CodeEditText codeEditText;
@@ -75,6 +77,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     }
 
     void Initalize(){
+        gson = new Gson();
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         auth = FirebaseAuth.getInstance();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
@@ -242,6 +245,10 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     }
 
     private void VerifySuccess(){
+        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
+        local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
+        local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
+
         if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
             progressBarManager.SetMessage("Saving");
             SendRequestRegister();
@@ -307,16 +314,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             user.setUserId(jsonData.getString("userid"));
-            local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
-            local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
-            local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
-            local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 0);
             progressBarManager.HideProgressBar();
 
-            //Fill information
             Intent intent = new Intent(VerifyByPhoneActivity.this, UpdateUserInformationActivity.class);
             intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
-            intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+            intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
             startActivity(intent);
         }
 

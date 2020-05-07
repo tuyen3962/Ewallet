@@ -9,9 +9,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.ewalletexample.Server.bank.BankMappingCallback;
-import com.example.ewalletexample.Server.bank.unlink.UnlinkBankConnectedAPI;
-import com.example.ewalletexample.Server.bank.unlink.UnlinkBankResponse;
+import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
+import com.example.ewalletexample.Server.api.bank.unlink.UnlinkBankConnectedAPI;
 import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;

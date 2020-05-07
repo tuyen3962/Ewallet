@@ -14,8 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.bank.BankMappingCallback;
-import com.example.ewalletexample.Server.transaction.TransactionHistory;
+import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
+import com.example.ewalletexample.Server.api.transaction.TransactionHistory;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.TransactionDetail;
 import com.example.ewalletexample.model.StatisMonthTransaction;
@@ -28,10 +28,7 @@ import com.example.ewalletexample.utilies.HandleDateTime;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class HistoryTransactionActivity extends AppCompatActivity implements BankMappingCallback<List<TransactionDetail>>, ResponseModelByKey<StatisMonthTransaction> {
     FirebaseDatabaseHandler<StatisMonthTransaction> firebaseDatabaseHandler;

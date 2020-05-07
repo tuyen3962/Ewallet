@@ -128,6 +128,7 @@ public class HomeFragment extends Fragment {
         Intent intent = new Intent(mainActivity, SearchUserExchangeActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
+        intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserInformation().getPhoneNumber());
         startActivity(intent);
     }
 

@@ -11,8 +11,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import com.example.ewalletexample.Server.register.RegisterUserAPI;
-import com.example.ewalletexample.Server.register.ResgisterCallback;
+import com.example.ewalletexample.Server.api.register.RegisterUserAPI;
+import com.example.ewalletexample.Server.api.register.ResgisterCallback;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
@@ -101,10 +101,10 @@ public class AddUserAutomatic extends AppCompatActivity {
 
         @Override
         public void RegisterSuccessful(String userid, String fullName, String phone) {
-            UserModel model = new UserModel();
-            model.setFullname(fullName);
-            model.setPhone(phone);
-            firebaseDatabaseHandler.PushDataIntoDatabase(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), userid, model);
+//            UserModel model = new UserModel();
+//            model.setFullname(fullName);
+//            model.setPhone(phone);
+//            firebaseDatabaseHandler.PushDataIntoDatabase(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), userid, model);
         }
     }
 }

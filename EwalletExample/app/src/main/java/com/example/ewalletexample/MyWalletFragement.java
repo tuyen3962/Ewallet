@@ -145,7 +145,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
 
     public void SwitchToPersonalDetailActivity(){
         Intent intent = new Intent(mainActivity, PersonalDetailActivity.class);
-        intent.putExtra(Symbol.USER.GetValue(), mainActivity.GetUserInformation().ExchangeToJson());
+        intent.putExtra(Symbol.USER.GetValue(), mainActivity.GetGson().toJson(mainActivity.GetUserInformation()));
         startActivityForResult(intent, RequestCode.MODIFY_INFORMATION);
     }
 
@@ -157,9 +157,9 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             if(changeBalance){
                 mainActivity.SetUserBalance(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
             }
-            String imageLink = mainActivity.GetUserInformation().getImgAccountLink();
+            String imageLink = mainActivity.GetUserInformation().getAvatar();
             mainActivity.SetUserInformationByJson(data.getStringExtra(Symbol.USER.GetValue()));
-            if(!imageLink.equalsIgnoreCase(mainActivity.GetUserInformation().getImgAccountLink())){
+            if(!imageLink.equalsIgnoreCase(mainActivity.GetUserInformation().getAvatar())){
                 mainActivity.FindImageUriFromInternet();
             }
         }

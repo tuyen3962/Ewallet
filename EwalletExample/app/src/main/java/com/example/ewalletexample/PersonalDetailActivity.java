@@ -6,29 +6,21 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.request.RequestServerAPI;
-import com.example.ewalletexample.Server.request.RequestServerFunction;
-import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
-import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
-import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
 
 public class PersonalDetailActivity extends AppCompatActivity implements WebsocketResponse {
     FirebaseStorageHandler firebaseStorageHandler;
@@ -39,7 +31,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
     ProgressBarManager progressBarManager;
 
     private User user;
-
+    private Gson gson;
     WebsocketClient client;
     long balance;
     boolean changeBalance;
@@ -53,6 +45,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
     }
 
     void Initialize(){
+        gson = new Gson();
         changeBalance = false;
         balance = 0;
         client = new WebsocketClient(this);
@@ -80,12 +73,9 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
     }
 
     void LoadDataFromIntent(){
-        user = new User();
         Intent intent = getIntent();
-        String json = intent.getStringExtra(Symbol.USER.GetValue());
-        if(!json.isEmpty()){
-            user.ReadJson(json);
-        }
+        user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
+        user.setDate();
         FillUserProfile();
         LoadImageAccount();
     }
@@ -96,56 +86,47 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         tvAddress.setText(user.getAddress());
         tvPhone.setText(user.getPhoneNumber());
         tvEmail.setText(user.getEmail());
-        if(user.getStatus() == -1){
+        if(user.getStatus() == 0){
             tvVerifyText.setText("Chưa xác thực");
-        } else if(user.getStatus() == 0){
-            tvVerifyText.setText("Đang xác thực");
+        } else if(user.getStatus() == 2){
+            tvVerifyText.setText("Xác thực thất bại");
         } else{
             tvVerifyText.setText("Đã xác thực");
         }
     }
 
     void LoadImageAccount(){
-        if(user.getImgAccountLink().isEmpty()){
+        if(user.getAvatar().isEmpty()){
             imgAccount.setImageDrawable(getResources().getDrawable(R.drawable.ic_action_person, null));
             return;
         }
 
-        firebaseStorageHandler.LoadAccountImageFromLink(user.getImgAccountLink(), imgAccount);
+        firebaseStorageHandler.LoadAccountImageFromLink(user.getAvatar(), imgAccount);
     }
 
     public void UploadUserInfo(View view){
         Intent intent = new Intent(PersonalDetailActivity.this, UpdateUserInformationActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
-        intent.putExtra(Symbol.ADDRESS.GetValue(), user.getAddress());
-        intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
-        intent.putExtra(Symbol.DOB.GetValue(), user.getDateOfbirth());
-        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
+        intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
+        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         startActivityForResult(intent, RequestCode.UPDATE_USER);
     }
 
     public void VerifyAccount(View view){
         Intent intent = new Intent(PersonalDetailActivity.this, VerifyAccountActivity.class);
+        intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
         intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
-        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgID());
-        intent.putExtra(Symbol.STATUS.GetValue(), user.getStatus());
+        intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
+        intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
         startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
-    }
-
-    public void UpdateUserEmail(View view){
-        Intent intent = new Intent(PersonalDetailActivity.this, UpdateEmailActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
-        intent.putExtra(Symbol.EMAIL.GetValue(), user.getEmail());
-        startActivityForResult(intent, RequestCode.UPDATE_EMAIL);
     }
 
     public void BackToMainEvent(View view){
         Intent intent = new Intent();
         intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-        intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         setResult(RESULT_OK, intent);
         finish();
     }
@@ -171,29 +152,20 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
             if(resultCode == RESULT_OK){
                 user.setAddress(data.getStringExtra(Symbol.ADDRESS.GetValue()));
                 user.setDateOfbirth(data.getStringExtra(Symbol.DOB.GetValue()));
-                FillUserProfile();
-            }
-        } else if(requestCode == RequestCode.VERIFY_ACCOUNT_CODE && resultCode == RESULT_OK){
-            user.setImgID(data.getStringExtra(Symbol.IMAGE_ID.GetValue()));
-            user.setCmnd(data.getStringExtra(Symbol.CMND.GetValue()));
-            user.setStatus(data.getIntExtra(Symbol.STATUS.GetValue(), -1));
-            FillUserProfile();
-        } else if(requestCode == RequestCode.UPDATE_EMAIL){
-            boolean change = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
-            if(change){
-                this.balance = data.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
-            }
-
-            if(resultCode == RESULT_OK){
                 user.setEmail(data.getStringExtra(Symbol.EMAIL.GetValue()));
                 FillUserProfile();
             }
+        } else if(requestCode == RequestCode.VERIFY_ACCOUNT_CODE && resultCode == RESULT_OK){
+            user.setCmndFrontImage(data.getStringExtra(Symbol.IMAGE_CMND_FRONT.GetValue()));
+            user.setCmndBackImage(data.getStringExtra(Symbol.IMAGE_CMND_BACK.GetValue()));
+            user.setCmnd(data.getStringExtra(Symbol.CMND.GetValue()));
+            FillUserProfile();
         }
     }
 
     void CheckImageLink(String imgLink){
-        if(!imgLink.equalsIgnoreCase(user.getImgAccountLink())){
-            user.setImgAccountLink(imgLink);
+        if(!imgLink.equalsIgnoreCase(user.getAvatar())){
+            user.setAvatar(imgLink);
             LoadImageAccount();
         }
     }

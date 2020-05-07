@@ -24,6 +24,10 @@ public enum  ServerAPI {
     GET_BANK_LINKING_API("/bank-mapping/list"),
     GET_LIST_BANK_SUPPORT("/bank-mapping/support-bank"),
 
+    CHECK_LIST_PHONE("/check-list"),
+
+    HISTORY_NOTIFICATION("/notify/history"),
+
     CREATE_TOPUP_ORDER("/wallet-topup/create-order"),
     GET_STATUS_TOPUP_ORDER("/wallet-topup/order-status"),
 

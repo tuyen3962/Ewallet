@@ -1,24 +1,16 @@
 package com.example.ewalletexample;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.ResponseBody;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.balance.BalanceResponse;
-import com.example.ewalletexample.Server.balance.GetBalanceAPI;
+import com.davidmiguel.numberkeyboard.NumberKeyboard;
+import com.davidmiguel.numberkeyboard.NumberKeyboardListener;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
@@ -26,50 +18,27 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.Response;
-import com.example.ewalletexample.model.UserModel;
-import com.example.ewalletexample.service.CarrierNumber;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.ServerAPI;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.textview.MaterialTextView;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
 
 public class LoginActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     MaterialTextView tvFullname, tvPhone;
-    EditText etPassword;
     TextView tvError;
+    PasswordFieldFragment passwordFieldFragment;
+    NumberKeyboard keyboard;
     User user;
     ProgressBarManager progressBarManager;
     SharedPreferenceLocal local;
-    TextWatcher textWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            if(tvError.getVisibility() == View.VISIBLE){
-                tvError.setVisibility(View.GONE);
-            }
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-
-        }
-    };
+    Gson gson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,10 +46,16 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login_ui);
 
         InitLayoutProperties();
+        if(savedInstanceState == null) {
+            passwordFieldFragment = PasswordFieldFragment.newInstance("Nhập mật khẩu");
+            getSupportFragmentManager().
+                    beginTransaction().replace(R.id.passwordFrameLayout, passwordFieldFragment).commit();
+        }
         GetValueFromIntent();
     }
 
     void InitLayoutProperties(){
+        gson = new Gson();
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() != null){
@@ -93,11 +68,27 @@ public class LoginActivity extends AppCompatActivity {
         tvFullname = findViewById(R.id.tvFullName);
         tvPhone = findViewById(R.id.tvPhone);
 
-        etPassword = findViewById(R.id.etPassword);
-
-        etPassword.addTextChangedListener(textWatcher);
+        keyboard = findViewById(R.id.keyboard);
+        SetDefault();
         tvError = findViewById(R.id.tvError);
         user = new User();
+
+        keyboard.setListener(new NumberKeyboardListener() {
+            @Override
+            public void onNumberClicked(int i) {
+                passwordFieldFragment.CheckIncreaseIndex(String.valueOf(i));
+            }
+
+            @Override
+            public void onLeftAuxButtonClicked() {
+                HideKeyBoard();
+            }
+
+            @Override
+            public void onRightAuxButtonClicked() {
+                passwordFieldFragment.CheckDecreaseIndex();
+            }
+        });
     }
 
     void GetValueFromIntent(){
@@ -105,19 +96,28 @@ public class LoginActivity extends AppCompatActivity {
         user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
         user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
 
-        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
-        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 0);
-        local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
-        local.DeleteKey(Symbol.KEY_USER_PHONE.GetValue());
-
         tvFullname.setText(user.getFullName());
         tvPhone.setText(user.getPhoneNumber());
     }
 
+    public void ShowNumberKeyBoard(){
+        keyboard.setVisibility(View.VISIBLE);
+    }
+
+    public void HideKeyBoard(){
+        keyboard.setVisibility(View.GONE);
+        passwordFieldFragment.DisablePasswordField();
+    }
+
+    void SetDefault(){
+        keyboard.setVisibility(View.GONE);
+    }
+
     public void UserLoginEvent(View view){
+        keyboard.setVisibility(View.GONE);
         progressBarManager.ShowProgressBar("Loading");
 
-        String password = etPassword.getText().toString();
+        String password = passwordFieldFragment.getTextByImage();
 
         Response response = CheckUsernameAndPassword(password);
 
@@ -156,26 +156,28 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void UserForgetPasswordEvent(View view){
+        keyboard.setVisibility(View.GONE);
         startActivity(new Intent(LoginActivity.this, VerifyUserForForget.class));
     }
 
     public void UserLogoutPhoneEvent(View view){
-        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), -1);
+        keyboard.setVisibility(View.GONE);
+        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), "");
+        local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), "");
         startActivity(new Intent(LoginActivity.this, EnterPhoneStartAppActivity.class));
     }
 
     private void ShowErrorText(String message){
+        keyboard.setVisibility(View.GONE);
         tvError.setVisibility(View.VISIBLE);
         tvError.setText(message);
     }
 
     private void SwitchToMainScreen() {
         local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
-        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 1);
-        local.WriteValueByKey(Symbol.KEY_USER_PHONE.GetValue(), user.ExchangeToJson());
-
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+        Log.d("TAG", "SwitchToMainScreen: " + gson.toJson(user));
+        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         startActivity(intent);
     }
 
@@ -206,10 +208,10 @@ public class LoginActivity extends AppCompatActivity {
             user.setDateOfbirth(jsonData.getString("dob"));
             user.setCmnd(jsonData.getString("cmnd"));
             user.setEmail(jsonData.getString("email"));
-            user.setImgID(jsonData.getString("image_id"));
-            user.setImgAccountLink(jsonData.getString("image_profile"));
-            user.setStatus(jsonData.getInt("status"));
-
+            user.setCmndFrontImage(jsonData.getString("cmndFontImg"));
+            user.setAvatar(jsonData.getString("avatar"));
+            user.setCmndBackImage(jsonData.getString("cmndBackImg"));
+            user.setStatus(jsonData.getInt("verify"));
             SwitchToMainScreen();
         }
 

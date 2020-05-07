@@ -23,10 +23,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.ewalletexample.Server.balance.BalanceResponse;
-import com.example.ewalletexample.Server.balance.GetBalanceAPI;
-import com.example.ewalletexample.Server.user.update.UpdateUserAPI;
-import com.example.ewalletexample.Server.user.update.UpdateUserResponse;
+import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
+import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
@@ -36,6 +34,7 @@ import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler
 import com.example.ewalletexample.service.storageFirebase.LoadImageResponse;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +57,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     boolean hasUploadTwoImages;
     SharedPreferenceLocal local;
     String update;
+    Gson gson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +72,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void Initialize(){
         frontPhotoUri = null;
         backPhotoUri = null;
+        gson = new Gson();
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         tvFullName = findViewById(R.id.tvFullName);
         tvBack = findViewById(R.id.tvBack);
@@ -84,6 +85,10 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         updateAPI = new UpdateUserAPI(user.getUserId(), this);
         hasUploadTwoImages = false;
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            tvBack.setText("Skip");
+            tvFullName.setCompoundDrawables(null,null,null,null);
+        }
     }
 
     void GetValueFromIntent(){
@@ -91,15 +96,13 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         Intent intent = getIntent();
         update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
-            user.ReadJson(intent.getStringExtra(Symbol.USER.GetValue()));
-            tvBack.setText("Skip");
-            tvFullName.setCompoundDrawables(null,null,null,null);
+            user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
         } else {
             user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
             user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
             user.setCmnd(intent.getStringExtra(Symbol.CMND.GetValue()));
-            user.setImgID(intent.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue()));
-            user.setStatus(intent.getIntExtra(Symbol.STATUS.GetValue(), -1));
+            user.setCmndFrontImage(intent.getStringExtra(Symbol.IMAGE_CMND_FRONT.GetValue()));
+            user.setCmndBackImage(intent.getStringExtra(Symbol.IMAGE_CMND_BACK.GetValue()));
         }
     }
 
@@ -125,8 +128,8 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     void LoadImage(){
-        if(!user.getImgID().isEmpty()){
-            String[] images = user.getImgID().split(",");
+        if(!user.getCmndFrontImage().isEmpty()){
+            String[] images = user.getCmndFrontImage().split(",");
             BlurImage frontImage = new BlurImage(firebaseStorageHandler, this, findViewById(R.id.frontImage),
                     images[0], imgFrontIdentifierCard);
 
@@ -248,10 +251,11 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     public void VerifyInformation(View view){
-        if(!user.getImgID().isEmpty()){
-            String[] images = user.getImgID().split(",");
-            firebaseStorageHandler.DeleteFileInStorage(images[0]);
-            firebaseStorageHandler.DeleteFileInStorage(images[1]);
+        if(!user.getCmndFrontImage().isEmpty()){
+            firebaseStorageHandler.DeleteFileInStorage(user.getCmndFrontImage());
+        }
+        if (!user.getCmndBackImage().isEmpty()){
+            firebaseStorageHandler.DeleteFileInStorage(user.getCmndBackImage());
         }
         firebaseStorageHandler.UploadImage(frontPhotoUri, this);
     }
@@ -278,10 +282,11 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             progressBarManager.ShowProgressBar("Loading");
             user.setStatus(0);
             user.setCmnd(etCMND.getText().toString());
-            user.setImgID(frontPhotoPath+","+backPhotoPath);
+            user.setCmndFrontImage(frontPhotoPath);
+            user.setCmndBackImage(backPhotoPath);
             updateAPI.setCmnd(etCMND.getText().toString());
-            updateAPI.setStatus(0);
-            updateAPI.setImageID(frontPhotoPath+","+backPhotoPath);
+            updateAPI.setCmndFrontImage(frontPhotoPath);
+            updateAPI.setCmndBackImage(backPhotoPath);
             updateAPI.UpdateUser();
         }
     }
@@ -292,9 +297,9 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             SwitchToMain();
         } else {
             Intent intent = new Intent();
-            intent.putExtra(Symbol.IMAGE_ID.GetValue(), user.getImgID());
+            intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
+            intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
             intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
-            intent.putExtra(Symbol.STATUS.GetValue(), user.getStatus());
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -306,11 +311,8 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     void SwitchToMain(){
-        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
-        local.WriteValueByKey(Symbol.KEY_USER_PHONE.GetValue(), user.ExchangeToJson());
-        local.WriteIntegerValueByKey(Symbol.KEY_STATE.GetValue(), 1);
         Intent intent = new Intent(VerifyAccountActivity.this, MainActivity.class);
-        intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         startActivity(intent);
     }
 

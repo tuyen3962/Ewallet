@@ -1,61 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SearchUserExchangeActivity"
-    android:orientation="vertical">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Chuyển tiền đến ví"
-        android:textSize="25dp"
-        android:padding="10dp"
-        android:textColor="@color/Black"
-        android:textStyle="bold"/>
+    tools:context=".SearchUserExchangeActivity">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="5"
-        android:paddingVertical="10dp"
-        android:paddingLeft="10dp">
-
-        <EditText
-            android:id="@+id/etUserSearch"
-            android:layout_width="210dp"
-            android:layout_height="match_parent"
-            android:textSize="16dp"
-            android:layout_weight="3"
-            android:gravity="center"
-            android:hint="Nhập số điện thoại hoặc họ tên"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Quét mã"
-            android:textSize="15dp"
-            android:layout_marginLeft="5dp"
-            android:layout_weight="1"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="Tim"
-            android:textSize="15dp"
-            android:layout_marginHorizontal="5dp"
-            android:layout_weight="1"
-            android:onClick="SearchReceiverPhoneRecommend"/>
-    </LinearLayout>
-
-    <ListView
-        android:id="@+id/lvUserRecommend"
+        android:id="@+id/layoutInfoTransaction"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="10dp"
-        android:layout_marginHorizontal="5dp"/>
+        android:orientation="vertical"
+        android:visibility="visible">
 
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chuyển tiền đến ví"
+                android:textSize="25dp"
+                android:padding="10dp"
+                android:textColor="@color/Black"
+                android:textStyle="bold"/>
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/imgUserProfile"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="5dp"
+                android:padding="2dp"
+                android:src="@drawable/ic_action_person"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:orientation="horizontal"
+            android:layout_marginLeft="10dp"
+            android:weightSum="5">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvSearchUser"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="5"
+                android:gravity="center"
+                android:hint="Nhập số điện thoại hoặc họ tên"
+                android:onClick="ShowLayoutInfoReceiver"
+                android:background="@drawable/round_password"
+                android:textSize="16dp" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Quét mã"
+                android:textSize="15dp"
+                android:layout_marginLeft="5dp"
+                android:layout_weight="2"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvTitleListReceiver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="Nhung nguoi da chuyen tien qua"
+            android:textSize="20dp"
+            android:textColor="@color/Black"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/lvFriend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="5dp"
+            android:layout_marginHorizontal="10dp"/>
+
+        <com.aldoapps.autoformatedittext.AutoFormatEditText
+            android:id="@+id/etCash"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20dp"
+            android:hint="Nhập số tiền"
+            android:layout_margin="10dp"
+            app:isDecimal="true"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"/>
+
+        <CheckBox
+            android:id="@+id/cbSaveReceiverInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:useMaterialThemeColors="false"
+            android:layout_gravity="end"
+            android:layout_marginRight="10dp"
+            android:checked="true"
+            android:background="@drawable/round_password"
+            android:padding="10dp"
+            android:text="Lưu thông tin số điện thoại "/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginBottom="5dp">
+
+            <Button
+                android:id="@+id/btnVerify"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/colorAccent"
+                android:textSize="22dp"
+                android:layout_gravity="bottom"
+                android:text="Xác nhận"
+                android:onClick="StartCreateExchangeOrder"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/layoutInfoReceiver"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="5"
+                android:paddingVertical="10dp"
+                android:paddingLeft="10dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:textSize="16dp"
+                    android:layout_weight="4"
+                    android:gravity="center"
+                    android:hint="Nhập số điện thoại hoặc họ tên"
+                    app:startIconDrawable="@drawable/ic_action_action_search"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etUserSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <Button
+                    android:id="@+id/btnFind"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Tim"
+                    android:textSize="15dp"
+                    android:layout_marginHorizontal="5dp"
+                    android:layout_weight="1"
+                    android:onClick="SearchReceiverPhoneRecommend"/>
+            </LinearLayout>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvContact"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Danh ba"
+                android:textSize="20dp"
+                android:layout_marginLeft="10dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/lvUserContact"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp"
+                android:layout_marginHorizontal="5dp"
+                android:layout_marginVertical="10dp"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvOtherContacts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lien he khac"
+                android:textSize="20dp"
+                android:layout_marginLeft="10dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/lvUserRecommend"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp"
+                android:layout_marginHorizontal="5dp"
+                android:layout_marginVertical="10dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+    <include
+        android:id="@+id/progressBar"
+        layout="@layout/progress_bar"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:visibility="gone"/>
+
+</RelativeLayout>

@@ -18,8 +18,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.bank.BankMappingCallback;
-import com.example.ewalletexample.Server.bank.list.ListBankConnectedAPI;
+import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
+import com.example.ewalletexample.Server.api.bank.list.ListBankConnectedAPI;
 import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;

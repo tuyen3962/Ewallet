@@ -7,8 +7,8 @@
 
     <item
         android:id="@+id/navigation_history"
-        android:icon="@drawable/ic_action_history"
-        android:title="Lịch sử giao dịch"/>
+        android:icon="@drawable/ic_action_notification"
+        android:title="Thông báo"/>
 
     <item
         android:id="@+id/navigation_wallet"

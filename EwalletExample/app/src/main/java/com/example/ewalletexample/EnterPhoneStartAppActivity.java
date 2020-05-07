@@ -24,6 +24,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.json.JSONObject;
+
 import java.util.Iterator;
 import java.util.Set;
 
@@ -48,19 +50,13 @@ public class EnterPhoneStartAppActivity extends AppCompatActivity implements Han
 
     void CheckCurrentPhone(){
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
-        int state = local.GetValueIntegerByKey(Symbol.KEY_STATE.GetValue());
-        if(state != -1){
-            String user = local.GetValueStringByKey(Symbol.KEY_USER_PHONE.GetValue());
-            if(state == 0){
-                Intent intent = new Intent(EnterPhoneStartAppActivity.this, LoginActivity.class);
-                intent.putExtra(Symbol.PHONE.GetValue(), local.GetValueStringByKey(Symbol.KEY_PHONE.GetValue()));
-                intent.putExtra(Symbol.FULLNAME.GetValue(), local.GetValueStringByKey(Symbol.KEY_FULL_NAME.GetValue()));
-                startActivity(intent);
-            } else if (state == 1){
-                Intent intent = new Intent(EnterPhoneStartAppActivity.this, MainActivity.class);
-                intent.putExtra(Symbol.USER.GetValue(), local.GetValueStringByKey(Symbol.KEY_USER_PHONE.GetValue()));
-                startActivity(intent);
-            }
+        String phone = local.GetValueStringByKey(Symbol.KEY_PHONE.GetValue());
+        String fullName = local.GetValueStringByKey(Symbol.KEY_FULL_NAME.GetValue());
+        if(!phone.isEmpty() && !fullName.isEmpty()){
+            Intent intent = new Intent(EnterPhoneStartAppActivity.this, LoginActivity.class);
+            intent.putExtra(Symbol.PHONE.GetValue(), phone);
+            intent.putExtra(Symbol.FULLNAME.GetValue(), fullName);
+            startActivity(intent);
         }
     }
 

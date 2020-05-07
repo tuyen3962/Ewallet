@@ -1,7 +1,7 @@
 package com.example.ewalletexample.Symbol;
 
 public enum  Symbol {
-    BASE_ADDRESS("192.168.1.15"),
+    BASE_ADDRESS("192.168.1.5"),
 
     UPDATE_SYMBOL("UPDATE"),
     UPDATE_FOR_REGISTER("UPDATE_REGISTER"),
@@ -10,8 +10,6 @@ public enum  Symbol {
     NAME_PREFERENCES("MyPreference"),
     KEY_PHONES("phones"),
     KEY_PHONE("phone"),
-    KEY_USER_PHONE("user"),
-    KEY_STATE("state"),
     KEY_FULL_NAME("fullname"),
 
     REASION_VERIFY("REASONVERIFY"),
@@ -34,6 +32,9 @@ public enum  Symbol {
     DOB("DATE_OF_BIRTH"),
 
     IMAGE_ID("IMAGE_ID"),
+
+    IMAGE_CMND_FRONT("CMND_FRONT"),
+    IMAGE_CMND_BACK("CMND_BACK"),
 
     STATUS("STATUS"),
 

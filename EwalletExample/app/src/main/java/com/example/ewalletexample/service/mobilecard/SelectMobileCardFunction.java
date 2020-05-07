@@ -4,14 +4,9 @@ import com.example.ewalletexample.service.mobilecard.recycleViewHolder.MobileCar
 import com.example.ewalletexample.service.mobilecard.recycleViewHolder.MobileCardOperatorAdapter;
 
 public interface SelectMobileCardFunction {
-//    void SetCurrentMobileCardOperatorViewHolder(MobileCardOperatorAdapter.MobileCardOperatorViewHolder mobileCardOperatorViewHolder);
-
     void SelectMobileCardOperator(MobileCardOperatorAdapter.MobileCardOperatorViewHolder mobileCardOperatorViewHolder, MobileCardOperator mobileCardOperator);
 
     MobileCardOperator GetCurrentMobileCardOperator();
 
     void SelectMobileCardAmount(MobileCardAmountAdapter.MobileCardAmountViewHolder currentAmountView, MobileCardAmount mobileCardAmount);
-
-//    void SetCurrentMobileCardAmountViewHolder(MobileCardAmountAdapter.MobileCardAmountViewHolder mobileCardAmountViewHolder);
-
 }

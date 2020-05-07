@@ -14,8 +14,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginHorizontal="3dp"
-            android:layout_weight="3"
-            android:src="@drawable/logo_ngan_hang_techcombank" />
+            android:layout_weight="3"/>
 
         <TextView
             android:id="@+id/tvBankName"

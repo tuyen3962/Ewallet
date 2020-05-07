@@ -1,6 +1,7 @@
 package com.example.ewalletexample.Symbol;
 
 public class RequestCode {
+    public static  final int LOGIN_CODE = 0;
     public static final int CONNECT_BANK_CODE = 1;
     public static final int UNLINK_BANK_CODE = 2;
 

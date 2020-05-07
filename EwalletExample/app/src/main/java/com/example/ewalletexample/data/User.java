@@ -1,6 +1,5 @@
 package com.example.ewalletexample.data;
 
-import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.utilies.Date;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
@@ -14,8 +13,9 @@ public class User {
     private String password;
     private String phoneNumber;
     private String email;
-    private String imgAccountLink;
-    private String imgID;
+    private String avatar;
+    private String cmndFrontImage;
+    private String cmndBackImage;
     private String dateOfbirth;
     private Date dob;
     private String address;
@@ -30,14 +30,14 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.password = pin;
         email = "";
-        imgAccountLink = "";
+        avatar = "";
         dateOfbirth = "";
         address = "";
         this.fullName = fullName;
     }
 
     public User(UserModel model){
-        setImgAccountLink(model.getImgLink());
+        setAvatar(model.getImgLink());
         setFullName(model.getFullname());
     }
 
@@ -47,12 +47,13 @@ public class User {
         password = "";
         phoneNumber = "";
         email = "";
-        imgAccountLink = "";
-        imgID = "";
+        avatar = "";
+        cmndFrontImage = "";
         dateOfbirth = "";
         address = "";
         cmnd = "";
         status = -1;
+        cmndBackImage = "";
     }
 
     public String getFullName() {
@@ -104,15 +105,15 @@ public class User {
             this.email = email;
     }
 
-    public String getImgAccountLink() {
-        return imgAccountLink;
+    public String getAvatar() {
+        return avatar;
     }
 
-    public void setImgAccountLink(String imgAccountLink) {
-        if(imgAccountLink.equalsIgnoreCase("null"))
-            this.imgAccountLink = "";
+    public void setAvatar(String avatar) {
+        if(avatar.equalsIgnoreCase("null"))
+            this.avatar = "";
         else
-            this.imgAccountLink = imgAccountLink;
+            this.avatar = avatar;
     }
 
     public String getDateOfbirth() {
@@ -120,14 +121,7 @@ public class User {
     }
 
     public void setDateOfbirth(String dateOfbirth) {
-        if(dateOfbirth.isEmpty() || dateOfbirth.equalsIgnoreCase("null")){
-            dob = null;
-            this.dateOfbirth = "";
-            return;
-        }
         this.dateOfbirth = dateOfbirth;
-        String[] splits = dateOfbirth.split("/");
-        dob = new Date(splits[2], splits[1], splits[0]);
     }
 
     public String getAddress() {
@@ -179,45 +173,31 @@ public class User {
         return String.valueOf(dob.getYear());
     }
 
-    public String getImgID() {
-        return imgID;
+    public String getCmndFrontImage() {
+        return cmndFrontImage;
     }
 
-    public void setImgID(String imgID) {
-        if(imgID.equalsIgnoreCase("null"))
-            this.imgID = "";
+    public void setCmndFrontImage(String cmndFrontImage) {
+        if(cmndFrontImage.equalsIgnoreCase("null"))
+            this.cmndFrontImage = "";
         else
-            this.imgID = imgID;
+            this.cmndFrontImage = cmndFrontImage;
     }
 
-    public String ExchangeToJson()  {
-        try {
-            String[] arr = new String[]{"userid:"+userId,"fullname:"+fullName,"password:"+password,"phoneNumber:"+phoneNumber,
-                    "email:"+email,"imgAccountLink:"+imgAccountLink,"imgID:"+imgID,"dateOfbirth:"+dateOfbirth,"address:"+address,"cmnd:"+cmnd,"status:"+status};
-
-            String json = HandlerJsonData.ExchangeToJsonString(arr);
-            return json;
-        } catch (JSONException e){
-            return "";
-        }
+    public String getCmndBackImage() {
+        return cmndBackImage;
     }
 
-    public void ReadJson(String json){
-        try {
-            JSONObject jsonObject = new JSONObject(json);
-            setUserId(jsonObject.getString("userid"));
-            setFullName(jsonObject.getString("fullname"));
-            setPassword(jsonObject.getString("password"));
-            setPhoneNumber(jsonObject.getString("phoneNumber"));
-            setDateOfbirth(jsonObject.getString("dateOfbirth"));
-            setImgID(jsonObject.getString("imgID"));
-            setImgAccountLink(jsonObject.getString("imgAccountLink"));
-            setEmail(jsonObject.getString("email"));
-            setAddress(jsonObject.getString("address"));
-            setCmnd(jsonObject.getString("cmnd"));
-            setStatus(jsonObject.getInt("status"));
-        } catch (JSONException e){
+    public void setCmndBackImage(String cmndBackImage) {
+        this.cmndBackImage = cmndBackImage;
+    }
+
+    public void setDate(){
+        if(this.dateOfbirth.isEmpty() || this.dateOfbirth.equalsIgnoreCase("null")){
+            dob = null;
             return;
         }
+        String[] splits = dateOfbirth.split("/");
+        dob = new Date(splits[2], splits[1], splits[0]);
     }
 }

@@ -15,8 +15,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.ewalletexample.Server.user.update.UpdateUserAPI;
-import com.example.ewalletexample.Server.user.update.UpdateUserResponse;
+import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
+import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;

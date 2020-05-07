@@ -7,6 +7,7 @@ public class CheckInputField {
     private static String EMAIL_REGEX = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
     private static String PASSWORD_REGEX = "[0-9]{6}";
     private static String PHONE_REGEX = "0[8|9|3|7|5][0-9]{8}";
+    private static String IS_PHONE_REGEX = "\\d{1,10}";
     private static String CMND_REGEX = "[0-9]{9}";
 
     public static boolean EmailIsValid(String email){
@@ -30,5 +31,9 @@ public class CheckInputField {
 
     public static boolean CMNDIsValid(String cmnd){
         return cmnd.matches(CMND_REGEX);
+    }
+
+    public static boolean IsPhone(String text){
+        return text.matches(IS_PHONE_REGEX);
     }
 }

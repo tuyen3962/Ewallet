@@ -23,8 +23,8 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.ewalletexample.Server.user.update.UpdateUserAPI;
-import com.example.ewalletexample.Server.user.update.UpdateUserResponse;
+import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
+import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
@@ -32,6 +32,7 @@ import com.example.ewalletexample.dialogs.AlertDialogTakePicture;
 import com.example.ewalletexample.dialogs.AlertDialogTakePictureFunction;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ResponseMethod;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
@@ -39,8 +40,10 @@ import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.Utilies;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,10 +59,10 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     View btnUpload, dateOfBirthLayout;
 
     TextView tvFullname, tvMonth, tvYear, tvDay, tvBack;
-    EditText etAddress;
+    TextInputEditText etAddress, etEmail;
     CircleImageView imgAccount;
     ProgressBarManager progressBarManager;
-
+    Gson gson;
     User user;
     UserModel model;
     AlertDialogTakePicture dialogTakePicture;
@@ -91,7 +94,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         changeBalance = false;
         balance = 0;
         client = new WebsocketClient(this);
-
+        gson = new Gson();
         datePickerDialog = new DatePickerDialog(this,this,1998,1,1);
         dialogTakePicture = new AlertDialogTakePicture(this);
 
@@ -101,6 +104,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         tvMonth = findViewById(R.id.tvMonth);
         tvYear = findViewById(R.id.tvYear);
         tvBack = findViewById(R.id.tvBack);
+        etEmail = findViewById(R.id.etEmail);
 
         tvFullname = findViewById(R.id.tvFullName);
         etAddress = findViewById(R.id.etAddress);
@@ -117,13 +121,14 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         user = new User();
         Intent intent = getIntent();
         update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
-        user.ReadJson(intent.getStringExtra(Symbol.USER.GetValue()));
+        user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
             tvBack.setCompoundDrawables(null, null,getDrawable(R.drawable.ic_action_arrow_right),null);
             tvBack.setText("Skip");
         } else  if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
             tvBack.setCompoundDrawables(null, null,getDrawable(R.drawable.ic_action_home),null);
             tvBack.setText("Trở về");
+            user.setDate();
             LoadImageAccount();
         }
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
@@ -136,15 +141,22 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         tvDay.setText(user.getDayOfBirth());
         tvMonth.setText(user.getMonthOfBirth());
         tvYear.setText(user.getYearOfBirth());
+        if (!user.getAddress().isEmpty()){
+            etAddress.setHint(user.getAddress());
+        }
+
+        if(!user.getEmail().isEmpty()){
+            etEmail.setHint(user.getEmail());
+        }
     }
 
     void LoadImageAccount(){
-        if(user.getImgAccountLink().isEmpty()){
+        if(user.getAvatar().isEmpty()){
             Utilies.SetImageDrawable(this, imgAccount);
             return;
         }
 
-        storageHandler.LoadAccountImageFromLink(user.getImgAccountLink(), imgAccount);
+        storageHandler.LoadAccountImageFromLink(user.getAvatar(), imgAccount);
     }
 
     @Override
@@ -239,8 +251,8 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
 
     public void VerifyUploadImage(){
         progressBarManager.ShowProgressBar("Cập nhật");
-        if(!user.getImgAccountLink().isEmpty()){
-            storageHandler.DeleteFileInStorage(user.getImgAccountLink());
+        if(!user.getAvatar().isEmpty()){
+            storageHandler.DeleteFileInStorage(user.getAvatar());
         }
         storageHandler.UploadImage(photoUri, this);
     }
@@ -248,7 +260,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     @Override
     public void GetImageServerFile(String serverFile) {
         uploadImage = true;
-        user.setImgAccountLink(serverFile);
+        user.setAvatar(serverFile);
         model.setImgLink(serverFile);
         firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), user.getUserId(), model);
         updateAPI.setImageProfile(serverFile);
@@ -275,14 +287,21 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     }
 
     public void UpdateUserInfo(View view){
+        String email = etEmail.getText().toString();
+        if (!email.isEmpty() && !CheckInputField.EmailIsValid(email)){
+            etEmail.setError("Email không hợp lệ. Xin nhập lại.");
+            return;
+        }
         uploadImage = false;
         progressBarManager.ShowProgressBar("Loading");
         String dob = tvDay.getText().toString()+"/"+tvMonth.getText().toString()+"/"+tvYear.getText().toString();
         String address = etAddress.getText().toString();
         user.setAddress(address);
         user.setDateOfbirth(dob);
+        user.setEmail(email);
         updateAPI.setDateOfBirth(dob);
         updateAPI.setAddress(address);
+        updateAPI.setEmail(email);
         updateAPI.UpdateUser();
     }
 
@@ -295,13 +314,14 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
             if (update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
                 Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
                 intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
-                intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+                intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
                 startActivity(intent);
             } else if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
                 Intent intent = new Intent();
                 intent.putExtra(Symbol.ADDRESS.GetValue(), user.getAddress());
                 intent.putExtra(Symbol.DOB.GetValue(), user.getDateOfbirth());
-                intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
+                intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getAvatar());
+                intent.putExtra(Symbol.EMAIL.GetValue(), user.getEmail());
                 intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
                 intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
                 setResult(RESULT_OK, intent);
@@ -385,11 +405,11 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
             Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
             intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
-            intent.putExtra(Symbol.USER.GetValue(), user.ExchangeToJson());
+            intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
             startActivity(intent);
         } else {
             Intent intent = new Intent();
-            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getImgAccountLink());
+            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getAvatar());
             intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
             intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
             setResult(RESULT_CANCELED, intent);

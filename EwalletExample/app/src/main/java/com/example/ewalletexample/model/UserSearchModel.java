@@ -22,10 +22,6 @@ public class UserSearchModel {
 
     }
 
-    public UserSearchModel(String json){
-        ReadJson(json);
-    }
-
     public String getUserid() {
         return userid;
     }
@@ -56,31 +52,5 @@ public class UserSearchModel {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String ExchangeToJson(){
-        String[] arr = new String[]{"userid:" + userid,"imgLink:" + imgLink, "phone:"+phone,"fullname:" + fullName};
-
-        try {
-            return HandlerJsonData.ExchangeToJsonString(arr);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return "";
-    }
-
-    private void ReadJson(String jsonFile){
-        try {
-            JSONObject jsonObject = new JSONObject(jsonFile);
-
-            setFullName(jsonObject.getString("fullname"));
-            setImgLink(jsonObject.getString("imgLink"));
-            setPhone(jsonObject.getString("phone"));
-            setUserid(jsonObject.getString("userid"));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
     }
 }

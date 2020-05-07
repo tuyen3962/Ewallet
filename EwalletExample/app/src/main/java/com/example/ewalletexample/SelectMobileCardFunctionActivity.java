@@ -26,6 +26,7 @@ import com.example.ewalletexample.service.mobilecard.recycleViewHolder.MobileCar
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.utilies.Utilies;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -77,14 +78,14 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
 
         rvMobileCardOperator = findViewById(R.id.rvMobileCardOperator);
         mobileCardOperatorAdapter = new MobileCardOperatorAdapter(arrMobileCardNetwork, this, this);
-        InitializeRecycleView(rvMobileCardOperator,
+        Utilies.InitializeRecycleView(rvMobileCardOperator,
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false),
                 mobileCardOperatorAdapter);
 
         layoutCardAmount = findViewById(R.id.layoutCardAmount);
         listAmounts = MobileCard.GetInstance().GetListAmountsByMobileCardOperator(arrMobileCardNetwork[0]);
         mobileCardAmountAdapter = new MobileCardAmountAdapter(this, listAmounts, this);
-        InitializeRecycleView(layoutCardAmount,
+        Utilies.InitializeRecycleView(layoutCardAmount,
                 new GridLayoutManager(this, 3),
                 mobileCardAmountAdapter);
     }
@@ -94,12 +95,6 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-    }
-
-    void InitializeRecycleView(RecyclerView recyclerView, RecyclerView.LayoutManager layoutManager, RecyclerView.Adapter adapter){
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(adapter);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)

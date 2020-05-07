@@ -39,6 +39,10 @@ public class ProgressBarManager {
         }
     }
 
+    public boolean IsVivisible(){
+        return progressLayout.getVisibility() == View.VISIBLE;
+    }
+
     public void SetMessage(String text){
         progressText.setText(text);
     }

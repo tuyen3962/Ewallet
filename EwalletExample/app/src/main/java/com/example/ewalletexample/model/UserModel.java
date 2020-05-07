@@ -112,6 +112,9 @@ public class UserModel implements Serializable {
     }
 
     public List<String> getFriends(){
+        if (this.friends == null){
+            this.friends = new ArrayList<>();
+        }
         return this.friends;
     }
 
