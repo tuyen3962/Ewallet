@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -30,7 +29,6 @@ import com.example.ewalletexample.utilies.Encryption;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -132,20 +130,10 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         Response response = CheckUsernameAndPassword(password);
 
         if(response.GetStatus()){
-            String encryptKey = "";
-
-            SecretKey shareKey = Encryption.generateAESKeyFromText(getString(R.string.share_key));
-            encryptKey = Encryption.encryptHmacSha256(shareKey, password);
-
             SecretKey secretKey = Encryption.generateAESKey();
-            encryptKey = Encryption.encryptHmacSha256(secretKey, encryptKey);
-
-            String secretKeyString = Base64.encodeToString(secretKey.getEncoded(), Base64.DEFAULT);
-            String encryptPassword = Encryption.EncryptStringByPublicKey(getString(R.string.public_key), secretKeyString);
-
-            SecretKey secretKey1 = Encryption.generateAESKeyFromText(secretKeyString);
-            String decodeStringKey = 
-//            SendLoginRequest(encryptPassword, encryptKey);
+            String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), password);
+            String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
+            SendLoginRequest(encodeSecretKeyByPublicKey, encryptPasswordByAES);
         }
         else{
             progressBarManager.HideProgressBar();

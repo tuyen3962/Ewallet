@@ -1,9 +1,11 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
@@ -26,6 +28,7 @@ import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.code.CheckOTPFunction;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.utilies.Encryption;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -42,6 +45,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
+
+import javax.crypto.SecretKey;
 
 public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTPFunction {
 
@@ -234,6 +239,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(VerifyByPhoneActivity.this, new OnCompleteListener<AuthResult>() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
@@ -251,6 +257,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
                 });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void VerifySuccess(){
         local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
         local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
@@ -284,8 +291,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         startActivity(intent);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void SendRequestRegister(){
         JSONObject postData = new JSONObject();
+
+        SecretKey secretKey = Encryption.generateAESKey();
+        String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), password);
+        String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
 
         try {
             postData.put("fullname",user.getFullName());

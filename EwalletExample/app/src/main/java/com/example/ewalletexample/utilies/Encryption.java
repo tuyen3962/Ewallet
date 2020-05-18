@@ -41,14 +41,15 @@ public class Encryption {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public static String EncryptStringByPublicKey(String publicKeyText, String text)  {
+    public static String EncryptSecretKeyByPublicKey(String publicKeyText, SecretKey secretKey)  {
         try {
             byte[] decoded = Base64.getDecoder().decode(publicKeyText);
             X509EncodedKeySpec x509PublicKey = new X509EncodedKeySpec(decoded);
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PublicKey publicKey = keyFactory.generatePublic(x509PublicKey);
 
-            byte[] rawData = text.getBytes(StandardCharsets.UTF_8);
+            String secretKeyText = Encryption.EncodeStringBase64(secretKey.getEncoded());
+            byte[] rawData = secretKeyText.getBytes(StandardCharsets.UTF_8);
 
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -106,5 +107,50 @@ public class Encryption {
             ex.printStackTrace();
         }
         return null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static String encryptAES(SecretKey secretKey, String data) {
+        try {
+            byte[] rawData = data.getBytes(StandardCharsets.UTF_8);
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+            byte[] encryptedData = cipher.doFinal(rawData);
+            Base64.Encoder encoder = Base64.getEncoder();
+            return encoder.encodeToString(encryptedData);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static String decryptAES(SecretKey secretKey, String encryptedDataBase64) {
+        try {
+            byte[] encryptedData = Base64.getDecoder().decode(encryptedDataBase64);
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
+            byte[] rawOutput = cipher.doFinal(encryptedData);
+            return new String(rawOutput, StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private static String EncryptStringByShareKey(String shareKeyText, String text){
+        SecretKey sharekey = generateAESKeyFromText(shareKeyText);
+        return Encryption.encryptHmacSha256(sharekey, text);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public static String EncryptStringBySecretKey(SecretKey secretKey, String shareKeyText, String text){
+        String encryptText = EncryptStringByShareKey(shareKeyText, text);
+        return Encryption.encryptAES(secretKey, encryptText);
     }
 }
