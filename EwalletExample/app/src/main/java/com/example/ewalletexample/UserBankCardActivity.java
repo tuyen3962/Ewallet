@@ -25,17 +25,20 @@ import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
+import com.example.ewalletexample.service.UserSelectFunction;
+import com.example.ewalletexample.service.recycleview.bank.ListBankConnectedRecycleView;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, WebsocketResponse {
+public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, WebsocketResponse, UserSelectFunction<BankInfo> {
     FirebaseStorageHandler storageHandler;
 
     ListBankConnectedAPI listBankAPI;
@@ -50,8 +53,8 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     List<BankInfo> bankInfoList;
 
     WebsocketClient client;
-
-    String userid;
+    Gson gson;
+    String userid, cmnd;
     long balance;
 
     @Override
@@ -66,7 +69,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
 
     void Initialize(){
         bankInfoList = new ArrayList<>();
-
+        gson = new Gson();
         client = new WebsocketClient(this);
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
 
@@ -89,6 +92,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         balance = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+        cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
     }
 
     private void LoadBankConnected(){
@@ -104,20 +108,22 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         Intent intent = new Intent(UserBankCardActivity.this, ChooseBankConnectActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        intent.putExtra(Symbol.CMND.GetValue(), cmnd);
         startActivityForResult(intent, RequestCode.CONNECT_BANK_CODE);
     }
 
     public void BackToMain(View view){
-        Intent intent = new Intent(UserBankCardActivity.this, MainActivity.class);
+        Intent intent = new Intent(UserBankCardActivity.this, MainLayoutActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         startActivity(intent);
     }
 
-    void SwitchToUnlinkBankAccount(BankInfo bankInfo){
+    @Override
+    public void SelectModel(BankInfo model) {
         Intent intent = new Intent(UserBankCardActivity.this, BankCardDetailActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.BANK_INFO.GetValue(), bankInfo.ExchangeToJsonData());
+        intent.putExtra(Symbol.BANK_INFO.GetValue(), gson.toJson(model));
         startActivityForResult(intent, RequestCode.UNLINK_BANK_CODE);
     }
 
@@ -140,12 +146,38 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     public void SetLayoutBankConnect(){
         if(bankInfoList.size() > 0){
             layoutConnectBank.setVisibility(View.GONE);
-            banksConnected = new ListBankConnectedRecycleView(this, bankInfoList);
+            banksConnected = new ListBankConnectedRecycleView(this, bankInfoList, storageHandler, this);
             listBankConnected.setAdapter(banksConnected);
             listBankConnected.setVisibility(View.VISIBLE);
         } else {
             layoutConnectBank.setVisibility(View.VISIBLE);
             listBankConnected.setVisibility(View.GONE);
+        }
+    }
+
+    public void AddNewBankInfo(BankInfo bankInfo){
+        bankInfoList.add(bankInfo);
+        banksConnected = new ListBankConnectedRecycleView(this, bankInfoList, storageHandler, this);
+        listBankConnected.setAdapter(banksConnected);
+        if (layoutConnectBank.getVisibility() == View.VISIBLE){
+            layoutConnectBank.setVisibility(View.GONE);
+            listBankConnected.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void RemoveBankInfo(BankInfo bankInfo){
+        if (bankInfo == null)
+             return;
+        int index = -1;
+        for (int i = 0; i < bankInfoList.size(); i++){
+            if (bankInfoList.get(i).equal(bankInfo)){
+                index = i;
+                break;
+            }
+        }
+        if (index >= 0){
+            bankInfoList.remove(index);
+            SetLayoutBankConnect();
         }
     }
 
@@ -159,109 +191,14 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         });
     }
 
-    private class ListBankConnectedRecycleView extends RecyclerView.Adapter<ListBankConnectedRecycleView.BankConnectedViewHolder>{
-
-        private Context context;
-        private LayoutInflater inflater;
-        private List<BankInfo> bankInfoList;
-
-        public ListBankConnectedRecycleView(Context context, List<BankInfo> bankInfos){
-            this.context = context;
-            inflater = LayoutInflater.from(context);
-            bankInfoList = bankInfos;
-        }
-
-        class BankConnectedViewHolder extends RecyclerView.ViewHolder{
-            TextView tvCardName;
-            TextView tvF6Card;
-            TextView tvL4Card;
-            ImageView imgBank;
-            GradientDrawable gradientDrawable;
-            View layout;
-
-            public BankConnectedViewHolder(View view){
-                super(view);
-                gradientDrawable = (GradientDrawable) view.getBackground();
-                tvCardName = view.findViewById(R.id.tvcardName);
-                tvF6Card = view.findViewById(R.id.tvF6CardNo);
-                tvL4Card = view.findViewById(R.id.tvL4CardNo);
-                imgBank = view.findViewById(R.id.imgBank);
-                layout = view.findViewById(R.id.bankConnectLayout);
-            }
-
-            public void SetCardName(String name){
-                tvCardName.setText(name);
-            }
-
-            public void SetF6CardNo(String f6Cardno){
-                tvF6Card.setText(f6Cardno);
-            }
-
-            public void SetL4CardNo(String l4Cardno){
-                tvL4Card.setText(l4Cardno);
-            }
-
-            public void LoadBankImage(FirebaseStorageHandler storageHandler, String imgBankLink){
-                storageHandler.LoadAccountImageFromLink(imgBankLink, imgBank);
-            }
-
-            public void SetBackgroundColor(int colorId){
-                gradientDrawable.setColor(colorId);
-                gradientDrawable.setStroke(2, colorId);
-            }
-
-            public void SetClickEvent(final BankInfo info){
-                layout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        SwitchToUnlinkBankAccount(info);
-                    }
-                });
-            }
-        }
-
-        @NonNull
-        @Override
-        public ListBankConnectedRecycleView.BankConnectedViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = inflater.inflate(R.layout.activity_bank_card, parent, false);
-            BankConnectedViewHolder holder = new BankConnectedViewHolder(view);
-
-            return holder;
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ListBankConnectedRecycleView.BankConnectedViewHolder holder, int position) {
-            BankInfo info = bankInfoList.get(position);
-            BankSupport support = BankSupport.FindBankSupport(info.getBankCode());
-            holder.SetCardName(info.getCardName());
-            holder.SetF6CardNo(info.getF6CardNo());
-            holder.SetL4CardNo(info.getL4CardNo());
-//            holder.SetBackgroundColor(support.GetBackgroundColorCode());
-            holder.LoadBankImage(storageHandler, support.getBankLinkImage());
-            holder.SetClickEvent(info);
-        }
-
-        @Override
-        public int getItemCount() {
-            return bankInfoList.size();
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RequestCode.CONNECT_BANK_CODE){
             if (resultCode == RESULT_OK){
-                String bankInfo = data.getStringExtra(Symbol.BANK_INFO.GetValue());
-                try {
-                    BankInfo bank = new BankInfo(bankInfo);
-                    if(bank != null){
-                        bankInfoList.add(bank);
-                        banksConnected = new ListBankConnectedRecycleView(UserBankCardActivity.this, bankInfoList);
-                        listBankConnected.setAdapter(banksConnected);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                BankInfo bank = gson.fromJson(data.getStringExtra(Symbol.BANK_INFO.GetValue()), BankInfo.class);
+                if(bank != null){
+                    AddNewBankInfo(bank);
                 }
             }
         } else if(requestCode == RequestCode.UNLINK_BANK_CODE){
@@ -271,24 +208,8 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
             }
 
             if(resultCode == RESULT_OK){
-                String bankInfoString = data.getStringExtra(Symbol.BANK_INFO.GetValue());
-                try {
-                    BankInfo bankInfo = new BankInfo(bankInfoString);
-                    int index = -1;
-                    for (int i = 0; i < bankInfoList.size(); i++){
-                        BankInfo info = bankInfoList.get(i);
-                        if(bankInfo.equal(info)){
-                            index = i;
-                            break;
-                        }
-                    }
-                    if(index != -1){
-                        bankInfoList.remove(index);
-                        SetLayoutBankConnect();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                BankInfo bankInfo = gson.fromJson(data.getStringExtra(Symbol.BANK_INFO.GetValue()), BankInfo.class);
+                RemoveBankInfo(bankInfo);
             }
         }
     }

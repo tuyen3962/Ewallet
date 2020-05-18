@@ -1,4 +1,4 @@
-package com.example.ewalletexample;
+package com.example.ewalletexample.ui.mywallet;
 
 import android.app.Activity;
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.view.LayoutInflater;
@@ -17,46 +18,36 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.ewalletexample.HistoryTransactionActivity;
+import com.example.ewalletexample.LoginActivity;
+import com.example.ewalletexample.MainLayoutActivity;
+import com.example.ewalletexample.PersonalDetailActivity;
+import com.example.ewalletexample.R;
+import com.example.ewalletexample.SettingActivity;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.service.BalanceVisible;
+import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 
 public class MyWalletFragement extends Fragment implements View.OnClickListener{
-    private String userid;
-
+    MyWalletViewModel myWalletViewModel;
     CircleImageView imgAccount;
-    Button btnVisibilyBalance;
     LinearLayout layoutUserAccount, layoutSetting, layoutBankAccount, layoutHistoryTransaction;
-    TextView tvBalance, tvFullName, tvPhone, tvNumCardConnected, tvEmail;
+    TextView tvFullName, tvPhone, tvNumCardConnected;
+    SharedPreferenceLocal local;
 
-    private MainActivity mainActivity;
+    MainLayoutActivity mainActivity;
 
     public MyWalletFragement() {
 
     }
 
-    public static MyWalletFragement newInstance(String userid) {
-        MyWalletFragement fragment = new MyWalletFragement();
-        Bundle args = new Bundle();
-        args.putString(Symbol.USER_ID.GetValue(), userid);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            userid = getArguments().getString(Symbol.USER_ID.GetValue());
-        }
-    }
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof MainActivity){
-            mainActivity = (MainActivity) context;
+        if(context instanceof MainLayoutActivity){
+            mainActivity = (MainLayoutActivity) context;
         }
     }
 
@@ -65,10 +56,9 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_my_wallet, container, false);
-
+        myWalletViewModel = ViewModelProviders.of(this).get(MyWalletViewModel.class);
         Initialize(view);
         SetupUI();
-        btnVisibilyBalance.setOnClickListener(this);
         layoutSetting.setOnClickListener(this);
         layoutUserAccount.setOnClickListener(this);
         layoutBankAccount.setOnClickListener(this);
@@ -79,14 +69,12 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     }
 
     void Initialize(View view){
+        local = new SharedPreferenceLocal(mainActivity, Symbol.NAME_PREFERENCES.GetValue());
         imgAccount = view.findViewById(R.id.imgAccount);
-        btnVisibilyBalance = view.findViewById(R.id.btnVisibilyBalance);
         layoutUserAccount = view.findViewById(R.id.layoutUserAccount);
         layoutSetting = view.findViewById(R.id.layoutSetting);
         layoutBankAccount = view.findViewById(R.id.layoutBankAccount);
-        tvBalance = view.findViewById(R.id.tvBalance);
         tvFullName = view.findViewById(R.id.tvFullName);
-        tvEmail = view.findViewById(R.id.tvEmail);
         tvNumCardConnected = view.findViewById(R.id.tvNumCard);
         tvPhone = view.findViewById(R.id.tvPhone);
         layoutHistoryTransaction = view.findViewById(R.id.layoutHistoryTransaction);
@@ -94,7 +82,6 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
 
     void SetupUI(){
         mainActivity.SetImageUriForImageView(imgAccount);
-        tvBalance.setText(mainActivity.GetUserBalance() + "");
         SetTextviewDetail();
     }
 
@@ -103,42 +90,32 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         if(user != null){
             tvFullName.setText(user.getFullName());
             tvPhone.setText(user.getPhoneNumber());
-//            tvNumCardConnected.setText(mainActivity.GetNumCardConnected() + " thẻ liên kết");
-            if(user.getEmail().isEmpty()){
-                tvEmail.setText("");
-                return;
-            }
-            tvEmail.setText(user.getEmail() + "(Đã xác thực)");
         }
     }
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == btnVisibilyBalance.getId()){
-            SetVisibilityWalletAmount();
-        }else if(v.getId() == layoutUserAccount.getId()){
+        if(v.getId() == layoutUserAccount.getId()){
             SwitchToPersonalDetailActivity();
         }else if(v.getId() == layoutBankAccount.getId()){
             mainActivity.SwitchToBankConnectedActivity();
         }else if(v.getId() == layoutHistoryTransaction.getId()){
             ShowTransactionHistory();
+        } else if(v.getId() == layoutSetting.getId()){
+            ShowLayoutSetting();
         }
     }
 
-    private void SetVisibilityWalletAmount(){
-        BalanceVisible.SwitchBalanceVisible();
-        if (BalanceVisible.IsBalanceVisible()){
-            tvBalance.setText(mainActivity.GetUserBalance() + "");
-        }
-        else{
-            tvBalance.setText("******");
-        }
+    void ShowLayoutSetting(){
+        Intent intent = new Intent(mainActivity, SettingActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), mainActivity.GetUserInformation().getUserId());
+        startActivityForResult(intent, RequestCode.SETTING_ACCOUNT);
     }
 
     void ShowTransactionHistory() {
         Intent intent = new Intent(mainActivity, HistoryTransactionActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.userAmount);
+        intent.putExtra(Symbol.USER_ID.GetValue(), mainActivity.GetUserInformation().getUserId());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
         intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserInformation().getPhoneNumber());
         startActivity(intent);
     }
@@ -161,6 +138,13 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             mainActivity.SetUserInformationByJson(data.getStringExtra(Symbol.USER.GetValue()));
             if(!imageLink.equalsIgnoreCase(mainActivity.GetUserInformation().getAvatar())){
                 mainActivity.FindImageUriFromInternet();
+            }
+        } else if (requestCode == RequestCode.SETTING_ACCOUNT){
+            if (resultCode == ((Activity)mainActivity).RESULT_CANCELED){
+                Intent intent = new Intent(mainActivity, LoginActivity.class);
+                intent.putExtra(Symbol.FULLNAME.GetValue(), local.GetValueStringByKey(Symbol.KEY_FULL_NAME.GetValue()));
+                intent.putExtra(Symbol.PHONE.GetValue(), local.GetValueStringByKey(Symbol.KEY_PHONE.GetValue()));
+                startActivity(intent);
             }
         }
     }

@@ -4,14 +4,26 @@
     <string name="title_gifts">Gifts</string>
     <string name="title_cart">Cart</string>
     <string name="title_profile">Profile</string>
+
+    <string name="public_key">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1sdnujl1b22C8enVeTC+bHYhkALy9ZgK90t63+9rxmQsv7lXQl66GrVP1kkl3IQ/OmAjvWj9B0T/teJrhkOmQL1DaF75oWii2EV5jh41K07I3/qKjvS+BG4Ujtr1ps33PIGP558Fg8go98HqZZYeYqahPGQE89lFB9PSvux1+BUxJoy55daVVrLeTIxczRIKAnplNHJClHJRiASYycFCJwpgm2xF9GZ3YStfq2wYO1WVPB8Dm4gvmkpbQj9JpHH0U9AfXuSRWfxm94zOkwyCk3e2QiRqj9WUaj2MUXb0fuSjnrZxQYVIQlLFvG64B1jHVaD1uZC8jycNZ7VhXrsoQQIDAQAB</string>
+    <string name="share_key">u2A1qv5uSlMJXs0RJgArphLnDYtrVRF/lUg091gxFfU=</string>
     <string name="email_address">hatuyen3962@gmail.com</string>
     <string name="password_email">tuyen74120</string>
     <string name="subject_email">Gửi OTP để xác thực email</string>
     <string name="content_email">Mã OTP cho email xác thực: </string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="Enter_current_password">Nhập mật khẩu hiện tại</string>
 
+    <string name="Enter_new_password">Nhập mật khẩu mới</string>
+    <string name="Enter_new_password_again">Nhập mật khẩu mới lại</string>
+    <string name="Update">Cập nhật</string>
+    <string name="Change_password">Đổi mật khẩu</string>
+    <string name="current_language">Tiếng Việt</string>
+
+    <string name="title_home">Trang chủ</string>
+    <string name="title_notifications">Thông báo</string>
+    <string name="title_personal">Cá nhân</string>
+    <string name="title_activity_main_layout">MainLayoutActivity</string>
     <string-array name="city_arrays">
         <item>Hà Nội</item>
         <item>TP Hồ Chí Minh</item>
@@ -22,5 +34,10 @@
         <item>Bình Thuận</item>
         <item>Bình Định</item>
         <item>Bạc Liêu</item>
+    </string-array>
+    <string-array name="language">
+        <item>Tiếng Việt</item>
+        <item>Tiếng Anh</item>
+        <item>Tiếng Trung</item>
     </string-array>
 </resources>

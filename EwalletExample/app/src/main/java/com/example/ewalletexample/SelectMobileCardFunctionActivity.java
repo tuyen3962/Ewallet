@@ -1,5 +1,6 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -11,8 +12,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
@@ -46,7 +49,7 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
     FirebaseStorageHandler firebaseStorageHandler;
 
     RecyclerView  rvMobileCardOperator, layoutCardAmount;
-
+    TextView tvQuantity;
     MobileCardOperator[] arrMobileCardNetwork;
 
     MobileCardOperatorAdapter mobileCardOperatorAdapter;
@@ -75,7 +78,7 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
 
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
-
+        tvQuantity = findViewById(R.id.tvQuantity);
         rvMobileCardOperator = findViewById(R.id.rvMobileCardOperator);
         mobileCardOperatorAdapter = new MobileCardOperatorAdapter(arrMobileCardNetwork, this, this);
         Utilies.InitializeRecycleView(rvMobileCardOperator,
@@ -166,7 +169,7 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
         intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.MOBILE_CARD_SERVICE_TYPE.GetCode());
         intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
-        startActivity(intent);
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
 
     @Override
@@ -195,5 +198,16 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
     @Override
     public void HandlerDatabaseError(DatabaseError databaseError) {
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestCode.SUBMIT_ORDER){
+            if (resultCode == RESULT_OK){
+                setResult(resultCode);
+                finish();
+            }
+        }
     }
 }

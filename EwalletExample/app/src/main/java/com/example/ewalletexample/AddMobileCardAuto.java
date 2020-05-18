@@ -26,12 +26,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class AddMobileCardAuto extends AppCompatActivity implements HandleDataFromFirebaseDatabase<MobileCardModel> {
-
-    FirebaseDatabaseHandler<MobileCardModel> firebaseDatabaseHandler;
+public class AddMobileCardAuto extends AppCompatActivity  {
     Button btnAdd;
     MobileCardOperator operator;
     MobileCardAmount amount;
@@ -41,83 +40,41 @@ public class AddMobileCardAuto extends AppCompatActivity implements HandleDataFr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_user_automatic);
         btnAdd = findViewById(R.id.btnAdd);
-        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    Add();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                BeginAdd(20);
             }
         });
     }
 
-    public void Add() throws InterruptedException {
-        BeginAdd(20);
-    }
-
-    private void BeginAdd(int number) throws InterruptedException {
-        for (MobileCardOperator operator : MobileCard.GetInstance().GetMobileCardOperator()){
-            for (MobileCardAmount amount : MobileCard.GetInstance().GetListAmountsByMobileCardOperator(operator)){
-                for(int i = 0; i < number ; i++){
-                    String cardNumber = GetRandomNumber(15);
-                    String seri = GetRandomNumber(14);
-                    Log.d("TAG", "BeginAdd: has created");
-                    try {
-                        String[] arr = new String[]{"cardnumber:" + cardNumber, "serinumber:" + seri, "cardtype:" + operator.GetMobileCode(), "amount:" + Long.valueOf(amount.GetAmount())};
-                        String json = HandlerJsonData.ExchangeToJsonString(arr);
-                        new CreateMobileCard().execute(ServerAPI.CREATE_MOBILE_CARD.GetUrl(), json);
-                        Thread.sleep(1000);
-                    }
-                    catch (JSONException e){
-                        Log.d("TAG", "BeginAdd: " + e.getMessage());
-                    }
-                }
-            }
+    private int number;
+    private int index;
+    private MobileCardOperator[] operators;
+    private int indexOperator;
+    private List<MobileCardAmount> amounts;
+    private int amountIndex;
+    private void BeginAdd(int number) {
+        Log.d("TAG", "BeginAdd: button clicked");
+        operators = MobileCard.GetInstance().GetMobileCardOperator();
+        indexOperator = 0;
+        amounts = MobileCard.GetInstance().GetListAmountsByMobileCardOperator(operators[indexOperator]);
+        amountIndex = 0;
+        index = 1;
+        this.number = number;
+        try {
+            String cardNumber = GetRandomNumber(15);
+            String seri = GetRandomNumber(14);
+            Log.d("TAG", "BeginAdd: has created");
+            String[] arr = new String[]{"cardnumber:" + cardNumber, "serinumber:" + seri,
+                    "cardtype:" + operators[indexOperator].GetMobileCode(), "amount:" + Long.valueOf(amounts.get(amountIndex).GetAmount())};
+            String json = HandlerJsonData.ExchangeToJsonString(arr);
+            new CreateMobileCard().execute(ServerAPI.CREATE_MOBILE_CARD.GetUrl(), json);
         }
-    }
-
-    @Override
-    public void HandleDataModel(MobileCardModel data) {
-        if (amount == null || operator == null)
-            return;
-
-        if (data == null){
-            data = new MobileCardModel(MobileCard.GetInstance().GetListAmountsByMobileCardOperator(MobileCardOperator.GMOBILE), amount);
-            firebaseDatabaseHandler.PushDataIntoDatabase(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue(), operator.GetMobileCode(), data);
+        catch (JSONException e){
+            Log.d("TAG", "BeginAdd: " + e.getMessage());
         }
-        else {
-            data.IncreaseMobileCardAvailable(amount);
-            Map<String,Object> map = data.GetMapObject();
-
-            firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue(), operator.GetMobileCode(), map);
-        }
-
-        Log.d("TAG", "HandleDataModel: upload firebase successfully ");
-    }
-
-    @Override
-    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
-        if (amount == null || operator == null)
-            return;
-
-        if(dataSnapshot.hasChild(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue())
-                && dataSnapshot.child(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue()).hasChild(operator.GetMobileCode())){
-
-            MobileCardModel model = dataSnapshot.child(Symbol.CHILD_NAME_CARDS_FIREBASE_DATABASE.GetValue()).child(operator.GetMobileCode()).getValue(MobileCardModel.class);
-            firebaseDatabaseHandler.UnregisterValueListener(model);
-            return;
-        }
-
-        firebaseDatabaseHandler.UnregisterValueListener(null);
-    }
-
-    @Override
-    public void HandlerDatabaseError(DatabaseError databaseError) {
-
     }
 
     String GetRandomNumber(int length){
@@ -148,15 +105,36 @@ public class AddMobileCardAuto extends AppCompatActivity implements HandleDataFr
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            operator = MobileCardOperator.FindOperator(jsonData.getString("cardtype"));
-            amount = MobileCardAmount.FindAmount(String.valueOf(jsonData.getLong("amount")));
-            Log.d("TAG", "DataHandle: create successfully");
-//            firebaseDatabaseHandler.RegisterDataListener();
-//            try {
-//                Thread.sleep(2000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            try{
+                Thread.sleep(2000);
+                operator = MobileCardOperator.FindOperator(jsonData.getString("cardtype"));
+                amount = MobileCardAmount.FindAmount(String.valueOf(jsonData.getLong("amount")));
+                Log.d("TAG", "DataHandle: create successfully");
+                if (index == number){
+                    index = 0;
+                    if(amountIndex == amounts.size() - 1){
+                        amountIndex = 0;
+                        if (indexOperator == operators.length - 1){
+                            return;
+                        } else {
+                            indexOperator += 1;
+                        }
+                    } else {
+                        amountIndex += 1;
+                    }
+                } else {
+                    index += 1;
+                }
+                String cardNumber = GetRandomNumber(15);
+                String seri = GetRandomNumber(14);
+                Log.d("TAG", "BeginAdd: has created");
+                String[] arr = new String[]{"cardnumber:" + cardNumber, "serinumber:" + seri,
+                        "cardtype:" + operators[indexOperator].GetMobileCode(), "amount:" + Long.valueOf(amounts.get(amountIndex).GetAmount())};
+                String json = HandlerJsonData.ExchangeToJsonString(arr);
+                new CreateMobileCard().execute(ServerAPI.CREATE_MOBILE_CARD.GetUrl(), json);
+            } catch (InterruptedException e){
+                Log.d("TAG", "DataHandle: " + e.getMessage());
+            }
         }
 
         @Override

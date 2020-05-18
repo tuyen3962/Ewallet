@@ -17,7 +17,8 @@ public enum  ServerAPI {
     // get the balance of user by their id
     GET_BALANCE_API("/wallet/get-balance"),
 
-    HISTORY_TRANSACTION("/charge-order/history"),
+    HISTORY_TRANSACTION("/txn-history/list"),
+    TRANSACTION_DETAIL("/txn-history/detail"),
 
     LINK_BANK_CARD_API("/bank-mapping/link"),
     UNLINK_BANK_CARD_API("/bank-mapping/unlink"),

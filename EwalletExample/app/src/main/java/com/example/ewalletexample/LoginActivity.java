@@ -1,16 +1,21 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import com.davidmiguel.numberkeyboard.NumberKeyboard;
 import com.davidmiguel.numberkeyboard.NumberKeyboardListener;
+import com.example.ewalletexample.Server.api.balance.BalanceResponse;
+import com.example.ewalletexample.Server.api.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
@@ -21,6 +26,7 @@ import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.utilies.Encryption;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -29,7 +35,9 @@ import com.google.gson.GsonBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class LoginActivity extends AppCompatActivity {
+import javax.crypto.SecretKey;
+
+public class LoginActivity extends AppCompatActivity implements BalanceResponse {
     FirebaseAuth mAuth;
     MaterialTextView tvFullname, tvPhone;
     TextView tvError;
@@ -38,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
     User user;
     ProgressBarManager progressBarManager;
     SharedPreferenceLocal local;
+    GetBalanceAPI balanceAPI;
     Gson gson;
 
     @Override
@@ -113,6 +122,7 @@ public class LoginActivity extends AppCompatActivity {
         keyboard.setVisibility(View.GONE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void UserLoginEvent(View view){
         keyboard.setVisibility(View.GONE);
         progressBarManager.ShowProgressBar("Loading");
@@ -122,7 +132,20 @@ public class LoginActivity extends AppCompatActivity {
         Response response = CheckUsernameAndPassword(password);
 
         if(response.GetStatus()){
-            SendLoginRequest(password);
+            String encryptKey = "";
+
+            SecretKey shareKey = Encryption.generateAESKeyFromText(getString(R.string.share_key));
+            encryptKey = Encryption.encryptHmacSha256(shareKey, password);
+
+            SecretKey secretKey = Encryption.generateAESKey();
+            encryptKey = Encryption.encryptHmacSha256(secretKey, encryptKey);
+
+            String secretKeyString = Base64.encodeToString(secretKey.getEncoded(), Base64.DEFAULT);
+            String encryptPassword = Encryption.EncryptStringByPublicKey(getString(R.string.public_key), secretKeyString);
+
+            SecretKey secretKey1 = Encryption.generateAESKeyFromText(secretKeyString);
+            String decodeStringKey = 
+//            SendLoginRequest(encryptPassword, encryptKey);
         }
         else{
             progressBarManager.HideProgressBar();
@@ -141,11 +164,12 @@ public class LoginActivity extends AppCompatActivity {
         return new Response(ErrorCode.SUCCESS);
     }
 
-    private void SendLoginRequest(String password){
+    private void SendLoginRequest(String secretKey, String password){
         JSONObject json = new JSONObject();
 
         try{
             json.put("phone",user.getPhoneNumber());
+            json.put("key", secretKey);
             json.put("pin",password);
 
             new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
@@ -173,11 +197,17 @@ public class LoginActivity extends AppCompatActivity {
         tvError.setText(message);
     }
 
-    private void SwitchToMainScreen() {
+    void GetUserBalance(){
+        balanceAPI = new GetBalanceAPI(user.getUserId(), this);
+        balanceAPI.GetBalance();
+    }
+
+    @Override
+    public void GetBalanceResponse(long balance) {
         local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        Log.d("TAG", "SwitchToMainScreen: " + gson.toJson(user));
+        Intent intent = new Intent(LoginActivity.this, MainLayoutActivity.class);
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         startActivity(intent);
     }
 
@@ -212,7 +242,7 @@ public class LoginActivity extends AppCompatActivity {
             user.setAvatar(jsonData.getString("avatar"));
             user.setCmndBackImage(jsonData.getString("cmndBackImg"));
             user.setStatus(jsonData.getInt("verify"));
-            SwitchToMainScreen();
+            GetUserBalance();
         }
 
         @Override

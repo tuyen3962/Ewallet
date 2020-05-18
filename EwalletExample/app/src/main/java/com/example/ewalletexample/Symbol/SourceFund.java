@@ -16,6 +16,10 @@ public enum SourceFund {
         return numberCode;
     }
 
+    public String GetName(){
+        return nameCode;
+    }
+
     public static SourceFund Find(short code){
         for(SourceFund source : SourceFund.values()){
             if(source.GetCode() == code){

@@ -7,11 +7,19 @@
     <color name="Blue">#249AF8</color>
     <color name="SoftBlue">#89C6F6</color>
     <color name="White">#FFFFFFFF</color>
-    <color name="Grey">#BDBABA</color>
+    <color name="Grey">#A5A5A5</color>
+    <color name="SoftGrey">#E1DFDF</color>
     <color name="Black">#0E0E0E</color>
     <color name="Red">#FD0707</color>
     <color name="SoftRed">#FF8F8F</color>
     <color name="bgBottomNavigation">#fe485a</color>
-    <color name="SoftWhite">#CCFFFFFF</color>
+    <color name="SoftWhite">#EDEDED</color>
     <color name="Yellow">#F3E35E</color>
+
+    <color name="transparent">#00FFFFFF</color>
+
+    <color name="text_button_pressed_color">#E6E6E6</color>
+    <color name="text_button_default_color">#7C7C7C</color>
+    <color name="text_button_focused_color">#C1C0C0</color>
+    <color name="text_button_focused_pressed_color">#C5BFBF</color>
 </resources>

@@ -5,8 +5,10 @@ import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.data.TransactionDetail;
+import com.example.ewalletexample.data.TransactionHistory;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
+import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,17 +17,19 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransactionHistory {
+public class TransactionHistoryAPI {
     BankMappingCallback response;
     private String userid;
     private long startTime;
     private int pageSize;
+    private Gson gson;
 
-    public TransactionHistory(BankMappingCallback response, String userid, long startTime, int pageSize){
+    public TransactionHistoryAPI(BankMappingCallback response, String userid, long startTime, int pageSize){
         this.response = response;
         this.userid = userid;
         this.startTime = startTime;
         this.pageSize = pageSize;
+        gson = new Gson();
     }
 
     public void SetPageSize(int pageSize){
@@ -41,14 +45,14 @@ public class TransactionHistory {
             String[] arr = new String[]{"userid:"+userid,"starttime:"+startTime,"pagesize:"+ pageSize};
             String json = HandlerJsonData.ExchangeToJsonString(arr);
 
-            new TransactionHistoryAPI().execute(ServerAPI.HISTORY_TRANSACTION.GetUrl(), json);
+            new GetTransactionHistoryAPI().execute(ServerAPI.HISTORY_TRANSACTION.GetUrl(), json);
         } catch (JSONException e){
             response.MappingResponse(false, null);
         }
     }
 
-    class TransactionHistoryAPI extends RequestServerAPI implements RequestServerFunction {
-        public TransactionHistoryAPI(){
+    class GetTransactionHistoryAPI extends RequestServerAPI implements RequestServerFunction {
+        public GetTransactionHistoryAPI(){
             SetRequestServerFunction(this);
         }
 
@@ -63,19 +67,12 @@ public class TransactionHistory {
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            List<TransactionDetail> transactionDetails = new ArrayList<>();
+            List<TransactionHistory> transactionDetails = new ArrayList<>();
 
             JSONArray transactionArr = jsonData.getJSONArray("histories");
             for (int i = 0; i < transactionArr.length(); i++) {
                 JSONObject transaction = transactionArr.getJSONObject(i);
-                TransactionDetail detail = new TransactionDetail();
-                detail.setTransactionid(transaction.getLong("transactionid"));
-                detail.setAmount(transaction.getLong("amount"));
-                detail.setOrderid(transaction.getLong("orderid"));
-                detail.setServicetype(transaction.getInt("servicetype"));
-                detail.setSourceoffund(transaction.getInt("sourceoffund"));
-                detail.setChargetime(transaction.getString("chargetime"));
-                transactionDetails.add(detail);
+                transactionDetails.add(gson.fromJson(transaction.toString(), TransactionHistory.class));
             }
 
             response.MappingResponse(true, transactionDetails);

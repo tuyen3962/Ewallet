@@ -3,6 +3,7 @@ package com.example.ewalletexample.Server.api.order;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.data.MobileCardData;
 import com.example.ewalletexample.model.MobileCardModel;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
@@ -13,6 +14,7 @@ import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,8 +62,10 @@ public class MobileCardOrder extends Order {
     protected void GetDataFromJsonFromStatusOrder(JSONObject json) throws JSONException {
         cardnumber = json.getString("cardnumber");
         serinumber = json.getString("serinumber");
-        listResponseObjects.add(cardnumber);
-        listResponseObjects.add(serinumber);
+        MobileCardData data = new MobileCardData();
+        data.setMobileCode(operator.GetMobileCode());
+        data.setCardNumber(cardnumber);
+        data.setSeriNumber(serinumber);
         new ReduceNumberCardThread(operator, mobileCardAmount).run();
     }
 
@@ -108,104 +112,4 @@ public class MobileCardOrder extends Order {
 
         }
     }
-
-//    class CreateMobileCardOrder extends RequestServerAPI implements RequestServerFunction {
-//        public CreateMobileCardOrder(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            orderid = jsonData.getLong("orderid");
-//            try {
-//                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+codeSourceFund,
-//                        "bankcode:", "f6cardno:", "l4cardno:","amount:"+ mobileCardAmount.GetAmount(),"pin:"+pin,
-//                        "servicetype:"+ Service.MOBILE_CARD_SERVICE_TYPE.GetCode()};
-//
-//                String json = HandlerJsonData.ExchangeToJsonString(arr);
-//                new SubmitMobileCardOrder().execute(ServerAPI.SUBMIT_TRANSACTION.GetUrl(), json);
-//            } catch (JSONException e){
-//
-//            }
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//
-//        }
-//    }
-
-//    class SubmitMobileCardOrder extends RequestServerAPI implements RequestServerFunction{
-//        public SubmitMobileCardOrder(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            int bankreturncode = jsonData.getInt("bankreturncode");
-////            long transactionid = jsonData.getLong("transactionid");
-//            try {
-//                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid};
-//
-//                String json = HandlerJsonData.ExchangeToJsonString(arr);
-//                new GetStatusMobileCardOrder().execute(ServerAPI.GET_STATUS_MOBILE_CARD_ORDER.GetUrl(), json);
-//            } catch (JSONException e){
-//
-//            }
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//
-//        }
-//    }
-
-//    class GetStatusMobileCardOrder extends RequestServerAPI implements RequestServerFunction{
-//
-//        public GetStatusMobileCardOrder(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//            else if(code > ErrorCode.SUCCESS.GetValue()){
-//                return false;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            cardnumber = jsonData.getString("cardnumber");
-//            serinumber = jsonData.getString("serinumber");
-//            firebaseDatabaseHandler.RegisterDataListener();
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//
-//        }
-//    }
 }

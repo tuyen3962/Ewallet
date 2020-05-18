@@ -1,6 +1,7 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import com.aldoapps.autoformatedittext.AutoFormatEditText;
 import com.example.ewalletexample.Server.api.checklist.CheckListAPI;
 import com.example.ewalletexample.Server.api.checklist.CheckListResponse;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
@@ -55,7 +57,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     List<UserSearchModel> listUserRecommend, listPhoneContacts, listFriendProfile;
     MaterialTextView tvSearchUser, tvContact, tvOtherContacts, tvTitleListReceiver;
     CheckBox cbSaveReceiverInfo;
-    TextInputEditText etUserSearch;
+    TextInputEditText etUserSearch, etNote;
     AutoFormatEditText etCash;
     ImageView imgUserProfile;
     RecyclerView lvUserRecommend, lvUserContact, lvFriendProfile;
@@ -99,6 +101,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         checkListAPI = new CheckListAPI(this);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar),
                 findViewById(R.id.btnVerify), tvSearchUser, findViewById(R.id.btnFind));
+        etNote = findViewById(R.id.etNote);
         lvUserRecommend.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         lvUserContact.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         lvFriendProfile.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -248,10 +251,11 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), cash);
         intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
         intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.EXCHANGE_SERVICE_TYPE.GetCode());
+        intent.putExtra(Symbol.NOTE.GetValue(), etNote.getText().toString());
         intent.putExtra(Symbol.RECEIVER_PHONE.GetValue(), currentReceiverModel.getPhone());
         intent.putExtra(Symbol.RECEIVER_FULL_NAME.GetValue(), currentReceiverModel.getFullName());
         intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
-        startActivity(intent);
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
 
     @Override
@@ -369,6 +373,17 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
             }else
             {
                 Toast.makeText(getApplicationContext(), "You denied permission.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestCode.SUBMIT_ORDER){
+            if (resultCode == RESULT_OK){
+                setResult(resultCode);
+                finish();
             }
         }
     }

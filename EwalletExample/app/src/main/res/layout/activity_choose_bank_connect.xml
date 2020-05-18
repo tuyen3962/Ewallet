@@ -12,6 +12,10 @@
         android:orientation="vertical"
         android:background="#CCFFFFFF">
 
+        <include
+            android:id="@+id/toolbarLayout"
+            layout="@layout/custom_action_bar"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -187,32 +191,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_margin="5dp"
-                    android:weightSum="3">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center|top"
-                        android:textSize="20dp"
-                        android:text="Chứng minh\n nhân dân" />
-
-                    <EditText
-                        android:id="@+id/etCMNDCard"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_weight="2"
-                        android:ems="10"
-                        android:hint="Nhập số CMND"
-                        android:gravity="center"
-                        android:inputType="textPersonName" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:gravity="end"
                     android:layout_margin="5dp"
                     android:weightSum="3">
@@ -223,6 +201,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginHorizontal="4dp"
                         android:text="Liên kết"
+                        android:textColor="@color/White"
+                        android:background="@drawable/background_button"
                         android:onClick="CreateLinkAccountWithBank"/>
 
                 </LinearLayout>

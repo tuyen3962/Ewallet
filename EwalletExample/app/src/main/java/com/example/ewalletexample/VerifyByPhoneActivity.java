@@ -23,6 +23,7 @@ import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.code.CheckOTPFunction;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -42,7 +43,7 @@ import org.json.JSONObject;
 
 import java.util.concurrent.TimeUnit;
 
-public class VerifyByPhoneActivity extends AppCompatActivity {
+public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTPFunction {
 
     FirebaseAuth auth;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
@@ -90,14 +91,16 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         etCode06 = findViewById(R.id.etCode06);
         tvError = findViewById(R.id.tvError);
         btnVerifyPhone = findViewById(R.id.btnVerifyPhone);
+        btnVerifyPhone.setEnabled(false);
         btnResendVerifyCode = findViewById(R.id.btnResendVerifyPhone);
+        btnChangePhone = findViewById(R.id.btnChangePhone);
         txVerifyPhone = findViewById(R.id.txVerifyPhone);
-        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone);
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone, btnChangePhone);
         AddTextWatcherEventToEditText();
     }
 
     void AddTextWatcherEventToEditText(){
-        codeEditText = new CodeEditText(1, etCode01, etCode02, etCode03, etCode04, etCode05, etCode06);
+        codeEditText = new CodeEditText(1, this, etCode01, etCode02, etCode03, etCode04, etCode05, etCode06);
     }
 
     void GetValueFromIntent(){
@@ -157,10 +160,12 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
 
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
                 phone,
-                60,
+                15,
                 TimeUnit.SECONDS,
                 TaskExecutors.MAIN_THREAD,
                 mCallbacks);
+
+        Toast.makeText(this, "has send code " + phone, Toast.LENGTH_SHORT).show();
     }
 
     public void ResendVerifyCodeEvent(View view){
@@ -191,6 +196,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
         @Override
         public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
             String code = phoneAuthCredential.getSmsCode();
+            Toast.makeText(VerifyByPhoneActivity.this, phoneAuthCredential.getSmsCode(), Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -204,15 +210,16 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
             //storing the verification id that is sent to the user
             mVerificationId = s;
             token = forceResendingToken;
+            Toast.makeText(VerifyByPhoneActivity.this, "code sent", Toast.LENGTH_SHORT).show();
         }
     };
 
     public void VerifyVerificationCode(View view){
         String code = codeEditText.GetCombineText();
         if(TextUtils.isEmpty(code) || code.length() < 6){
-            ShowErrorText("Xin nhap code");
             return;
         }
+
         progressBarManager.ShowProgressBar("Verifying");
 
         PhoneAuthCredential credential = PhoneAuthProvider.getCredential(mVerificationId,code);
@@ -294,6 +301,16 @@ public class VerifyByPhoneActivity extends AppCompatActivity {
     private void ShowErrorText(String message){
         tvError.setText(message);
         tvError.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void IsFull() {
+        btnVerifyPhone.setEnabled(true);
+    }
+
+    @Override
+    public void NotFull() {
+        btnVerifyPhone.setEnabled(false);
     }
 
     private class RegisterEvent extends RequestServerAPI implements RequestServerFunction {

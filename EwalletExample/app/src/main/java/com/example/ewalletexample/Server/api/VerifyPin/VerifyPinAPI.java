@@ -19,6 +19,15 @@ public class VerifyPinAPI {
         this.response = response;
     }
 
+    public VerifyPinAPI(String userid, VerifyResponse response){
+        this.userid = userid;
+        this.response = response;
+    }
+
+    public void SetPin(String pin){
+        this.pin = pin;
+    }
+
     public void StartVerify(){
         try {
             String[] arr = new String[]{"userid:"+userid,"pin:"+pin};

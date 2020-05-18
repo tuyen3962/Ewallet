@@ -35,6 +35,7 @@ public class PasswordFieldFragment extends Fragment {
     private View passwordLayout;
     private LoginActivity loginActivity;
     private RegisterByPhone registerByPhone;
+    private SubmitOrderActivity submitOrderActivity;
     private ControlListImage controlListImage;
     private boolean isShowText;
 
@@ -71,6 +72,8 @@ public class PasswordFieldFragment extends Fragment {
         } else if(context instanceof RegisterByPhone){
             registerByPhone = (RegisterByPhone) context;
             loginActivity = null;
+        } else if (context instanceof SubmitOrderActivity){
+            submitOrderActivity = (SubmitOrderActivity) context;
         }
     }
 
@@ -142,6 +145,8 @@ public class PasswordFieldFragment extends Fragment {
             loginActivity.ShowNumberKeyBoard();
         } else if(registerByPhone != null) {
             registerByPhone.ShowNumberKeyBoard(getId());
+        } else if(submitOrderActivity != null){
+            submitOrderActivity.ShowNumberKeyBoard();
         }
     }
 

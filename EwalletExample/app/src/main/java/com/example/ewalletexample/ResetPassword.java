@@ -21,6 +21,8 @@ import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ServerAPI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -32,8 +34,9 @@ public class ResetPassword extends AppCompatActivity {
     FirebaseAuth auth;
 
     ProgressDialog progressDialog;
-    private EditText etPassword, etConfirmPassword;
-    private TextView tvUsername, tvError;
+    TextInputEditText etPassword, etConfirmPassword;
+    TextView tvError;
+    MaterialTextView tvUsername;
 
     private String reason, email, phone, userid;
 

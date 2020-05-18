@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi;
 
 public class HandleDateTime {
     private static SimpleDateFormat dayFormatter = new SimpleDateFormat("dd-MM-yyyy");
+    private static SimpleDateFormat dayTimeFormatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
 
     private static long GetCurrentTimeMillis(){
         return System.currentTimeMillis();
@@ -25,8 +26,16 @@ public class HandleDateTime {
 
     public static long GetLongByString(String currentDate){
         try {
-            Date date = dayFormatter.parse(currentDate);
-            return date.getTime();
+            return dayFormatter.parse(currentDate).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static long GetLongByStringTimeDate(String currentDateTime){
+        try {
+            return dayTimeFormatter.parse(currentDateTime).getTime();
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -41,6 +50,14 @@ public class HandleDateTime {
         c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
 
         return c.getActualMaximum(Calendar.DAY_OF_MONTH) + "-"+(c.get(Calendar.MONTH) + 1) + "-"+c.get(Calendar.YEAR);
+    }
+
+    public static String GetNextDayByString(String currentDate) throws ParseException {
+        final Date date = dayFormatter.parse(currentDate);
+        final Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        return dayFormatter.format(calendar.getTime());
     }
 
     public static int GetMonthOfDate(String currentTime) throws ParseException {

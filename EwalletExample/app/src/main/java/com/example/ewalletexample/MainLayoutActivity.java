@@ -1,20 +1,12 @@
 package com.example.ewalletexample;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-import de.hdodenhof.circleimageview.CircleImageView;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.MenuItem;
+import android.view.View;
 
 import com.bumptech.glide.Glide;
-import com.example.ewalletexample.Server.api.balance.BalanceResponse;
-import com.example.ewalletexample.Server.api.balance.GetBalanceAPI;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
@@ -30,10 +22,21 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
-public class MainActivity extends AppCompatActivity implements ResponseImageUri, BalanceResponse, ResponseModelByKey<UserModel> {
-    private static String HOME = "HOME", MY_WALLET = "MY_WALLET";
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+import de.hdodenhof.circleimageview.CircleImageView;
+
+public class MainLayoutActivity extends AppCompatActivity implements ResponseImageUri, ResponseModelByKey<UserModel> {
+
     long userAmount;
+    View securityLayout;
     FirebaseAuth auth;
+    Toolbar toolbar;
     BottomNavigationView bottomNavigation;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler storageHandler;
@@ -43,33 +46,15 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
     UserModel model;
     Gson gson;
 
-    BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener =
-            new BottomNavigationView.OnNavigationItemSelectedListener() {
-                @Override public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.navigation_main:
-                            openFragment(HomeFragment.newInstance(user.getUserId()), HOME);
-                            return true;
-                        case R.id.navigation_history:
-//                            openFragment(SmsFragment.newInstance("", ""));
-                            return true;
-                        case R.id.navigation_wallet:
-                            openFragment(MyWalletFragement.newInstance(user.getUserId()), MY_WALLET);
-                            return true;
-                    }
-                    return false;
-                }
-            };
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main_layout);
         Setup();
         Initialize();
         LoadDataFromIntent();
     }
+
 
     void Setup(){
         auth = FirebaseAuth.getInstance();
@@ -80,11 +65,20 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
 
     void Initialize(){
         gson = new Gson();
+        securityLayout = findViewById(R.id.securityLayout);
+        HideSecurityLayout(securityLayout);
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-        bottomNavigation = findViewById(R.id.bottom_navigation);
-        bottomNavigation.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
+        bottomNavigation = findViewById(R.id.nav_view);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), bottomNavigation);
+        toolbar = findViewById(R.id.toolbarLayout);
+        setSupportActionBar(toolbar);
+        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.navigation_home, R.id.navigation_notifications, R.id.navigation_personal)
+                .build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(bottomNavigation, navController);
     }
 
     private void LoadDataFromIntent(){
@@ -92,11 +86,9 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
         user = new User();
         Intent intent = getIntent();
         user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
-        Log.d("TAG", "LoadDataFromIntent: " + user.toString());
-//        user.ReadJson(intent.getStringExtra(Symbol.USER.GetValue()));
-        GetBalanceAPI balanceAPI = new GetBalanceAPI(user.getUserId(), this);
-        balanceAPI.GetBalance();
+        userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
+        FindImageUriFromInternet();
     }
 
     public void FindImageUriFromInternet(){
@@ -104,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
             storageHandler.GetUriImageFromServerFile(user.getAvatar(), this);
         } else {
             this.imageUri = null;
-            openFragment(HomeFragment.newInstance(user.getUserId()), HOME);
             progressBarManager.HideProgressBar();
         }
     }
@@ -112,8 +103,6 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
     @Override
     public void GetImageUri(Uri imageUri) {
         this.imageUri = imageUri;
-        openFragment(HomeFragment.newInstance(user.getUserId()), HOME);
-
         progressBarManager.HideProgressBar();
     }
 
@@ -123,13 +112,6 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
         }else {
             Utilies.SetImageDrawable(this, circleImageView);
         }
-    }
-
-    public void openFragment(Fragment fragment, String tag) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.mainLayoutFragment, fragment, tag);
-        transaction.addToBackStack(null);
-        transaction.commit();
     }
 
     public long GetUserBalance(){
@@ -149,16 +131,11 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
     }
 
     public void SwitchToBankConnectedActivity(){
-        Intent intent = new Intent(MainActivity.this, UserBankCardActivity.class);
+        Intent intent = new Intent(MainLayoutActivity.this, UserBankCardActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
+        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
         startActivity(intent);
-    }
-
-    @Override
-    public void GetBalanceResponse(long balance) {
-        userAmount = balance;
-        FindImageUriFromInternet();
     }
 
     @Override
@@ -169,5 +146,40 @@ public class MainActivity extends AppCompatActivity implements ResponseImageUri,
 
     public Gson GetGson(){
         return gson;
+    }
+
+    public void SetUserSecurityInfo(String cmnd, String imgCMNDFront, String imgCMNDBack){
+        user.setCmnd(cmnd);
+        user.setCmndFrontImage(imgCMNDFront);
+        user.setCmndBackImage(imgCMNDBack);
+    }
+
+    public void ShowSecurityLayout(){
+        securityLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void HideSecurityLayout(View view){
+        securityLayout.setVisibility(View.GONE);
+    }
+
+    public void SecurityAccount(View view){
+        Intent intent = new Intent(MainLayoutActivity.this, VerifyAccountActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+        intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
+        intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
+        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+        intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
+        intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
+        startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestCode.VERIFY_ACCOUNT_CODE && resultCode == RESULT_OK){
+            user.setCmndBackImage(data.getStringExtra(Symbol.IMAGE_CMND_BACK.GetValue()));
+            user.setCmndFrontImage(data.getStringExtra(Symbol.IMAGE_CMND_FRONT.GetValue()));
+            user.setCmnd(data.getStringExtra(Symbol.CMND.GetValue()));
+        }
     }
 }

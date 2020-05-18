@@ -22,6 +22,7 @@ import com.example.ewalletexample.R;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.google.gson.Gson;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -144,5 +145,30 @@ public class Utilies {
             }
         }
         return contacts;
+    }
+
+    public static String HandleBalanceTextView(String balance){
+        int index = balance.length()-3;
+        int startIndexAddDot = 3, indexIncrementAddDot = 4;
+        int indexAddDot = startIndexAddDot;
+
+        while(balance.length() > indexAddDot && index > 0){
+            String headText = balance.substring(0,index);
+            String lastText = balance.substring(index);
+            balance = headText + "," + lastText;
+
+            indexAddDot += indexIncrementAddDot;
+            index -= startIndexAddDot;
+        }
+
+        return balance;
+    }
+
+    public static byte[] ConvertStringToByte(String code){
+        return code.getBytes(Charset.forName("UTF-8"));
+    }
+
+    public static String ConvertByteToString(byte[] bytes){
+        return new String(bytes);
     }
 }

@@ -9,16 +9,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ExchangeMoneyOrder extends Order{
-    private String receiverphone;
+    private String receiverphone, note;
 
-    public ExchangeMoneyOrder(String userid, String receiverphone, String pin, String amount, long fee, SourceFund sourceFund, OrderResponse response)  {
+    public ExchangeMoneyOrder(String userid, String receiverphone, String pin, String amount, long fee, SourceFund sourceFund, String note, OrderResponse response)  {
         super(userid, pin, amount, fee, sourceFund, Service.EXCHANGE_SERVICE_TYPE, response);
         this.receiverphone = receiverphone;
+        this.note = note;
     }
 
     @Override
     protected void VerifyPinSuccess() throws JSONException {
-        String[] arr = new String[]{"userid:"+userid,"receiverphone:"+receiverphone,"amount:"+Long.valueOf(amount)};
+        String[] arr = new String[]{"userid:"+userid,"receiverphone:"+receiverphone,"amount:"+Long.valueOf(amount),"note:"+note};
         String json = HandlerJsonData.ExchangeToJsonString(arr);
         CreateOrder(ServerAPI.CREATE_EXCHANGE_MONEY_ORDER, json);
     }
@@ -42,102 +43,4 @@ public class ExchangeMoneyOrder extends Order{
     protected void GetDataFromJsonFromStatusOrder(JSONObject json) {
 
     }
-
-//    class CreateExchangeMoneyOrder extends RequestServerAPI implements RequestServerFunction {
-//        public CreateExchangeMoneyOrder(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            orderid = jsonData.getLong("orderid");
-//            try {
-//                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+sourceFund.GetCode(),
-//                        "bankcode:","f6cardno:", "l4cardno:","amount:"+amount,"pin:"+pin,
-//                        "servicetype:"+ Service.EXCHANGE_SERVICE_TYPE.GetCode()};
-//
-//                String json = HandlerJsonData.ExchangeToJsonString(arr);
-//                new SubmitExchangeMoneyOrder().execute(ServerAPI.SUBMIT_TRANSACTION.GetUrl(), json);
-//            } catch (JSONException e){
-//
-//            }
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//            GetStausOrder(ServerAPI.GET_STATUS_EXCHANGE_MONEY_ORDER);
-//        }
-//    }
-
-//    class SubmitExchangeMoneyOrder extends RequestServerAPI implements RequestServerFunction{
-//        public SubmitExchangeMoneyOrder(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            int bankreturncode = jsonData.getInt("bankreturncode");
-////            long transactionid = jsonData.getLong("transactionid");
-//            try {
-//                String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"password:"+pin};
-//
-//                String json = HandlerJsonData.ExchangeToJsonString(arr);
-//                new GetStatusExchangeMoneyOrder().execute(ServerAPI.GET_STATUS_EXCHANGE_MONEY_ORDER.GetUrl(), json);
-//            } catch (JSONException e){
-//
-//            }
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//
-//        }
-//    }
-
-//    class GetStatusExchangeMoneyOrder extends RequestServerAPI implements RequestServerFunction{
-//
-//        public GetStatusExchangeMoneyOrder(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//            else if(code > ErrorCode.SUCCESS.GetValue()){
-//                return false;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            Log.d("TAG", "GetStatusTopupOrder DataHandle: success" );
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//
-//        }
-//    }
 }

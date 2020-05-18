@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/Grey"
+            android:background="#E8E6E6"
             android:text="Chọn nhà mạng"
             android:textSize="25dp"
             android:padding="10dp"
@@ -33,7 +33,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/Grey"
+            android:background="#E8E6E6"
             android:text="Chọn mệnh giá"
             android:textSize="25dp"
             android:padding="10dp"
@@ -42,13 +42,14 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/layoutCardAmount"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:padding="10dp"/>
 
     </LinearLayout>
 
     <Button
+        android:id="@+id/btnVerify"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"

@@ -1,6 +1,7 @@
 package com.example.ewalletexample.Symbol;
 
 public enum  ErrorCode {
+    PROCESSING(2,""),
     SUCCESS(1,""),
     EXCEPTION(0, "Ngoại"),
     // -1 -> -100 validate

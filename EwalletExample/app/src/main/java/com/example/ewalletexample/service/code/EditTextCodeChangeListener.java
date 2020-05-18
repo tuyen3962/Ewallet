@@ -8,15 +8,16 @@ import android.view.View;
 import android.widget.EditText;
 
 public class EditTextCodeChangeListener {
-
+    private CodeEditText codeEditText;
     EditText eText1, eText2;
     private String value;
     private int limitLength;
 
-    public EditTextCodeChangeListener(EditText _eText1, EditText _eText2, int length){
+    public EditTextCodeChangeListener(CodeEditText codeEditText, EditText _eText1, EditText _eText2, int length){
         eText1 = _eText1;
         eText2 = _eText2;
         limitLength = length;
+        codeEditText = codeEditText;
 
         eText1.addTextChangedListener(textWatcher);
 
@@ -34,8 +35,9 @@ public class EditTextCodeChangeListener {
         });
     }
 
-    public EditTextCodeChangeListener(EditText _eText1, int length){
+    public EditTextCodeChangeListener(CodeEditText codeEditText, EditText _eText1, int length){
         eText1 = _eText1;
+        this.codeEditText = codeEditText;
         limitLength = length;
 
         eText1.addTextChangedListener(textWatcher);
@@ -68,6 +70,14 @@ public class EditTextCodeChangeListener {
                 if(eText2 != null)
                 {
                     eText2.requestFocus();
+                }
+
+                if (codeEditText != null){
+                    codeEditText.CheckIsFull();
+                }
+            } else {
+                if (codeEditText != null){
+                    codeEditText.CheckIsFull();
                 }
             }
         }

@@ -123,10 +123,11 @@
                     android:layout_height="wrap_content"
                     android:text="Gửi lại"
                     android:enabled="false"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_weight="1"
                     android:textSize="18sp"
-                    android:onClick="ResendVerifyCodeEvent"/>
+                    android:onClick="ResendVerifyCodeEvent"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:textColor="@drawable/text_button_pressed_color_change"/>
 
                 <Space
                     android:layout_width="wrap_content"
@@ -139,6 +140,7 @@
                     android:layout_height="wrap_content"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:text="Đổi SDT"
+                    android:textColor="@drawable/text_button_pressed_color_change"
                     android:textSize="18sp"
                     android:layout_weight="1"
                     android:onClick="ChangePhone"/>

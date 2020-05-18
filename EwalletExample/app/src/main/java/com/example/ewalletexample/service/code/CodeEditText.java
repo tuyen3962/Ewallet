@@ -9,9 +9,17 @@ import androidx.annotation.NonNull;
 
 public class CodeEditText {
     private ArrayList<EditTextCodeChangeListener> listEditCodeChangeListeners;
-
+    private CheckOTPFunction function;
     private ArrayList<EditText> listEditTexts;
     private int lengthText;
+
+    public CodeEditText(int length, CheckOTPFunction function, @NonNull EditText... editText){
+        this.function = function;
+        listEditCodeChangeListeners = new ArrayList<>();
+        listEditTexts = new ArrayList<>();
+        lengthText = length;
+        InitializeListEditText(editText);
+    }
 
     public CodeEditText(int length, @NonNull EditText... editText){
         listEditCodeChangeListeners = new ArrayList<>();
@@ -35,13 +43,12 @@ public class CodeEditText {
     }
 
     void InitTwoEditCodeChangeListener(EditText editText1, EditText editText2){
-        Log.d("TAG", "InitTwoEditCodeChangeListener: ");
-        EditTextCodeChangeListener newCodeChangeListener = new EditTextCodeChangeListener(editText1, editText2, lengthText);
+        EditTextCodeChangeListener newCodeChangeListener = new EditTextCodeChangeListener(this, editText1, editText2, lengthText);
         listEditCodeChangeListeners.add(newCodeChangeListener);
     }
 
     void InitSingleEditCodeChangeListener(EditText editText1){
-        EditTextCodeChangeListener newCodeChangeListener = new EditTextCodeChangeListener(editText1, lengthText);
+        EditTextCodeChangeListener newCodeChangeListener = new EditTextCodeChangeListener(this, editText1, lengthText);
         listEditCodeChangeListeners.add(newCodeChangeListener);
     }
 
@@ -53,5 +60,16 @@ public class CodeEditText {
         }
 
         return result;
+    }
+
+    public void CheckIsFull(){
+        if (function != null){
+            if(GetCombineText().length() == listEditTexts.size()){
+                function.IsFull();
+                return;
+            }
+
+            function.NotFull();
+        }
     }
 }

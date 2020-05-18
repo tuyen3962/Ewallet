@@ -1,17 +1,26 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.UserDictionary;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.aldoapps.autoformatedittext.AutoFormatEditText;
 import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
 import com.example.ewalletexample.Server.api.bank.list.ListBankConnectedAPI;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
@@ -20,9 +29,12 @@ import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.recycleview.listbank.RecycleViewListBankConnected;
 import com.example.ewalletexample.service.recycleview.listbank.UserSelectBankConnect;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.gson.Gson;
 
 import java.util.List;
+import java.util.Locale;
 
 public class ServiceWalletActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, UserSelectBankConnect {
     private static final int currentHolderChosenColor = R.color.Grey, defaultHolderColor = R.color.White;
@@ -34,13 +46,43 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
     View sourceFundLayout;
     List<BankInfo> bankInfoList;
     ProgressBarManager progressBarManager;
+    Toolbar toolbar;
+    MaterialTextView tvTitle;
     RecyclerView rvListBankConnected;
     AutoFormatEditText etBalance;
     TextView tvErrorBalance;
     BankInfo currentBankConnect;
     Service service;
+    ImageButton btnBack;
     ListBankConnectedAPI listBankConnectedAPI;
     RecycleViewListBankConnected.ListBankConnectViewHolder currentHolder;
+
+    TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            String text = s.toString();
+            PredictText(text);
+        }
+    };
+
+    void PredictText(String text){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            // On JellyBean & above, you can provide a shortcut and an explicit Locale
+            UserDictionary.Words.addWord(this, "MadeUpWord", 10, "Mad", Locale.getDefault());
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
+            UserDictionary.Words.addWord(this, "MadeUpWord", 10, UserDictionary.Words.LOCALE_TYPE_CURRENT);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,15 +100,26 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar));
         sourceFundLayout = findViewById(R.id.sourceFundLayout);
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
+        etBalance.addTextChangedListener(textWatcher);
+        toolbar = findViewById(R.id.toolbarLayout);
+        tvTitle = findViewById(R.id.tvToolbarTitle);
+        btnBack = findViewById(R.id.btnBackToPreviousActivity);
+        setSupportActionBar(toolbar);
+
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BackToMain(v);
+            }
+        });
     }
 
     void GetValueFromIntent(){
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
-        int serviceType = intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0);
-        service = Service.Find(serviceType);
-        getSupportActionBar().setTitle(service.GetMessage());
+        this.service = Service.Find(intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0));
+        tvTitle.setText(this.service.GetName());
         sourceFundLayout.setVisibility(View.VISIBLE);
         listBankConnectedAPI = new ListBankConnectedAPI(this, userid);
     }
@@ -100,9 +153,9 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
             intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
         }
 
-        intent.putExtra(Symbol.BANK_INFO.GetValue(), currentBankConnect.ExchangeToJsonData());
+        intent.putExtra(Symbol.BANK_INFO.GetValue(), new Gson().toJson(currentBankConnect));
 
-        startActivity(intent);
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
 
     public void ClearAmounTransactionText(View view){
@@ -133,12 +186,23 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
 
     @Override
     public void SelectBankInfo(BankInfo info, RecycleViewListBankConnected.ListBankConnectViewHolder holder) {
-        if(currentHolder == null || (currentHolder != null && !currentHolder.equals(holder))){
+        if(currentHolder != null && !currentHolder.equals(holder)){
             currentHolder.SetBackgroundColor(defaultHolderColor);
         }
 
         this.currentHolder = holder;
         this.currentHolder.SetBackgroundColor(currentHolderChosenColor);
         this.currentBankConnect = info;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestCode.SUBMIT_ORDER){
+            if (resultCode == RESULT_OK){
+                setResult(resultCode);
+                finish();
+            }
+        }
     }
 }

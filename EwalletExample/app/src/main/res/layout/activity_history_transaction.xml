@@ -1,25 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HistoryTransactionActivity"
-    android:orientation="vertical">
+    tools:context=".HistoryTransactionActivity">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/monthTransaction"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="8dp"/>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/transactionDetail"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="5dp"
-        android:padding="5dp"
-        android:layout_marginBottom="2dp"/>
-</LinearLayout>
+        android:orientation="vertical">
+
+        <include
+            layout="@layout/custom_action_bar"
+            android:id="@+id/toolbarLayout"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="20dp"
+            android:layout_marginRight="20dp"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Ngày bắt đầu"
+                    android:textColor="@color/Black"
+                    android:textSize="20dp"/>
+
+                <TextView
+                    android:id="@+id/tvStartDateSearchTransaction"
+                    android:layout_width="200dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:background="@drawable/button_frame"
+                    android:textSize="20dp"
+                    android:textColor="@color/Black"
+                    android:paddingHorizontal="10dp"
+                    android:gravity="end|center_vertical"
+                    android:onClick="ShowDatePickerDialog"/>
+
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSearchTransaction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Tìm"
+            android:textSize="18dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginRight="20dp"
+            android:onClick="SearchTransactionByCurrentDate"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Danh sách các giao dịch"
+            android:textSize="20dp"
+            android:layout_marginLeft="10dp"
+            android:textColor="@color/Black"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/transactionDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="5dp"
+            android:padding="10dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/SoftWhite"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvLoadContinueTransaction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tải tiếp"
+                android:gravity="center"
+                android:textSize="18dp"
+                android:padding="10dp"
+                android:visibility="gone"
+                android:onClick="LoadMoreTransaction"/>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/tvFullTransaction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Không tồn tại giao dịch nữa"
+                android:textSize="18dp"
+                android:padding="10dp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+</ScrollView>

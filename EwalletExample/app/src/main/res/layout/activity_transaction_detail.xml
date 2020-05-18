@@ -1,172 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TransactionDetailActivity"
-    android:background="@color/Grey">
+    tools:context=".TransactionDetailActivity">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:background="#E8E6E6">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@color/White">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tên dịch vụ"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:textSize="30dp"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Số tiền"
-                android:textSize="40dp"
-                android:textStyle="bold"
-                android:gravity="center"/>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Tình trạng hóa đơn"
-                android:textSize="25dp"
-                android:gravity="center"
-                android:layout_marginBottom="10dp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="10dp"
-            android:background="@color/White"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="8dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="Nguồn tiền"
-                    android:gravity="center"
-                    android:textSize="22dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="Ví"
-                    android:textSize="22dp"
-                    android:gravity="right"
-                    android:textColor="@color/Black"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginVertical="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="Phí giao dịch"
-                    android:gravity="center"
-                    android:textSize="22dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="Miễn phí"
-                    android:textSize="22dp"
-                    android:gravity="right"
-                    android:textColor="@color/Black"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginVertical="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="Mã giao dịch"
-                    android:gravity="center"
-                    android:textSize="22dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="mã"
-                    android:textSize="22dp"
-                    android:gravity="right"
-                    android:textColor="@color/Black"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginVertical="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="Thời gian"
-                    android:gravity="center"
-                    android:textSize="22dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="01/01/2001 - 19:16"
-                    android:textSize="22dp"
-                    android:gravity="right"
-                    android:textColor="@color/Black"/>
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="20dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Thông tin thêm"
-                android:textSize="25dp"
-                android:paddingHorizontal="10dp"
-                android:textColor="@color/Black"
-                android:layout_marginBottom="10dp"/>
+            <include
+                layout="@layout/custom_action_bar"
+                android:id="@+id/toolbarLayout"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="8dp"
                 android:background="@color/White">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvService"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tên dịch vụ"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:textSize="30dp"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Số tiền"
+                    android:textSize="40dp"
+                    android:textStyle="bold"
+                    android:gravity="center"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvStatusTransaction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tình trạng hóa đơn"
+                    android:textSize="25dp"
+                    android:gravity="center"
+                    android:layout_marginBottom="10dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp"
+                android:background="@color/White"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -181,7 +78,8 @@
                         android:gravity="center"
                         android:textSize="22dp"/>
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvSourceFund"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:text="Ví"
@@ -196,14 +94,15 @@
                     android:orientation="horizontal"
                     android:layout_marginVertical="8dp">
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:text="Phí giao dịch"
                         android:gravity="center"
                         android:textSize="22dp"/>
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvFeeTransaction"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:text="Miễn phí"
@@ -218,14 +117,15 @@
                     android:orientation="horizontal"
                     android:layout_marginVertical="8dp">
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:text="Mã giao dịch"
                         android:gravity="center"
                         android:textSize="22dp"/>
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvTransactionId"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:text="mã"
@@ -240,14 +140,15 @@
                     android:orientation="horizontal"
                     android:layout_marginVertical="8dp">
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:text="Thời gian"
                         android:gravity="center"
                         android:textSize="22dp"/>
 
-                    <TextView
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvChargeTime"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:text="01/01/2001 - 19:16"
@@ -258,24 +159,482 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/layoutBankCardInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="15dp"
+                android:visibility="gone">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Thông tin Ngân hàng"
+                    android:textSize="25dp"
+                    android:paddingHorizontal="10dp"
+                    android:textColor="@color/Black"
+                    android:layout_marginBottom="10dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp"
+                    android:background="@color/White">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Tên ngân hàng"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvBankName"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Tên ngân hàng"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginVertical="8dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Số thẻ"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvCardNo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Số thẻ"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/supportInformationLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="15dp"
+                android:layout_marginBottom="20dp"
+                android:visibility="visible">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Thông tin thêm"
+                    android:textSize="25dp"
+                    android:paddingHorizontal="10dp"
+                    android:textColor="@color/Black"
+                    android:layout_marginBottom="10dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp"
+                    android:background="@color/White">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Nhà cung cấp"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvSupplier"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Nhà cung cấp"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginVertical="8dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Khách hàng"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvCustomerName"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Khách hàng"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginVertical="8dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Mã khách hàng"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvIdCustomer"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Mã khách hàng"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginVertical="8dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Kỳ thanh toán"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvTermTransaction"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Kỳ thanh toán"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/exchangeMoneyLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="10dp"
+                android:visibility="visible">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Thông tin người gửi"
+                    android:textSize="25dp"
+                    android:paddingHorizontal="10dp"
+                    android:textColor="@color/Black"
+                    android:layout_marginBottom="10dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="8dp"
+                    android:background="@color/White">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="4dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Người gửi"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvSenderName"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="người gửi"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="4dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Người nhận"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvReceiverName"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="người nhận"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginVertical="8dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:text="Ghi chú"
+                            android:gravity="center"
+                            android:textSize="22dp"/>
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvNote"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="Ghi chú"
+                            android:textSize="22dp"
+                            android:gravity="right"
+                            android:textColor="@color/Black"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cardLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="Thẻ đã mua"
+                        android:textSize="25dp"
+                        android:gravity="center"
+                        android:textColor="@color/Black"
+                        android:textStyle="bold"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvBuyOneMoreCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="Mua thêm"
+                        android:textSize="22dp"
+                        android:padding="8dp"
+                        android:layout_marginLeft="15dp"
+                        android:drawableEnd="@drawable/ic_action_add"
+                        android:gravity="end"
+                        android:textColor="@color/Grey"
+                        android:textStyle="bold"
+                        android:onClick="BuyNewMobileCard"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="5dp"
+                        android:paddingVertical="10dp"
+                        android:paddingHorizontal="10dp"
+                        android:layout_margin="10dp"
+                        android:background="@drawable/frame_background"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/imgMobileCard"
+                                android:layout_width="100dp"
+                                android:layout_height="60dp"
+                                android:background="@drawable/round"
+                                android:src="@drawable/card"
+                                android:padding="5dp"/>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/tvMobileCardOperator"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Tên nhà mạng"
+                                    android:textStyle="bold"
+                                    android:textSize="22dp"
+                                    android:layout_marginVertical="5dp"/>
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/tvMobileCardAmount"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="20dp"
+                                    android:text="Mệnh giá"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/colorAccent"/>
+
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:text="Mã số thẻ"
+                                android:textSize="22dp"/>
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/tvCardNumber"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:text="Mã số thẻ"
+                                android:gravity="end"
+                                android:layout_marginLeft="10dp"
+                                android:textSize="22dp"/>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:text="Số seri"
+                                android:textSize="22dp"/>
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:id="@+id/tvSeriNumber"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:text="Số seri"
+                                android:layout_marginLeft="10dp"
+                                android:textSize="22dp"/>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:padding="10dp"
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp">
+
+                <Button
+                    android:id="@+id/btnMainActivity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@color/SoftWhite"
+                    android:textSize="16dp"
+                    android:layout_marginBottom="10dp"
+                    android:paddingHorizontal="30dp"
+                    android:drawableLeft="@drawable/ic_action_home"
+                    android:text="Màn hình chính"
+                    android:onClick="BankToMain"/>
+
+                <Button
+                    android:id="@+id/btnServiceAgain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="@color/SoftWhite"
+                    android:textSize="16dp"
+                    android:layout_marginBottom="10dp"
+                    android:paddingHorizontal="55dp"
+                    android:drawableLeft="@drawable/ic_action_add"
+                    android:text="Nạp thêm"
+                    android:onClick="BuyNewMobileCard"/>
+
+            </LinearLayout>
+
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
+    </ScrollView>
 
-            <Button
-                android:layout_width="120dp"
-                android:layout_height="match_parent"
-                android:background="@color/SoftWhite"
-                android:textColor="@color/Grey"
-                android:drawableLeft="@drawable/ic_action_add"
-                android:text="Nạp thêm"/>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</ScrollView>
+</RelativeLayout>

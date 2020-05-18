@@ -12,7 +12,9 @@ public class RequestCode {
     public static final int VERIFY_ACCOUNT_CODE = 5;
     public static final  int UPDATE_EMAIL = 6;
 
+    public static final int SETTING_ACCOUNT = 7;
 
+    public static final int SUBMIT_ORDER = 8;
     public final static int TAKE_PHOTO_REQUEST = 100;
     public final static int PICK_IMAGE_REQUEST = 101;
 }

@@ -1,15 +1,20 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.davidmiguel.numberkeyboard.NumberKeyboard;
+import com.davidmiguel.numberkeyboard.NumberKeyboardListener;
 import com.example.ewalletexample.Server.api.balance.BalanceResponse;
 import com.example.ewalletexample.Server.api.order.ExchangeMoneyOrder;
 import com.example.ewalletexample.Server.api.order.MobileCardOrder;
@@ -17,33 +22,51 @@ import com.example.ewalletexample.Server.api.order.MobileCardOrderResponse;
 import com.example.ewalletexample.Server.api.order.OrderResponse;
 import com.example.ewalletexample.Server.api.order.TopupOrder;
 import com.example.ewalletexample.Server.api.order.WithdrawOrder;
+import com.example.ewalletexample.Server.api.transaction.TransactionDetailAPI;
+import com.example.ewalletexample.Server.api.transaction.TransactionDetailResponse;
+import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
+import com.example.ewalletexample.data.TransactionDetail;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
+import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.ControlListImage;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
 import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
+import com.example.ewalletexample.utilies.Utilies;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 
 import java.util.List;
 
-public class SubmitOrderActivity extends AppCompatActivity implements BalanceResponse, MobileCardOrderResponse, OrderResponse {
-
-    String userid, amount, receiverphone, receiverFullname, phone;
+public class SubmitOrderActivity extends AppCompatActivity implements OrderResponse, ResponseModelByKey<UserModel>, TransactionDetailResponse {
+    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
+    String userid, amount, receiverphone, receiverFullname, phone, note;
     long fee;
     Service service;
     SourceFund source;
     ProgressBarManager progressBarManager;
-    View exchangeMoneyLayout, withdrawView, topupView, sourceFundLayout, verifyPasswordLayout;
-    TextView tvAmount, tvTotalAmount, tvFeeTransaction, tvBackInDetailTransaction, tvBackInSourceFund, tvTopupBankFrom, tvWithdrawBankName, tvFullName, tvPhone;
-    EditText etPass01, etPass02, etPass03, etPass04, etPass05, etPass06;
-    CodeEditText codePassword;
+    View exchangeMoneyLayout, withdrawView, topupView, verifyPasswordLayout, mobileCardLayout, cardNumberLayout;
+    TextView tvAmount, tvTotalAmount, tvFeeTransaction, tvTopupBankFrom, tvWithdrawBankName,
+             tvFullName, tvPhone, tvMobileCard, tvQuantity, tvAmountText, tvCardNo;
     BankInfo bankInfo;
     MobileCardOperator mobileCardOperator;
     MobileCardAmount mobileCardAmount;
+    PasswordFieldFragment passwordFieldFragment;
+    NumberKeyboard keyboard;
+    Toolbar toolbar;
+    ImageButton btnBack;
+    Gson gson;
+    UserModel userModel;
+    TransactionDetailAPI transactionDetail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,33 +79,63 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         InitializeText();
     }
 
+    @Override
+    public void GetModel(UserModel data) {
+        userModel = data;
+    }
+
     void Initialize(){
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar));
-
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
         exchangeMoneyLayout = findViewById(R.id.exchangeMoneyLayout);
         withdrawView = findViewById(R.id.withdrawLayout);
         topupView = findViewById(R.id.topupLayout);
         verifyPasswordLayout = findViewById(R.id.verifyPasswordLayout);
-        sourceFundLayout = findViewById(R.id.sourceFundLayout);
-
+        cardNumberLayout = findViewById(R.id.cardNumberLayout);
+        tvCardNo = findViewById(R.id.tvCardno);
         tvAmount = findViewById(R.id.tvAmount);
         tvTotalAmount = findViewById(R.id.tvTotalAmount);
         tvFeeTransaction = findViewById(R.id.tvFeeTransaction);
-        tvBackInDetailTransaction = findViewById(R.id.tvBackInDetailTransaction);
-        tvBackInSourceFund = findViewById(R.id.tvBackInSourceFund);
         tvTopupBankFrom = findViewById(R.id.tvTopupBankFrom);
         tvWithdrawBankName = findViewById(R.id.tvWithdrawBankName);
         tvFullName = findViewById(R.id.tvFullName);
         tvPhone = findViewById(R.id.tvPhone);
+        keyboard = findViewById(R.id.keyboard);
+        mobileCardLayout = findViewById(R.id.mobileCardLayout);
+        tvMobileCard = findViewById(R.id.tvMobileCardOperator);
+        tvQuantity = findViewById(R.id.tvQuantity);
+        tvAmountText = findViewById(R.id.tvAmountText);
+        gson = new Gson();
+        passwordFieldFragment = PasswordFieldFragment.newInstance("Nhập mật khẩu");
+        toolbar = findViewById(R.id.toolbarLayout);
+        btnBack = findViewById(R.id.btnBackToPreviousActivity);
 
-        etPass01 = findViewById(R.id.etPass01);
-        etPass02 = findViewById(R.id.etPass02);
-        etPass03 = findViewById(R.id.etPass03);
-        etPass04 = findViewById(R.id.etPass04);
-        etPass05 = findViewById(R.id.etPass05);
-        etPass06 = findViewById(R.id.etPass06);
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        });
 
-        codePassword = new CodeEditText(1, etPass01, etPass02, etPass03, etPass04, etPass05, etPass06);
+        keyboard.setListener(new NumberKeyboardListener() {
+            @Override
+            public void onNumberClicked(int i) {
+                passwordFieldFragment.CheckIncreaseIndex(String.valueOf(i));
+            }
+
+            @Override
+            public void onLeftAuxButtonClicked() {
+                HideKeyBoard();
+            }
+
+            @Override
+            public void onRightAuxButtonClicked() {
+                passwordFieldFragment.CheckDecreaseIndex();
+            }
+        });
+
+        Utilies.AddFragmentIntoActivity(this, R.id.passwordLayout, passwordFieldFragment, "PASSWORD");
     }
 
     void GetValueFromIntent(){
@@ -92,17 +145,14 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         fee = intent.getLongExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
         service = Service.Find(intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0));
         source = SourceFund.Find(intent.getShortExtra(Symbol.SOURCE_OF_FUND.GetValue(), Short.parseShort("0")));
-
+        firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
         if(service == Service.EXCHANGE_SERVICE_TYPE){
             receiverphone = intent.getStringExtra(Symbol.RECEIVER_PHONE.GetValue());
             receiverFullname = intent.getStringExtra(Symbol.RECEIVER_FULL_NAME.GetValue());
+            note = intent.getStringExtra(Symbol.NOTE.GetValue());
         }
         else if(service == Service.TOPUP_SERVICE_TYPE || service == Service.WITHDRAW_SERVICE_TYPE){
-            try{
-                bankInfo = new BankInfo(intent.getStringExtra(Symbol.BANK_INFO.GetValue()));
-            }catch (JSONException e){
-                Log.w("TAG", "GetValueFromIntent: " + e.getMessage());
-            }
+            bankInfo = gson.fromJson(intent.getStringExtra(Symbol.BANK_INFO.GetValue()), BankInfo.class);
         }
         else if(service == Service.MOBILE_CARD_SERVICE_TYPE){
             phone = intent.getStringExtra(Symbol.PHONE.GetValue());
@@ -114,22 +164,36 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
     void InitializeText(){
         if(service == Service.TOPUP_SERVICE_TYPE){
             tvTopupBankFrom.setText(bankInfo.getCardName());
+            tvCardNo.setText("************"+bankInfo.getL4CardNo());
         }else if(service == Service.WITHDRAW_SERVICE_TYPE){
             tvWithdrawBankName.setText(bankInfo.getCardName());
+            tvCardNo.setText("************"+bankInfo.getL4CardNo());
         }
         else if(service == Service.EXCHANGE_SERVICE_TYPE){
             tvPhone.setText(receiverphone);
             tvFullName.setText(receiverFullname);
+        } else if (service == Service.MOBILE_CARD_SERVICE_TYPE){
+            tvMobileCard.setText(mobileCardOperator.GetMobileCardName());
+            tvAmountText.setText("Mệnh giá");
         }
-        tvAmount.setText(amount + "đ");
+        tvAmount.setText(Utilies.HandleBalanceTextView(amount) + "đ");
         if(fee == 0){
             tvFeeTransaction.setText("Free");
-            tvTotalAmount.setText(amount + "đ");
+            tvTotalAmount.setText(Utilies.HandleBalanceTextView(amount) + "đ");
         }else{
             tvFeeTransaction.setText(fee + "đ");
-            long total = Long.parseLong(amount) + fee;
+            long total= Long.parseLong(amount) + fee;
             tvTotalAmount.setText(total + "đ");
         }
+    }
+
+    public void ShowNumberKeyBoard(){
+        keyboard.setVisibility(View.VISIBLE);
+    }
+
+    public void HideKeyBoard(){
+        keyboard.setVisibility(View.GONE);
+        passwordFieldFragment.DisablePasswordField();
     }
 
     void ShowLayoutByServiceCode(){
@@ -140,7 +204,7 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         } else if(service == Service.WITHDRAW_SERVICE_TYPE){
             ShowWithdrawLayout();
         } else if (service == Service.MOBILE_CARD_SERVICE_TYPE){
-
+            ShowMobileCardLayout();
         }
     }
 
@@ -148,27 +212,32 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
         withdrawView.setVisibility(View.VISIBLE);
         topupView.setVisibility(View.GONE);
         exchangeMoneyLayout.setVisibility(View.GONE);
-        sourceFundLayout.setVisibility(View.GONE);
-        tvBackInDetailTransaction.setVisibility(View.VISIBLE);
-        tvBackInSourceFund.setVisibility(View.GONE);
+        mobileCardLayout.setVisibility(View.GONE);
+        cardNumberLayout.setVisibility(View.VISIBLE);
     }
 
     void ShowTopupLayout(){
         withdrawView.setVisibility(View.GONE);
         topupView.setVisibility(View.VISIBLE);
         exchangeMoneyLayout.setVisibility(View.GONE);
-        sourceFundLayout.setVisibility(View.VISIBLE);
-        tvBackInDetailTransaction.setVisibility(View.GONE);
-        tvBackInSourceFund.setVisibility(View.VISIBLE);
+        mobileCardLayout.setVisibility(View.GONE);
+        cardNumberLayout.setVisibility(View.VISIBLE);
     }
 
     void ShowExchangeMoneyLayout(){
         withdrawView.setVisibility(View.GONE);
         topupView.setVisibility(View.GONE);
         exchangeMoneyLayout.setVisibility(View.VISIBLE);
-        sourceFundLayout.setVisibility(View.GONE);
-        tvBackInDetailTransaction.setVisibility(View.VISIBLE);
-        tvBackInSourceFund.setVisibility(View.GONE);
+        mobileCardLayout.setVisibility(View.GONE);
+        cardNumberLayout.setVisibility(View.GONE);
+    }
+
+    void ShowMobileCardLayout(){
+        exchangeMoneyLayout.setVisibility(View.GONE);
+        withdrawView.setVisibility(View.GONE);
+        topupView.setVisibility(View.GONE);
+        mobileCardLayout.setVisibility(View.VISIBLE);
+        cardNumberLayout.setVisibility(View.GONE);
     }
 
     public void SubmitOrderTransaction(View view){
@@ -181,7 +250,7 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
 
     public void VerifyPin(View view) throws JSONException {
         progressBarManager.ShowProgressBar("Loading");
-        String pin = codePassword.GetCombineText();
+        String pin = passwordFieldFragment.getTextByImage();
 
         if(pin.isEmpty()){
             Toast.makeText(this, "Nhập mã pin", Toast.LENGTH_SHORT).show();
@@ -189,10 +258,12 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
             return;
         }
 
+        HideKeyBoard();
+
         CheckOrder(pin);
     }
 
-    void CheckOrder(String pin) throws JSONException{
+    void CheckOrder(String pin) {
         if (service == Service.TOPUP_SERVICE_TYPE){
             TopupOrder topupOrder = new TopupOrder(userid,pin,amount,fee,source,bankInfo, this);
             topupOrder.StartCreateOrder();
@@ -202,7 +273,7 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
             withdrawOrder.StartCreateOrder();
         }
         else if(service == Service.EXCHANGE_SERVICE_TYPE){
-            ExchangeMoneyOrder exchangeMoneyOrder = new ExchangeMoneyOrder(userid, receiverphone, pin, amount, fee, source, this);
+            ExchangeMoneyOrder exchangeMoneyOrder = new ExchangeMoneyOrder(userid, receiverphone, pin, amount, fee, source, note, this);
             exchangeMoneyOrder.StartCreateOrder();
         }
         else if(service == Service.MOBILE_CARD_SERVICE_TYPE){
@@ -212,22 +283,35 @@ public class SubmitOrderActivity extends AppCompatActivity implements BalanceRes
     }
 
     @Override
-    public void GetBalanceResponse(long balance) {
+    public void response(boolean isSuccess, int code, String transactionId) {
 
-    }
-
-    @Override
-    public void ResponseMobileCard(String cardNumber, String seriNumber) {
-        Log.d("TAG", "ResponseMobileCard: " + cardNumber + " " + seriNumber);
-    }
-
-    @Override
-    public void response(boolean isSuccess, int code, List<String> objectList) {
-        if(isSuccess){
-            Log.d("TAG", "response: " + code + " " + objectList.get(0));
-            if(service == Service.MOBILE_CARD_SERVICE_TYPE){
-                Log.d("TAG", "response: " + code + " " + objectList.get(1) + " " + objectList.get(2));
+        if(isSuccess && code == ErrorCode.SUCCESS.GetValue()){
+            transactionDetail = new TransactionDetailAPI(userid, transactionId, this);
+            transactionDetail.StartRequest();
+        } else {
+            if (code == ErrorCode.USER_PASSWORD_WRONG.GetValue()){
+                progressBarManager.HideProgressBar();
+                Toast.makeText(this, "Sai mật khẩu", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    @Override
+    public void TransactionResponse(String json) {
+        Intent intent = new Intent(SubmitOrderActivity.this, TransactionDetailActivity.class);
+        intent.putExtra(Symbol.STYLE_TRANSACTION_DETAIL.GetValue(), Symbol.RESULT.GetValue());
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.PIN.GetValue(), passwordFieldFragment.getTextByImage());
+        intent.putExtra(Symbol.TRANSACTION_DETAIL.GetValue(), json);
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestCode.SUBMIT_ORDER){
+            setResult(resultCode);
+            finish();
         }
     }
 }

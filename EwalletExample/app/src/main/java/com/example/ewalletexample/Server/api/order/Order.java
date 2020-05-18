@@ -27,9 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class Order implements VerifyResponse , ResponseModelByKey<StatisMonthTransaction> {
-    protected List<String> listResponseObjects;
     private FirebaseDatabaseHandler<StatisMonthTransaction> firebaseDatabaseHandler;
-    protected String userid, amount, pin;
+    protected String userid, amount, pin, transactionId;
     protected long orderid, fee;
     protected Service service;
     protected SourceFund sourceFund;
@@ -46,7 +45,6 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
         verifyPinAPI = new VerifyPinAPI(userid, pin, this);
         this.orderResponse = orderResponse;
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-        listResponseObjects = new ArrayList<>();
     }
 
     public void StartCreateOrder(){
@@ -123,7 +121,7 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
                 firebaseDatabaseHandler.PushDataIntoDatabase(Symbol.CHILD_NAME_TRANSACTION.GetValue(), userid, transaction);
             }
 
-            orderResponse.response(true, ErrorCode.SUCCESS.GetValue(), listResponseObjects);
+            orderResponse.response(true, ErrorCode.SUCCESS.GetValue(), transactionId);
 
         } catch (ParseException e) {
             Log.d("TAG", "GetModel: " + e.getMessage());
@@ -174,6 +172,7 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
+            transactionId = jsonData.getString("transactionId");
             SubmitOrderSuccess();
         }
 
@@ -203,7 +202,6 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            listResponseObjects.add(String.valueOf(orderid));
             GetDataFromJsonFromStatusOrder(jsonData);
             UpdateTransactionInFirebase();
         }

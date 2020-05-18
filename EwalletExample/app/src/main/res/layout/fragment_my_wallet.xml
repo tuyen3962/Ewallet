@@ -3,282 +3,320 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MyWalletFragement">
+    android:background="@color/SoftGrey"
+    tools:context=".ui.mywallet.MyWalletFragement">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:id="@+id/layoutUserAccount"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:orientation="horizontal">
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/imgAccount"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_action_person"
-                app:civ_border_width="2dp"
-                android:padding="10dp"
-                android:layout_weight="3"/>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_marginRight="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_weight="10">
-
-                <TextView
-                    android:id="@+id/tvFullName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:layout_weight="2"
-                    android:text="Full name" />
-
-                <TextView
-                    android:id="@+id/tvPhone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Phone number" />
-
-                <TextView
-                    android:id="@+id/tvEmail"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Email" />
-            </LinearLayout>
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_action_arrow_right" />
-
-        </LinearLayout>
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:background="@color/Grey"/>
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/layoutUserAccount"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="90dp"
+                android:background="@color/colorAccent"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btnVisibilyBalance"
+                <de.hdodenhof.circleimageview.CircleImageView
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/imgAccount"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
-                    android:layout_weight="1"
-                    android:background="@color/White"
-                    android:gravity="center_vertical"
-                    android:drawableStart="@drawable/ic_action_visibility"
-                    android:text="Số dư trong ví">
-                </Button>
-
-                <TextView
-                    android:id="@+id/tvBalance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical|end"
-                    android:layout_marginRight="5dp"
-                    android:background="@color/White"
-                    android:text="TextView" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/layoutBankAccount"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:padding="8dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:src="@drawable/credit_card" />
+                    android:src="@drawable/ic_action_person"
+                    app:civ_border_width="2dp"
+                    app:civ_border_color="@color/White"
+                    app:civ_circle_background_color="@color/White"
+                    android:padding="10dp"
+                    android:layout_weight="3"/>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
+                    android:orientation="vertical"
                     android:layout_marginRight="10dp"
-                    android:layout_weight="10"
-                    android:orientation="vertical">
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="10">
 
                     <TextView
-                        android:id="@+id/tvTitle"
+                        android:id="@+id/tvFullName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="5dp"
-                        android:layout_weight="1"
-                        android:text="Quản lý thẻ" />
+                        android:gravity="center_vertical"
+                        android:textSize="18dp"
+                        android:layout_weight="2"
+                        android:textColor="@color/White"
+                        android:text="Full name" />
 
                     <TextView
-                        android:id="@+id/tvNumCard"
+                        android:id="@+id/tvPhone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Số thẻ đã liên kết" />
+                        android:textSize="13dp"
+                        android:textColor="@color/White"
+                        android:text="Phone number" />
                 </LinearLayout>
 
                 <ImageView
-                    android:layout_width="40dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:src="@drawable/ic_action_arrow_right" />
 
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/layoutHistoryTransaction"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:orientation="horizontal"
-                android:weightSum="10">
+                android:layout_height="160dp"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginVertical="12dp"
+                android:background="@drawable/background_main_service"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/layoutHistoryTransaction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/card"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:textSize="16dp"
+                        android:text="Lịch sử giao dịch"
+                        android:textColor="@color/Black"
+                        android:layout_marginHorizontal="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:drawableEnd="@drawable/ic_action_arrow_right"
+                        android:src="@drawable/ic_action_arrow_right"/>
+
+                </LinearLayout>
 
                 <ImageView
-                    android:padding="8dp"
-                    android:layout_width="20dp"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/history"
-                    android:layout_weight="1"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="3dp"
+                    android:background="@color/SoftGrey"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/card"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:textSize="16dp"
+                        android:text="Hóa đơn của bạn"
+                        android:textColor="@color/Black"
+                        android:layout_marginHorizontal="10dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="end|center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/frame_background"
+                            android:text="12"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="2dp"
+                            android:layout_marginRight="8dp"/>
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/ic_action_arrow_right"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="3dp"
+                    android:background="@color/SoftGrey"/>
+
+                <LinearLayout
+                    android:id="@+id/layoutBankAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_weight="1"
                     android:layout_marginBottom="5dp"
-                    android:layout_marginLeft="5dp"
-                    android:gravity="left|center_vertical"
-                    android:text="Lịch sử giao dịch"
-                    android:layout_weight="9"/>
+                    android:orientation="horizontal">
 
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/card"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:textSize="16dp"
+                        android:text="Quản lý ngân hàng liên kết"
+                        android:textColor="@color/Black"
+                        android:layout_marginHorizontal="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:drawableEnd="@drawable/ic_action_arrow_right"
+                        android:src="@drawable/ic_action_arrow_right"/>
+
+                </LinearLayout>
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:orientation="horizontal"
-                android:weightSum="10">
+                android:layout_height="160dp"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginVertical="12dp"
+                android:background="@drawable/background_main_service"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/card"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:textSize="16dp"
+                        android:text="Bảo mật tài khoản"
+                        android:textColor="@color/Black"
+                        android:layout_marginHorizontal="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:drawableEnd="@drawable/ic_action_arrow_right"
+                        android:src="@drawable/ic_action_arrow_right"/>
+
+                </LinearLayout>
 
                 <ImageView
-                    android:padding="8dp"
-                    android:layout_width="20dp"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/transfer"
-                    android:layout_weight="1"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="3dp"
+                    android:background="@color/SoftGrey"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/card"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:textSize="16dp"
+                        android:text="Trợ giúp"
+                        android:textColor="@color/Black"
+                        android:layout_marginHorizontal="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:drawableEnd="@drawable/ic_action_arrow_right"
+                        android:src="@drawable/ic_action_arrow_right"/>
+
+
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="3dp"
+                    android:background="@color/SoftGrey"/>
+
+                <LinearLayout
+                    android:id="@+id/layoutSetting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_weight="1"
                     android:layout_marginBottom="5dp"
-                    android:layout_marginLeft="5dp"
-                    android:gravity="left|center_vertical"
-                    android:text="Hóa đơn"
-                    android:layout_weight="9"/>
+                    android:orientation="horizontal">
 
+                    <ImageView
+                        android:layout_width="45dp"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/card"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:textSize="16dp"
+                        android:text="Cài đặt"
+                        android:textColor="@color/Black"
+                        android:layout_marginHorizontal="10dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:drawableEnd="@drawable/ic_action_arrow_right"
+                        android:src="@drawable/ic_action_arrow_right"/>
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:background="@color/Grey"/>
-
-        <LinearLayout
-            android:id="@+id/layoutHelp"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:src="@drawable/ic_action_help" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="10dp"
-                android:layout_weight="8">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="5dp"
-                    android:textSize="20dp"
-                    android:gravity="center_vertical"
-                    android:text="Trợ giúp" />
-            </LinearLayout>
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_action_arrow_right" />
-
-        </LinearLayout>
-
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:background="@color/Grey"/>
-
-        <LinearLayout
-            android:id="@+id/layoutSetting"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:src="@drawable/ic_action_setting" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="10dp"
-                android:layout_weight="8">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="5dp"
-                    android:textSize="20dp"
-                    android:gravity="center_vertical"
-                    android:text="Cài đặt" />
-            </LinearLayout>
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_action_arrow_right" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+    </ScrollView>
 
 </FrameLayout>

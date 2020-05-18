@@ -72,7 +72,6 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void Initialize(){
         frontPhotoUri = null;
         backPhotoUri = null;
-        gson = new Gson();
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         tvFullName = findViewById(R.id.tvFullName);
         tvBack = findViewById(R.id.tvBack);
@@ -92,6 +91,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     void GetValueFromIntent(){
+        gson = new Gson();
         user = new User();
         Intent intent = getIntent();
         update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
@@ -311,7 +311,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     void SwitchToMain(){
-        Intent intent = new Intent(VerifyAccountActivity.this, MainActivity.class);
+        Intent intent = new Intent(VerifyAccountActivity.this, MainLayoutActivity.class);
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         startActivity(intent);
     }

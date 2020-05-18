@@ -36,23 +36,16 @@ public class AddUserAutomatic extends AppCompatActivity {
         btnAdd = findViewById(R.id.btnAdd);
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
         btnAdd = findViewById(R.id.btnAdd);
+
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                firebaseDatabaseHandler.RegisterDataListener();
-                try {
-                    CreateUser();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                Add(v);
             }
         });
-
     }
 
-    public void CreateUser() throws IOException, JSONException {
+    public void Add(View view) {
         new Test().execute();
     }
 

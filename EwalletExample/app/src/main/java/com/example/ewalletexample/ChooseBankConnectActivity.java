@@ -25,22 +25,26 @@ import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.AnimationManager;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.service.UserSelectFunction;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
+import com.example.ewalletexample.service.recycleview.bank.ListBankSupportRecycleView;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel> {
+public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, UserSelectFunction<BankSupport> {
     ProgressBarManager progressBarManager;
     FirebaseDatabaseHandler firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
@@ -50,7 +54,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
     LinearLayout listBankLayout, layoutBankAccountDetail;
 
-    EditText etFullNameCard, etCMNDCard, etCardNo0, etCardNo1, etCardNo2, etCardNo3;
+    EditText etFullNameCard, etCardNo0, etCardNo1, etCardNo2, etCardNo3;
     CodeEditText codeEditText;
     TextView tvBack;
 
@@ -58,10 +62,10 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
     BankSupport[] bankSupportList;
     BankSupport chosenBankConnect;
-    String userid;
+    String userid, cmnd;
     UserModel model;
     long amount;
-
+    Gson gson;
     boolean isShowing;
 
     @Override
@@ -72,8 +76,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         Initialize();
         GetValueFromIntent();
 
-//        new GetSupportBank().execute(ServerAPI.GET_LIST_BANK_SUPPORT.GetUrl(), "{}");
-
         tvBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -83,6 +85,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     }
 
     void Initialize(){
+        gson = new Gson();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler(FirebaseDatabase.getInstance().getReference());
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         animationManager = new AnimationManager(this);
@@ -93,14 +96,13 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
         rvBankSupportLayout = findViewById(R.id.rvListBankSupportLayout);
         bankSupportList = BankSupport.values();
-        listBankSupportRecycleView = new ListBankSupportRecycleView(this, bankSupportList);
+        listBankSupportRecycleView = new ListBankSupportRecycleView(this, firebaseStorageHandler, this, bankSupportList);
         rvBankSupportLayout.setHasFixedSize(true);
         rvBankSupportLayout.setLayoutManager(new GridLayoutManager(this, 3));
         rvBankSupportLayout.setAdapter(listBankSupportRecycleView);
 
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnLinkAccount));
 
-        etCMNDCard = findViewById(R.id.etCMNDCard);
         etFullNameCard = findViewById(R.id.etFullNameBank);
         tvBack = findViewById(R.id.tvBack);
 
@@ -117,8 +119,18 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         amount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
-
+        cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
+    }
+
+    @Override
+    public void SelectModel(BankSupport model) {
+        if(!isShowing){
+            isShowing = true;
+            animationManager.ShowAnimationView(layoutBankAccountDetail);
+            HideGridView();
+            chosenBankConnect = model;
+        }
     }
 
     private void HideGridView(){
@@ -127,7 +139,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
     public void ShowGridView(View view){
         rvBankSupportLayout.setEnabled(true);
-        listBankLayout.setBackground(null);
         animationManager.HideAnimationView(layoutBankAccountDetail);
         isShowing = false;
         chosenBankConnect = null;
@@ -136,12 +147,10 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     public void CreateLinkAccountWithBank(View view){
         String cardNo = codeEditText.GetCombineText();
         String fullname = etFullNameCard.getText().toString();
-        String cmnd = etCMNDCard.getText().toString();
 
-        if(cardNo.isEmpty() || fullname.isEmpty() || cmnd.isEmpty()){
+        if(cardNo.isEmpty() || fullname.isEmpty()){
             return;
         }
-        Log.d("TAG", "CreateLinkAccountWithBank: " + chosenBankConnect.getBankCode() + " " + cardNo + " " + fullname + " " + cmnd);
         SendRequestForLinkingBank(cardNo, fullname, cmnd);
     }
 
@@ -169,117 +178,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         this.model = data;
     }
 
-    private class ListBankSupportRecycleView extends RecyclerView.Adapter<ListBankSupportRecycleView.BankSupportViewHolder>{
-
-        private Context context;
-        private LayoutInflater inflater;
-        private BankSupport[] bankSupportList;
-
-        public ListBankSupportRecycleView(Context context, BankSupport[] supportList){
-            this.context = context;
-            inflater = LayoutInflater.from(context);
-            bankSupportList = supportList;
-        }
-
-        class BankSupportViewHolder extends RecyclerView.ViewHolder{
-            View view;
-            ImageView bankImg;
-            TextView tvBankName;
-            GradientDrawable gradientDrawable;
-
-            public BankSupportViewHolder(View view){
-                super(view);
-                this.view = view.findViewById(R.id.bankSupportLayout);
-                gradientDrawable = (GradientDrawable) view.getBackground();
-                bankImg = view.findViewById(R.id.imgBank);
-                tvBankName = view.findViewById(R.id.tvBankName);
-
-                gradientDrawable.setShape(GradientDrawable.OVAL);
-                gradientDrawable.setStroke(2, Color.GRAY);
-            }
-
-            public void SetBankText(String text){
-                tvBankName.setText(text);
-            }
-
-            public void LoadImageFromFirebase(FirebaseStorageHandler firebaseStorageHandler, String imageLink){
-                firebaseStorageHandler.LoadAccountImageFromLink(imageLink, bankImg);
-            }
-
-            public void SetClickEvent(final BankSupport bankSupport){
-                view.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(!isShowing){
-                            isShowing = true;
-                            animationManager.ShowAnimationView(layoutBankAccountDetail);
-                            HideGridView();
-                            chosenBankConnect = bankSupport;
-                        }
-                    }
-                });
-            }
-        }
-
-        @NonNull
-        @Override
-        public BankSupportViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = inflater.inflate(R.layout.bank_support_item, parent, false);
-            BankSupportViewHolder holder = new BankSupportViewHolder(view);
-
-            return holder;
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull BankSupportViewHolder holder, int position) {
-            BankSupport support = bankSupportList[position];
-            holder.SetBankText(support.getBankName());
-            holder.LoadImageFromFirebase(firebaseStorageHandler, support.getBankLinkImage());
-            holder.SetClickEvent(support);
-        }
-
-        @Override
-        public int getItemCount() {
-            return bankSupportList.length;
-        }
-    }
-
-//    class GetSupportBank extends RequestServerAPI implements RequestServerFunction{
-//        public GetSupportBank(){
-//            SetRequestServerFunction(this);
-//        }
-//
-//        @Override
-//        public boolean CheckReturnCode(int code) {
-//            if(code == ErrorCode.SUCCESS.GetValue()){
-//                return true;
-//            }
-//
-//            return false;
-//        }
-//
-//        @Override
-//        public void DataHandle(JSONObject jsonData) throws JSONException {
-//            bankSupportList = new ArrayList<>();
-//
-//            JSONArray mBankSupportArray = jsonData.getJSONArray("banks");
-//            for(int i = 0; i < mBankSupportArray.length(); i++){
-//                JSONObject mBankSupport = mBankSupportArray.getJSONObject(i);
-//                String bankCode = mBankSupport.getString("bankcode");
-//                String bankName = mBankSupport.getString("bankname");
-//                String bankImage = mBankSupport.getString("bankimage");
-//                bankSupportList.add(new BankSupport(bankCode, bankName, bankImage));
-//            }
-//
-//            AddIntoBankSupportGridView();
-//        }
-//
-//        @Override
-//        public void ShowError(int errorCode, String message) {
-//
-//        }
-//    }
-
     class LinkAccountWithBank extends RequestServerAPI implements RequestServerFunction{
         public LinkAccountWithBank(){
             SetRequestServerFunction(this);
@@ -296,12 +194,23 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
-            JSONObject bankInfoObject = jsonData.getJSONObject("bankInfo");
+            int bankReturnCode = jsonData.getInt("bankreturncode");
 
-            Intent intent = getIntent();
-            intent.putExtra(Symbol.BANK_INFO.GetValue(), bankInfoObject.toString());
-            setResult(RESULT_OK, intent);
-            finish();
+            if (bankReturnCode == 1){
+                BankInfo bankInfo = new BankInfo();
+                bankInfo.setBankCode(chosenBankConnect.getBankCode());
+                bankInfo.setCardName(chosenBankConnect.getBankName());
+                String cardNo = codeEditText.GetCombineText();
+                bankInfo.setF6CardNo(cardNo.substring(0, 6));
+                bankInfo.setL4CardNo(cardNo.substring(12));
+                Intent intent = new Intent();
+                intent.putExtra(Symbol.BANK_INFO_CONNECTION.GetValue(), Symbol.CONNECT_BANK.GetValue());
+                intent.putExtra(Symbol.BANK_INFO.GetValue(), gson.toJson(bankInfo));
+                setResult(RESULT_OK, intent);
+                finish();
+            } else {
+
+            }
         }
 
         @Override

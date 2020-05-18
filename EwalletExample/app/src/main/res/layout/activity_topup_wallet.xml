@@ -11,6 +11,10 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <include
+            layout="@layout/custom_action_bar"
+            android:id="@+id/toolbarLayout"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -23,15 +27,6 @@
                 android:textSize="30dp"
                 android:text="Số tiền"
                 android:layout_weight="1"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Trở về"
-                android:textSize="20dp"
-                android:drawableRight="@drawable/ic_action_home"
-                android:gravity="center"
-                android:onClick="BackToMain"/>
 
         </LinearLayout>
         <LinearLayout
