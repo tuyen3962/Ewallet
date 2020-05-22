@@ -123,7 +123,7 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
             intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
             intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
             intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), model.GetCode());
-            startActivity(intent);
+            startActivityForResult(intent, model.GetRequestCode());
         }
         else {
             mainActivity.ShowSecurityLayout();

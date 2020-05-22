@@ -25,6 +25,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
 import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
@@ -42,6 +43,8 @@ import java.io.IOException;
 public class VerifyAccountActivity extends AppCompatActivity implements ResponseMethod, UpdateUserResponse {
     private final static int TAKE_PHOTO_FRONT_SIDE_REQUEST = 100;
     private final static int TAKE_PHOTO_BACK_SIDE_REQUEST = 101;
+    private final static int CHOOSE_PICTURE_FRONT_SIDE_REQUEST = 102;
+    private final static int CHOOSE_PICTURE_BACK_SIDE_REQUEST = 102;
 
     FirebaseStorageHandler firebaseStorageHandler;
     ProgressBarManager progressBarManager;
@@ -87,6 +90,8 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
             tvBack.setText("Skip");
             tvFullName.setCompoundDrawables(null,null,null,null);
+        } else {
+            tvBack.setVisibility(View.GONE);
         }
     }
 
@@ -109,7 +114,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void FillUserProfile(){
         tvFullName.setText(user.getFullName());
         if(!user.getCmnd().isEmpty()){
-            etCMND.setHint("******" + user.getCmnd().substring(6));
+            etCMND.setHint("********" + user.getCmnd().substring(8));
         }
         LoadImage();
         if (user.getStatus() == 1){
@@ -135,28 +140,6 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
 
             BlurImage backImage = new BlurImage(firebaseStorageHandler, this, findViewById(R.id.frontImage),
                     images[1], imgBackIdentifierCard);
-        }
-    }
-
-    void CheckAndRequestPermissionForTakingPhoto(){
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, TAKE_PHOTO_FRONT_SIDE_REQUEST);
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == TAKE_PHOTO_FRONT_SIDE_REQUEST) {
-            if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED
-                    && grantResults[1] != PackageManager.PERMISSION_GRANTED) {
-                if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
-                        !shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
-                }
-            }
         }
     }
 
@@ -189,6 +172,16 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         }
     }
 
+    public void ChooseFrontPicture(View view){
+        CheckAndRequestPermissionForPickingPhoto();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+
+        if (intent.resolveActivity(getPackageManager()) != null){
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), CHOOSE_PICTURE_FRONT_SIDE_REQUEST);
+        }
+    }
+
     public void TakeBackPhoto(View view){
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         CheckAndRequestPermissionForTakingPhoto();
@@ -215,6 +208,16 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
                 intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(intent, TAKE_PHOTO_BACK_SIDE_REQUEST);
             }
+        }
+    }
+
+    public void ChooseBackPicture(View view){
+        CheckAndRequestPermissionForPickingPhoto();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+
+        if (intent.resolveActivity(getPackageManager()) != null){
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), CHOOSE_PICTURE_BACK_SIDE_REQUEST);
         }
     }
 
@@ -247,6 +250,10 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else if(requestCode == CHOOSE_PICTURE_FRONT_SIDE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null){
+            frontPhotoUri = data.getData();
+        } else if(requestCode == CHOOSE_PICTURE_BACK_SIDE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            backPhotoUri = data.getData();
         }
     }
 
@@ -340,4 +347,39 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             Utilies.SetImageDrawable(context, imgView, R.drawable.frame_background);
         }
     }
+
+    void CheckAndRequestPermissionForTakingPhoto(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, TAKE_PHOTO_FRONT_SIDE_REQUEST);
+        }
+    }
+
+    void CheckAndRequestPermissionForPickingPhoto(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ){
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, RequestCode.PICK_IMAGE_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == RequestCode.TAKE_PHOTO_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] != PackageManager.PERMISSION_GRANTED) {
+                if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
+                        !shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+                }
+            }
+        }
+        else if(requestCode == RequestCode.PICK_IMAGE_REQUEST){
+            if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                if(!shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)){
+                }
+            }
+        }
+    }
+
 }

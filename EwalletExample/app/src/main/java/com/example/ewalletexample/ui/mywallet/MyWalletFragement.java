@@ -14,8 +14,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.ewalletexample.HistoryTransactionActivity;
@@ -26,14 +24,14 @@ import com.example.ewalletexample.R;
 import com.example.ewalletexample.SettingActivity;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.VerifyAccountActivity;
 import com.example.ewalletexample.data.User;
-import com.example.ewalletexample.service.BalanceVisible;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 
 public class MyWalletFragement extends Fragment implements View.OnClickListener{
     MyWalletViewModel myWalletViewModel;
     CircleImageView imgAccount;
-    LinearLayout layoutUserAccount, layoutSetting, layoutBankAccount, layoutHistoryTransaction;
+    View layoutUserAccount, layoutSetting, layoutBankAccount, layoutHistoryTransaction, layoutSecurityAccount;
     TextView tvFullName, tvPhone, tvNumCardConnected;
     SharedPreferenceLocal local;
 
@@ -63,6 +61,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         layoutUserAccount.setOnClickListener(this);
         layoutBankAccount.setOnClickListener(this);
         layoutHistoryTransaction.setOnClickListener(this);
+        layoutSecurityAccount.setOnClickListener(this);
 
 
         return view;
@@ -78,6 +77,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         tvNumCardConnected = view.findViewById(R.id.tvNumCard);
         tvPhone = view.findViewById(R.id.tvPhone);
         layoutHistoryTransaction = view.findViewById(R.id.layoutHistoryTransaction);
+        layoutSecurityAccount = view.findViewById(R.id.layoutSecurityAccount);
     }
 
     void SetupUI(){
@@ -103,6 +103,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             ShowTransactionHistory();
         } else if(v.getId() == layoutSetting.getId()){
             ShowLayoutSetting();
+        } else if(v.getId() == layoutSecurityAccount.getId()){
+            SecurityAccount();
         }
     }
 
@@ -126,6 +128,18 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         startActivityForResult(intent, RequestCode.MODIFY_INFORMATION);
     }
 
+    public void SecurityAccount(){
+        User user = mainActivity.GetUserInformation();
+        Intent intent = new Intent(mainActivity, VerifyAccountActivity.class);
+        intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+        intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
+        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+        intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
+        intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
+        startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -145,6 +159,13 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
                 intent.putExtra(Symbol.FULLNAME.GetValue(), local.GetValueStringByKey(Symbol.KEY_FULL_NAME.GetValue()));
                 intent.putExtra(Symbol.PHONE.GetValue(), local.GetValueStringByKey(Symbol.KEY_PHONE.GetValue()));
                 startActivity(intent);
+            }
+        } else if (requestCode == RequestCode.VERIFY_ACCOUNT_CODE){
+            if (resultCode == ((Activity)mainActivity).RESULT_OK){
+                String cmndFrontImage = data.getStringExtra(Symbol.IMAGE_CMND_FRONT.GetValue());
+                String cmndBackImage = data.getStringExtra(Symbol.IMAGE_CMND_BACK.GetValue());
+                String cmnd = data.getStringExtra(Symbol.CMND.GetValue());
+                mainActivity.SetUserSecurityInfo(cmnd, cmndFrontImage, cmndBackImage);
             }
         }
     }

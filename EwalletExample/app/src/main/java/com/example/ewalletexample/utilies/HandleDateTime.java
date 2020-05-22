@@ -19,7 +19,7 @@ public class HandleDateTime {
         return System.currentTimeMillis();
     }
 
-    private static String GetStringCurrentDay(){
+    public static String GetStringCurrentDay(){
         Date date = new Date(GetCurrentTimeMillis());
         return dayFormatter.format(date);
     }
@@ -40,6 +40,19 @@ public class HandleDateTime {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public static String DecreaseOneSecondByDate(String day) throws ParseException {
+        Date date = dayTimeFormatter.parse(day);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.SECOND, -1);
+        return String.valueOf(calendar.getTime().getTime());
+    }
+
+    public static String FormatStringMillisecondIntoDate(String millisecond){
+        long time = Long.valueOf(millisecond);
+        return dayTimeFormatter.format(time);
     }
 
     public static String GetCurrentStringLastDayOfMonth() throws ParseException {

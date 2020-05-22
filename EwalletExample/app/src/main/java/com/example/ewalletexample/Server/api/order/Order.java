@@ -34,6 +34,7 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
     protected SourceFund sourceFund;
     protected VerifyPinAPI verifyPinAPI;
     protected OrderResponse orderResponse;
+    protected long balance;
 
     protected Order(String userid, String pin, String amount, long fee, SourceFund sourceFund, Service service, OrderResponse orderResponse) {
         this.userid = userid;
@@ -61,7 +62,7 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
             }
 
         } else {
-            orderResponse.response(false, ErrorCode.USER_PASSWORD_WRONG.GetValue(), null);
+            orderResponse.response(false, ErrorCode.USER_PASSWORD_WRONG.GetValue(), null, 0);
         }
     }
 
@@ -121,7 +122,7 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
                 firebaseDatabaseHandler.PushDataIntoDatabase(Symbol.CHILD_NAME_TRANSACTION.GetValue(), userid, transaction);
             }
 
-            orderResponse.response(true, ErrorCode.SUCCESS.GetValue(), transactionId);
+            orderResponse.response(true, ErrorCode.SUCCESS.GetValue(), transactionId, balance);
 
         } catch (ParseException e) {
             Log.d("TAG", "GetModel: " + e.getMessage());
@@ -140,7 +141,7 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
             if(code == ErrorCode.SUCCESS.GetValue()){
                 return true;
             }
-            orderResponse.response(false, code, null);
+            orderResponse.response(false, code, null, 0);
             return false;
         }
 
@@ -166,13 +167,14 @@ public abstract class Order implements VerifyResponse , ResponseModelByKey<Stati
             if(code == ErrorCode.SUCCESS.GetValue()){
                 return true;
             }
-            orderResponse.response(false, code, null);
+            orderResponse.response(false, code, null, 0);
             return false;
         }
 
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             transactionId = jsonData.getString("transactionId");
+            balance = jsonData.getLong("balance");
             SubmitOrderSuccess();
         }
 

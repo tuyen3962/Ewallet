@@ -12,30 +12,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum Service {
-    SCAN_CODE_QR(-3, "Quét mã", R.drawable.id_card, false, ShowQrcodeActivity.class),
-    WATCH_CODE_QR(-3,"Mã QR", R.drawable.id_card, false, ShowQrcodeActivity.class),
-    WALLET_TYPE(-2,"Ví tiền", R.drawable.id_card, false, UserBankCardActivity.class),
+    SCAN_CODE_QR(-3, "Quét mã", R.drawable.ic_scan_qr, false, ShowQrcodeActivity.class, RequestCode.SCANE_QR_CODE),
+    WATCH_CODE_QR(-3,"Mã QR", R.drawable.ic_qr, false, ShowQrcodeActivity.class, RequestCode.QR_CODE),
+    WALLET_TYPE(-2,"Ví tiền", R.drawable.id_card, false, UserBankCardActivity.class, RequestCode.WALLET_CODE),
 
-    WITHDRAW_SERVICE_TYPE(1,"Rút tiền", R.drawable.withdraw,false, ServiceWalletActivity.class),
-    TOPUP_SERVICE_TYPE(2, "Nạp tiền", R.drawable.icon_top_up ,true, ServiceWalletActivity.class),
-    EXCHANGE_SERVICE_TYPE(3,"Chuyển tiền", R.drawable.exchange,false, SearchUserExchangeActivity.class),
-    MOBILE_CARD_SERVICE_TYPE(4,"Mua thẻ", R.drawable.mobile_card , false, SelectMobileCardFunctionActivity.class),
-    LINK_CARD(5, "linkCard",R.drawable.transfer, false,ChooseBankConnectActivity.class),
-    UN_LINK_CARD(6, "unLinkCard",R.drawable.mobile_card, false,ChooseBankConnectActivity.class),
-    VERIFY_USER(7, "verifyUser",R.drawable.mobile_card, false,ChooseBankConnectActivity.class);
+    WITHDRAW_SERVICE_TYPE(1,"Rút tiền", R.drawable.ic_withdraw,false, ServiceWalletActivity.class, RequestCode.SUBMIT_ORDER),
+    TOPUP_SERVICE_TYPE(2, "Nạp tiền", R.drawable.ic_top_up ,true, ServiceWalletActivity.class, RequestCode.SUBMIT_ORDER),
+    EXCHANGE_SERVICE_TYPE(3,"Chuyển tiền", R.drawable.ic_transfer_money,false, SearchUserExchangeActivity.class, RequestCode.SUBMIT_ORDER),
+    MOBILE_CARD_SERVICE_TYPE(4,"Mua thẻ", R.drawable.ic_mobile_card , false, SelectMobileCardFunctionActivity.class, RequestCode.SUBMIT_ORDER),
+    LINK_CARD(5, "Liên kết thẻ",R.drawable.ic_link, false,ChooseBankConnectActivity.class, RequestCode.CONNECT_BANK_CODE),
+    UN_LINK_CARD(6, "Hủy liên kết thẻ",R.drawable.ic_unlink, false,ChooseBankConnectActivity.class, RequestCode.UNLINK_BANK_CODE),
+    VERIFY_USER(7, "Bảo mật tài khoản",R.drawable.mobile_card, false,ChooseBankConnectActivity.class, RequestCode.SECURITY_CODE);
 
     private int numberCode;
     private String nameCode;
     private int imgId;
     private boolean positive;
     private Class transitionClass;
+    private int code;
 
-    Service(int numberCode, String nameCode, int imgId, boolean positive, Class transitionClass){
+    Service(int numberCode, String nameCode, int imgId, boolean positive, Class transitionClass, int code){
         this.numberCode = numberCode;
         this.nameCode = nameCode;
         this.imgId = imgId;
         this.positive = positive;
         this.transitionClass = transitionClass;
+        this.code = code;
     }
 
     public int GetCode(){
@@ -56,6 +58,10 @@ public enum Service {
 
     public Class GetClassTransition(){
         return transitionClass;
+    }
+
+    public int GetRequestCode(){
+        return this.code;
     }
 
     public static List<Service> GetList(){

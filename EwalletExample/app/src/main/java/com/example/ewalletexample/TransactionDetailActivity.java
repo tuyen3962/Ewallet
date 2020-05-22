@@ -5,6 +5,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -21,12 +22,15 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.TransactionHistory;
 import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.utilies.HandleDateTime;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
-public class TransactionDetailActivity extends AppCompatActivity {
+public class TransactionDetailActivity extends AppCompatActivity implements ToolbarEvent {
 
     FirebaseStorageHandler storageHandler;
     MaterialTextView tvService, tvAmount, tvStatusTransaction, tvSourceFund, tvFeeTransaction,
@@ -36,11 +40,9 @@ public class TransactionDetailActivity extends AppCompatActivity {
     ImageView imgCard;
     String transaction_detail;
     View mobileCardLayout, exchanegMoneyLayout, supportInformationLayout, bankCardLayout;
-    TextView tvTitle;
     Button btnMainActivity, btnServiceAgain;
-    ImageButton btnBack;
-    Toolbar toolbar;
     TransactionHistory transactionHistory;
+    CustomToolbarContext customToolbarContext;
     Gson gson;
     Service service;
     SourceFund sourceFund;
@@ -83,15 +85,11 @@ public class TransactionDetailActivity extends AppCompatActivity {
         tvMobileCardAmount = findViewById(R.id.tvMobileCardAmount);
         tvMobileCardOperator = findViewById(R.id.tvMobileCardOperator);
         imgCard = findViewById(R.id.imgMobileCard);
-        toolbar = findViewById(R.id.toolbarLayout);
         tvBuyOneMoreCard = findViewById(R.id.tvBuyOneMoreCard);
         btnMainActivity = findViewById(R.id.btnMainActivity);
-        setSupportActionBar(toolbar);
-        tvTitle = findViewById(R.id.tvToolbarTitle);
-        btnBack = findViewById(R.id.btnBackToPreviousActivity);
         btnServiceAgain = findViewById(R.id.btnServiceAgain);
-
-        tvTitle.setText("Chi tiết giao dịch");
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
+        customToolbarContext.SetTitle("Chi tiết giao dịch");
     }
 
     void GetValueFromIntent(){
@@ -114,23 +112,14 @@ public class TransactionDetailActivity extends AppCompatActivity {
         } else if (service == Service.MOBILE_CARD_SERVICE_TYPE){
             ShowServiceMobileCardLayout();
         }
-
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (transaction_detail.equalsIgnoreCase(Symbol.RESULT.GetValue())){
-                    BankToMain(v);
-                }
-            }
-        });
     }
 
     void FillTransactionDetail(){
-        tvService.setText(Service.EXCHANGE_SERVICE_TYPE.GetName());
+        tvService.setText(service.GetName());
         tvSourceFund.setText(sourceFund.GetName());
         tvFeeTransaction.setText("Miễn phí");
         tvTransactionId.setText(transactionHistory.getTransactionid() + "");
-        tvChargeTime.setText(transactionHistory.getTimemilliseconds());
+        tvChargeTime.setText(HandleDateTime.FormatStringMillisecondIntoDate(transactionHistory.getTimemilliseconds()));
 
         if (transactionHistory.getStatus() == ErrorCode.SUCCESS.GetValue()){
             tvStatusTransaction.setText("Giao dịch thành công");
@@ -145,8 +134,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
 //        } else {
 //            tvFeeTransaction.setText(Utilies.HandleBalanceTextView(String.valueOf(fee)) + " đ");
 //        }
-
-        tvAmount.setText(Utilies.HandleBalanceTextView(String.valueOf(transactionHistory.getAmount()) +" đ"));
+        Log.d("TAG", "FillTransactionDetail: " + transactionHistory.getAmount());
+        tvAmount.setText(Utilies.HandleBalanceTextView(String.valueOf(transactionHistory.getAmount())) +" đ");
     }
 
     void ShowServiceMobileCardLayout(){
@@ -203,7 +192,8 @@ public class TransactionDetailActivity extends AppCompatActivity {
         finish();
     }
 
-    public void BankToMain(View view){
+    @Override
+    public void BackToPreviousActivity() {
         setResult(RESULT_OK);
         finish();
     }

@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -170,5 +171,11 @@ public class Utilies {
 
     public static String ConvertByteToString(byte[] bytes){
         return new String(bytes);
+    }
+
+    public static void SetEneableButton(Button button, boolean isEnable){
+        if (button.isEnabled() == !isEnable){
+            button.setEnabled(isEnable);
+        }
     }
 }

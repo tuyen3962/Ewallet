@@ -13,7 +13,7 @@
             android:id="@+id/btnBackToPreviousActivity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_action_navigation_arrow_back_inverted"
+            android:src="@drawable/image_back_button_toolbar"
             android:background="@color/transparent"/>
 
         <com.google.android.material.textview.MaterialTextView

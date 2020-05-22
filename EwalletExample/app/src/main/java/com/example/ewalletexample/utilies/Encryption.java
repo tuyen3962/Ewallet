@@ -30,6 +30,8 @@ import androidx.annotation.RequiresApi;
 
 public class Encryption {
 
+    private static SecretKey secretKey;
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static String EncodeStringBase64(byte[] bytes){
         return Base64.getEncoder().withoutPadding().encodeToString(bytes);
@@ -64,12 +66,19 @@ public class Encryption {
         return null;
     }
 
+    public static SecretKey getSecretKey(){
+        if (secretKey == null){
+            secretKey = generateAESKey();
+        }
+
+        return secretKey;
+    }
+
     public static SecretKey generateAESKey() {
 
         try {
             KeyGenerator generator = KeyGenerator.getInstance("AES");
             generator.init(256);
-            //generator.init(SecureRandom.getInstance("NativePRNG"));
 
             SecretKey secretKey = generator.generateKey();
 

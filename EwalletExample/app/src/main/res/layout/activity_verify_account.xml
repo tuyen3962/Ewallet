@@ -163,21 +163,48 @@
                         android:gravity="center_horizontal"
                         android:orientation="horizontal">
 
-                        <de.hdodenhof.circleimageview.CircleImageView
+                        <RelativeLayout
                             android:layout_width="wrap_content"
                             android:layout_height="30dp"
-                            app:civ_border_width="1dp"
-                            app:civ_circle_background_color="@color/SoftGreen"
-                            app:civ_border_color="@color/Grey"
-                            android:src="@drawable/ic_photo_camera" />
+                            android:layout_marginHorizontal="10dp">
 
-                        <de.hdodenhof.circleimageview.CircleImageView
+                            <de.hdodenhof.circleimageview.CircleImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:src="@color/transparent"
+                                app:civ_border_color="@color/Black"
+                                app:civ_circle_background_color="@color/SoftWhite"
+                                app:civ_border_width="2dp"/>
+
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="match_parent"
+                                android:padding="3dp"
+                                android:src="@drawable/ic_upload"/>
+
+                        </RelativeLayout>
+
+                        <RelativeLayout
                             android:layout_width="wrap_content"
                             android:layout_height="30dp"
-                            app:civ_border_width="1dp"
-                            app:civ_circle_background_color="@color/SoftGreen"
-                            app:civ_border_color="@color/Grey"
-                            android:src="@drawable/ic_photo_camera" />
+                            android:layout_marginHorizontal="10dp"
+                            android:onClick="ChooseFrontPicture">
+
+                            <de.hdodenhof.circleimageview.CircleImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:src="@color/transparent"
+                                app:civ_border_color="@color/Black"
+                                app:civ_circle_background_color="@color/SoftWhite"
+                                app:civ_border_width="2dp"/>
+
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="match_parent"
+                                android:padding="3dp"
+                                android:src="@drawable/ic_photo_camera"/>
+
+                        </RelativeLayout>
 
                     </LinearLayout>
                 </LinearLayout>
@@ -205,21 +232,48 @@
                         android:gravity="center_horizontal"
                         android:orientation="horizontal">
 
-                        <de.hdodenhof.circleimageview.CircleImageView
+                        <RelativeLayout
                             android:layout_width="wrap_content"
                             android:layout_height="30dp"
-                            app:civ_border_width="1dp"
-                            app:civ_circle_background_color="@color/SoftGreen"
-                            app:civ_border_color="@color/Grey"
-                            android:src="@drawable/ic_photo_camera" />
+                            android:layout_marginHorizontal="10dp">
 
-                        <de.hdodenhof.circleimageview.CircleImageView
+                            <de.hdodenhof.circleimageview.CircleImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:src="@color/transparent"
+                                app:civ_border_color="@color/Black"
+                                app:civ_circle_background_color="@color/SoftWhite"
+                                app:civ_border_width="2dp"/>
+
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="match_parent"
+                                android:padding="3dp"
+                                android:src="@drawable/ic_upload"/>
+
+                        </RelativeLayout>
+
+                        <RelativeLayout
                             android:layout_width="wrap_content"
                             android:layout_height="30dp"
-                            app:civ_border_width="1dp"
-                            app:civ_circle_background_color="@color/SoftGreen"
-                            app:civ_border_color="@color/Grey"
-                            android:src="@drawable/ic_photo_camera" />
+                            android:layout_marginHorizontal="10dp"
+                            android:onClick="ChooseBackPicture">
+
+                            <de.hdodenhof.circleimageview.CircleImageView
+                                android:layout_width="30dp"
+                                android:layout_height="30dp"
+                                android:src="@color/transparent"
+                                app:civ_border_color="@color/Black"
+                                app:civ_circle_background_color="@color/SoftWhite"
+                                app:civ_border_width="2dp"/>
+
+                            <ImageView
+                                android:layout_width="30dp"
+                                android:layout_height="match_parent"
+                                android:padding="3dp"
+                                android:src="@drawable/ic_photo_camera"/>
+
+                        </RelativeLayout>
 
                     </LinearLayout>
                 </LinearLayout>
@@ -239,13 +293,13 @@
                 android:id="@+id/btnVerify"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Xác thực"
+                android:text="Cập nhật thông tin"
                 android:textSize="20dp"
                 android:textColor="@color/White"
                 android:background="@color/SoftBlue"
                 android:paddingHorizontal="40dp"
                 android:paddingVertical="5dp"
-                android:onClick="VerifyInformation"/>
+                android:onClick="VerifyInformation" />
 
             <Button
                 android:id="@+id/btnSkip"
@@ -255,7 +309,7 @@
                 android:textSize="20dp"
                 android:textColor="@drawable/text_button_pressed_color_change"
                 android:background="@color/SoftBlue"
-                android:paddingHorizontal="40dp"
+                android:paddingHorizontal="60dp"
                 android:paddingVertical="5dp"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:onClick="BackPreviousActivity"/>

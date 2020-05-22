@@ -1,65 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".VerifyUserForForget">
+    tools:context=".VerifyUserForForget"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvIntroduce"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
-        android:text="VDT"
-        android:textColor="@color/colorPrimary"
-        android:textSize="40sp" />
+    <include
+        layout="@layout/custom_action_bar"
+        android:id="@+id/toolbarLayout"/>
 
-    <TextView
-        android:id="@+id/tvChangeTypeVerify"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="15dp"
-        android:layout_below="@id/tvIntroduce"
-        android:text="Nhập số điện thoại để tiếp tục"
-        android:textColor="@color/colorPrimary"
-        android:textSize="25dp"/>
-<!--        android:onClick="ChangeTypeVerifyEvent"/>-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/etDetail"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/tvChangeTypeVerify"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:hint="Nhập số diện thoại"
-        android:gravity="center"
-        android:textSize="18dp"
-        android:layout_marginRight="20dp"/>
+        <TextView
+            android:id="@+id/tvIntroduce"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:text="VDT"
+            android:textColor="@color/colorPrimary"
+            android:textSize="40sp" />
 
-    <Button
-        android:id="@+id/btnVerifyAccount"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/etDetail"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
-        android:text="Tiếp tục"
-        android:background="@drawable/edit_round_button"
-        android:onClick="VerifyAccountEvent"/>
+        <TextView
+            android:id="@+id/tvChangeTypeVerify"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:layout_below="@id/tvIntroduce"
+            android:text="Nhập số điện thoại để tiếp tục"
+            android:textColor="@color/colorPrimary"
+            android:textSize="25dp"/>
 
-    <TextView
-        android:id="@+id/tvError"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/btnVerifyAccount"
-        android:layout_marginTop="30dp"
-        android:layout_centerHorizontal="true"
-        android:text="555"
-        android:textColor="@color/SoftRed"
-        android:textSize="30dp"
-        android:visibility="gone"/>
-</RelativeLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/detailLayout"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvChangeTypeVerify"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:hint="Nhập số diện thoại"
+            android:layout_marginRight="20dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDetail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="10"
+                android:textSize="18dp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVerifyAccount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/detailLayout"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
+            android:paddingHorizontal="50dp"
+            android:textSize="20dp"
+            android:text="Tiếp tục"
+            android:background="@drawable/background_button"
+            android:onClick="VerifyAccountEvent" />
+
+    </RelativeLayout>
+</LinearLayout>

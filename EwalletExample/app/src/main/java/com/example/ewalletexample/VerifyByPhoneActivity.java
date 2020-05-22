@@ -1,6 +1,7 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,6 +20,7 @@ import android.widget.Toast;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
+import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.ServerAPI;
@@ -28,6 +30,8 @@ import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.code.CheckOTPFunction;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.utilies.Encryption;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -48,7 +52,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
-public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTPFunction {
+public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTPFunction, ToolbarEvent {
 
     FirebaseAuth auth;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
@@ -62,7 +66,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
     Button btnVerifyPhone, btnResendVerifyCode, btnChangePhone;
     TextView tvError, txVerifyPhone;
     ProgressBarManager progressBarManager;
-
+    CustomToolbarContext customToolbarContext;
     CountDownTimer countDown;
     boolean canResendCode;
 
@@ -84,6 +88,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
 
     void Initalize(){
         gson = new Gson();
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
+        customToolbarContext.SetTitle("Nhập mã OTP");
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         auth = FirebaseAuth.getInstance();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
@@ -102,6 +108,12 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         txVerifyPhone = findViewById(R.id.txVerifyPhone);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResendVerifyCode, btnVerifyPhone, btnChangePhone);
         AddTextWatcherEventToEditText();
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 
     void AddTextWatcherEventToEditText(){
@@ -288,7 +300,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
         intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
-        startActivity(intent);
+        startActivityForResult(intent, RequestCode.RESET_PASSWORD);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -296,13 +308,14 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         JSONObject postData = new JSONObject();
 
         SecretKey secretKey = Encryption.generateAESKey();
-        String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), password);
+        String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), user.getPassword());
         String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
 
         try {
             postData.put("fullname",user.getFullName());
-            postData.put("pin" , user.getPassword());
+            postData.put("pin" , encryptPasswordByAES);
             postData.put("phone", user.getPhoneNumber());
+            postData.put("key", encodeSecretKeyByPublicKey);
 
             new RegisterEvent().execute(ServerAPI.REGISTER_API.GetUrl(), postData.toString());
         } catch (JSONException e) {
@@ -354,6 +367,18 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         @Override
         public void ShowError(int errorCode, String message) {
             Log.d("ERROR", message);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RequestCode.RESET_PASSWORD)
+        {
+            if (resultCode == RESULT_CANCELED){
+                setResult(resultCode);
+                finish();
+            }
         }
     }
 }

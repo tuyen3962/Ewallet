@@ -8,6 +8,7 @@ public class UpdateUserRequest {
     private String address;
     private String dob;
     private String email;
+    private String key;
 
     private String cmndfontimg;
     private String cmndbackimg;
@@ -95,5 +96,13 @@ public class UpdateUserRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 }

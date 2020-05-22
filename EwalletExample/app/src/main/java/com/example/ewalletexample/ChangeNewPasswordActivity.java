@@ -1,10 +1,12 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -20,7 +22,10 @@ import com.example.ewalletexample.Server.api.VerifyPin.VerifyResponse;
 import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
 import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.utilies.Encryption;
 import com.google.android.material.textview.MaterialTextView;
+
+import javax.crypto.SecretKey;
 
 public class ChangeNewPasswordActivity extends AppCompatActivity implements VerifyResponse, UpdateUserResponse {
 
@@ -109,11 +114,17 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
         verifyPinAPI.StartVerify();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void VerifyPinResponse(boolean isSuccess) {
         if(isSuccess){
             if (CheckNewPassword()){
-                updateUserAPI.setPin(etNewPassword.getText().toString());
+                SecretKey secretKey = Encryption.getSecretKey();
+                String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), etNewPassword.getText().toString());
+                String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
+
+                updateUserAPI.setPin(encryptPasswordByAES);
+                updateUserAPI.setKey(encodeSecretKeyByPublicKey);
                 updateUserAPI.UpdateUser();
             }
         } else {

@@ -29,6 +29,8 @@ import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.recycleview.listbank.RecycleViewListBankConnected;
 import com.example.ewalletexample.service.recycleview.listbank.UserSelectBankConnect;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
@@ -46,16 +48,16 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
     View sourceFundLayout;
     List<BankInfo> bankInfoList;
     ProgressBarManager progressBarManager;
-    Toolbar toolbar;
-    MaterialTextView tvTitle;
     RecyclerView rvListBankConnected;
     AutoFormatEditText etBalance;
     TextView tvErrorBalance;
+    View layoutHintMoney;
+    MaterialTextView tvHintMoney1, tvHintMoney2, tvHintMoney3;
     BankInfo currentBankConnect;
     Service service;
-    ImageButton btnBack;
     ListBankConnectedAPI listBankConnectedAPI;
     RecycleViewListBankConnected.ListBankConnectViewHolder currentHolder;
+    CustomToolbarContext customToolbarContext;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -71,16 +73,33 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         @Override
         public void afterTextChanged(Editable s) {
             String text = s.toString();
-            PredictText(text);
+            if (s.length() == 0){
+                if (layoutHintMoney.getVisibility() == View.VISIBLE){
+                    layoutHintMoney.setVisibility(View.GONE);
+                }
+            } else {
+                if (layoutHintMoney.getVisibility() == View.GONE){
+                    layoutHintMoney.setVisibility(View.VISIBLE);
+                }
+            }
+            PredictText(text.replaceAll(",",""));
         }
     };
 
-    void PredictText(String text){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            // On JellyBean & above, you can provide a shortcut and an explicit Locale
-            UserDictionary.Words.addWord(this, "MadeUpWord", 10, "Mad", Locale.getDefault());
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
-            UserDictionary.Words.addWord(this, "MadeUpWord", 10, UserDictionary.Words.LOCALE_TYPE_CURRENT);
+    void PredictText(String money){
+        if (money.length() >= 6){
+            money = money.substring(0,6);
+            tvHintMoney1.setText(Utilies.HandleBalanceTextView(money + "0"));
+            tvHintMoney2.setText(Utilies.HandleBalanceTextView(money + "00"));
+            tvHintMoney3.setText(Utilies.HandleBalanceTextView(money + "000"));
+        } else if (money.length() == 5){
+            tvHintMoney1.setText(Utilies.HandleBalanceTextView(money + "00"));
+            tvHintMoney2.setText(Utilies.HandleBalanceTextView(money + "000"));
+            tvHintMoney3.setText(Utilies.HandleBalanceTextView(money + "0000"));
+        } else {
+            tvHintMoney1.setText(Utilies.HandleBalanceTextView(money + "000"));
+            tvHintMoney2.setText(Utilies.HandleBalanceTextView(money + "0000"));
+            tvHintMoney3.setText(Utilies.HandleBalanceTextView(money + "00000"));
         }
     }
 
@@ -101,17 +120,12 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         sourceFundLayout = findViewById(R.id.sourceFundLayout);
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         etBalance.addTextChangedListener(textWatcher);
-        toolbar = findViewById(R.id.toolbarLayout);
-        tvTitle = findViewById(R.id.tvToolbarTitle);
-        btnBack = findViewById(R.id.btnBackToPreviousActivity);
-        setSupportActionBar(toolbar);
-
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BackToMain(v);
-            }
-        });
+        layoutHintMoney = findViewById(R.id.layoutHintMoney);
+        tvHintMoney1 = findViewById(R.id.tvHintMoney1);
+        tvHintMoney2 = findViewById(R.id.tvHintMoney2);
+        tvHintMoney3 = findViewById(R.id.tvHintMoney3);
+        layoutHintMoney.setVisibility(View.GONE);
+        customToolbarContext = new CustomToolbarContext(this, this::BackToMain);
     }
 
     void GetValueFromIntent(){
@@ -119,7 +133,7 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         this.service = Service.Find(intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0));
-        tvTitle.setText(this.service.GetName());
+        customToolbarContext.SetTitle(this.service.GetName());
         sourceFundLayout.setVisibility(View.VISIBLE);
         listBankConnectedAPI = new ListBankConnectedAPI(this, userid);
     }
@@ -162,7 +176,7 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         etBalance.setText("");
     }
 
-    public void BackToMain(View view){
+    public void BackToMain(){
         setResult(RESULT_CANCELED);
         finish();
     }
@@ -193,6 +207,18 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         this.currentHolder = holder;
         this.currentHolder.SetBackgroundColor(currentHolderChosenColor);
         this.currentBankConnect = info;
+    }
+
+    public void ClickHintMoney(View view){
+        if (view.getId() == tvHintMoney1.getId()){
+            etBalance.setText(tvHintMoney1.getText().toString());
+        } else if (view.getId() == tvHintMoney2.getId()){
+            etBalance.setText(tvHintMoney2.getText().toString());
+        } else{
+            etBalance.setText(tvHintMoney3.getText().toString());
+        }
+        etBalance.setSelection(etBalance.length() - 1);
+        layoutHintMoney.setVisibility(View.GONE);
     }
 
     @Override

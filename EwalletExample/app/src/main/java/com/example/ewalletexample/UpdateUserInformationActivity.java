@@ -7,6 +7,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.Manifest;
@@ -20,7 +22,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
@@ -28,56 +29,71 @@ import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
-import com.example.ewalletexample.dialogs.AlertDialogTakePicture;
-import com.example.ewalletexample.dialogs.AlertDialogTakePictureFunction;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
+import com.example.ewalletexample.service.AnimationManager;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ResponseMethod;
+import com.example.ewalletexample.service.UserSelectFunction;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
+import com.example.ewalletexample.service.recycleview.listitem.RecycleViewListSingleItem;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Calendar;
 
-public class UpdateUserInformationActivity extends AppCompatActivity implements AlertDialogTakePictureFunction, ResponseMethod,
-        ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener, UpdateUserResponse, WebsocketResponse {
-
-    private final static String DIALOG_TAG = "DIALOG";
+public class UpdateUserInformationActivity extends AppCompatActivity implements ResponseMethod,
+        ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener, UpdateUserResponse, WebsocketResponse, UserSelectFunction<String> {
 
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler storageHandler;
-    View btnUpload, dateOfBirthLayout;
-
-    TextView tvFullname, tvMonth, tvYear, tvDay, tvBack;
-    TextInputEditText etAddress, etEmail;
+    View btnUpload, dateOfBirthLayout, layoutListItem;
+    RecyclerView rvListCities;
+    TextView tvFullname, tvMonth, tvYear, tvDay, tvBack, tvListItemTitle;
+    TextInputEditText etEmail;
+    TextInputLayout input_email_layout;
+    MaterialTextView etAddress;
     CircleImageView imgAccount;
     ProgressBarManager progressBarManager;
     Gson gson;
     User user;
     UserModel model;
-    AlertDialogTakePicture dialogTakePicture;
     String currentPhotoPath;
     File photoFile;
     Uri photoUri;
-    boolean canTakePhoto = false, canPickImage = false;
     WebsocketClient client;
     long balance;
     boolean changeBalance, uploadImage;
-
+    RecycleViewListSingleItem recycleViewListSingleItem;
     UpdateUserAPI updateAPI;
-
+    AnimationManager animationManager;
     DatePickerDialog datePickerDialog;
     String update;
+    String[] arrCities;
+    CustomToolbarContext customToolbarContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,8 +112,6 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         client = new WebsocketClient(this);
         gson = new Gson();
         datePickerDialog = new DatePickerDialog(this,this,1998,1,1);
-        dialogTakePicture = new AlertDialogTakePicture(this);
-
         btnUpload = findViewById(R.id.btnUpload);
         dateOfBirthLayout = findViewById(R.id.dateOfBirthLayout);
         tvDay = findViewById(R.id.tvDay);
@@ -105,16 +119,52 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         tvYear = findViewById(R.id.tvYear);
         tvBack = findViewById(R.id.tvBack);
         etEmail = findViewById(R.id.etEmail);
-
+        layoutListItem = findViewById(R.id.layoutListItem);
+        tvListItemTitle = findViewById(R.id.tvTitle);
+        rvListCities = findViewById(R.id.rvListItems);
         tvFullname = findViewById(R.id.tvFullName);
         etAddress = findViewById(R.id.etAddress);
-
+        animationManager = new AnimationManager(this);
         imgAccount = findViewById(R.id.imgAccount);
-
+        input_email_layout = findViewById(R.id.input_email_layout);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar),
                 btnUpload, dateOfBirthLayout, etAddress, imgAccount);
         storageHandler = new FirebaseStorageHandler(imgAccount, FirebaseStorage.getInstance(), this);
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
+        customToolbarContext = new CustomToolbarContext(this, this::BackPreviousActivity);
+        ReadFile();
+        tvListItemTitle.setText("Các thành phố");
+        layoutListItem.setVisibility(View.GONE);
+    }
+
+    void ReadFile(){
+        try {
+            InputStream is = getAssets().open("cities.txt");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            String line = reader.readLine();
+            if (line != null){
+                JSONObject jsonObject = new JSONObject(line);
+                JSONArray jsonArray = jsonObject.getJSONArray("cities");
+                arrCities = new String[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); i++){
+                    arrCities[i] = jsonArray.getString(i);
+                }
+                recycleViewListSingleItem = new RecycleViewListSingleItem(this, arrCities, this);
+                Utilies.InitializeRecycleView(rvListCities, new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false), recycleViewListSingleItem);
+            } else {
+                arrCities = null;
+                recycleViewListSingleItem = null;
+            }
+        } catch (FileNotFoundException e){
+            Log.d("TAG", "Initialize: " + e.getMessage());
+            arrCities = null;
+        } catch (IOException e) {
+            Log.d("TAG", "Initialize: " + e.getMessage());
+            arrCities = null;
+        } catch (JSONException e) {
+            Log.d("TAG", "Initialize: " + e.getMessage());
+            arrCities = null;
+        }
     }
 
     void GetValueFromIntent(){
@@ -122,14 +172,13 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         Intent intent = getIntent();
         update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
         user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
-        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
-            tvBack.setCompoundDrawables(null, null,getDrawable(R.drawable.ic_action_arrow_right),null);
-            tvBack.setText("Skip");
-        } else  if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
-            tvBack.setCompoundDrawables(null, null,getDrawable(R.drawable.ic_action_home),null);
-            tvBack.setText("Trở về");
+        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
+            tvBack.setVisibility(View.GONE);
             user.setDate();
             LoadImageAccount();
+            customToolbarContext.SetVisibilityImageButtonBack(View.VISIBLE);
+        } else if (update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
+            customToolbarContext.SetVisibilityImageButtonBack(View.GONE);
         }
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
         FillUserDetail();
@@ -146,7 +195,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
 
         if(!user.getEmail().isEmpty()){
-            etEmail.setHint(user.getEmail());
+            input_email_layout.setHint(user.getEmail());
         }
     }
 
@@ -168,26 +217,23 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         datePickerDialog.show();
     }
 
-    public void UploadImageEvent(View view){
-        CheckAndRequestPermissionForTakingPhoto();
-        CheckAndRequestPermissionForPickingPhoto();
-        if(!canPickImage && !canTakePhoto)
-            return;
-        ShowDialogTakePictureEvent();
+    public void ShowListCitiesRecommend(View view){
+        if (arrCities != null){
+            animationManager.ShowAnimationView(layoutListItem);
+        }
     }
 
-    public void ShowDialogTakePictureEvent(){
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        Fragment prev = getSupportFragmentManager().findFragmentByTag(DIALOG_TAG);
-        if (prev != null) {
-            ft.remove(prev);
-        }
-        ft.addToBackStack(null);
-        dialogTakePicture.show(ft, DIALOG_TAG);
+    public void HideListItemLayout(View view){
+        animationManager.HideAnimationView(layoutListItem);
     }
 
     @Override
-    public void TakePhoto() {
+    public void SelectModel(String model) {
+        animationManager.HideAnimationView(layoutListItem);
+        etAddress.setText(model);
+    }
+
+    public void TakePhoto(View view) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         CheckAndRequestPermissionForTakingPhoto();
         if (intent.resolveActivity(getPackageManager()) != null) {
@@ -216,17 +262,14 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
     }
 
-    @Override
-    public void ChoosePicture() {
-        if(!canPickImage)
-        {
-            CheckAndRequestPermissionForPickingPhoto();
-            return;
-        }
-        Intent intent = new Intent();
+    public void ChoosePicture(View view) {
+        CheckAndRequestPermissionForPickingPhoto();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), RequestCode.PICK_IMAGE_REQUEST);
+
+        if (intent.resolveActivity(getPackageManager()) != null){
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), RequestCode.PICK_IMAGE_REQUEST);
+        }
     }
 
     @Override
@@ -288,9 +331,14 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
 
     public void UpdateUserInfo(View view){
         String email = etEmail.getText().toString();
-        if (!email.isEmpty() && !CheckInputField.EmailIsValid(email)){
-            etEmail.setError("Email không hợp lệ. Xin nhập lại.");
-            return;
+        if (!email.isEmpty()){
+            if (!CheckInputField.EmailIsValid(email)){
+                etEmail.setError("Email không hợp lệ. Xin nhập lại.");
+                return;
+            }
+            else {
+
+            }
         }
         uploadImage = false;
         progressBarManager.ShowProgressBar("Loading");
@@ -350,17 +398,11 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
                 ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE }, RequestCode.TAKE_PHOTO_REQUEST);
         }
-        else{
-            canTakePhoto = true;
-        }
     }
 
     void CheckAndRequestPermissionForPickingPhoto(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ){
             ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, RequestCode.PICK_IMAGE_REQUEST);
-        }
-        else{
-            canPickImage =true;
         }
     }
 
@@ -374,21 +416,13 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
                     && grantResults[1] != PackageManager.PERMISSION_GRANTED) {
                 if(!shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) &&
                         !shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)){
-                    canTakePhoto = false;
                 }
-            }
-            else{
-                canTakePhoto = true;
             }
         }
         else if(requestCode == RequestCode.PICK_IMAGE_REQUEST){
             if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 if(!shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)){
-                    canPickImage = false;
                 }
-            }
-            else{
-                canPickImage = true;
             }
         }
     }
@@ -401,19 +435,19 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
     }
 
+    public void BackPreviousActivity(){
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getAvatar());
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        setResult(RESULT_CANCELED, intent);
+        finish();
+    }
+
     public void BackPreviousActivity(View view){
-        if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
-            Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
-            intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
-            intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
-            startActivity(intent);
-        } else {
-            Intent intent = new Intent();
-            intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getAvatar());
-            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-            setResult(RESULT_CANCELED, intent);
-            finish();
-        }
+        Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
+        intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
+        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+        startActivity(intent);
     }
 }

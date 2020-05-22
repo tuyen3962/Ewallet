@@ -16,7 +16,7 @@
         <de.hdodenhof.circleimageview.CircleImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@color/SoftGrey"
+            android:src="@color/SoftWhite"
             app:civ_circle_background_color="@color/SoftGrey"/>
 
         <ImageView
@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/ic_home_black_24dp"
-            android:padding="5dp"/>
+            android:padding="12dp"/>
 
     </RelativeLayout>
 

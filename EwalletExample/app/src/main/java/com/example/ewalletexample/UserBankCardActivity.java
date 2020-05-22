@@ -14,9 +14,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
 import com.example.ewalletexample.Server.api.bank.list.ListBankConnectedAPI;
@@ -28,6 +30,8 @@ import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.UserSelectFunction;
 import com.example.ewalletexample.service.recycleview.bank.ListBankConnectedRecycleView;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.google.firebase.storage.FirebaseStorage;
@@ -38,7 +42,8 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, WebsocketResponse, UserSelectFunction<BankInfo> {
+public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>,
+        WebsocketResponse, UserSelectFunction<BankInfo>, ToolbarEvent {
     FirebaseStorageHandler storageHandler;
 
     ListBankConnectedAPI listBankAPI;
@@ -48,7 +53,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     TextView tvBalance, tvConnectBankAccount;
     Button btnConnectBankAccount;
     LinearLayout layoutConnectBank;
-
+    CustomToolbarContext customToolbarContext;
     RecyclerView listBankConnected;
     List<BankInfo> bankInfoList;
 
@@ -56,6 +61,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     Gson gson;
     String userid, cmnd;
     long balance;
+    boolean changeBalance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +74,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     }
 
     void Initialize(){
+        changeBalance = false;
         bankInfoList = new ArrayList<>();
         gson = new Gson();
         client = new WebsocketClient(this);
@@ -79,6 +86,8 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         btnConnectBankAccount = findViewById(R.id.btnConnectBankAccount);
 
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), tvConnectBankAccount, btnConnectBankAccount);
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
+        customToolbarContext.SetTitle("Danh sách thẻ liên kết");
 
         listBankConnected = findViewById(R.id.listBankAccountConnect);
         listBankConnected.setHasFixedSize(true);
@@ -110,13 +119,6 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         intent.putExtra(Symbol.CMND.GetValue(), cmnd);
         startActivityForResult(intent, RequestCode.CONNECT_BANK_CODE);
-    }
-
-    public void BackToMain(View view){
-        Intent intent = new Intent(UserBankCardActivity.this, MainLayoutActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-        startActivity(intent);
     }
 
     @Override
@@ -186,6 +188,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         runOnUiThread(()->{
             if(userid.equalsIgnoreCase(this.userid)){
                 this.balance = balance;
+                this.changeBalance = true;
                 SetBalance(balance);
             }
         });
@@ -212,5 +215,14 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
                 RemoveBankInfo(bankInfo);
             }
         }
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 }

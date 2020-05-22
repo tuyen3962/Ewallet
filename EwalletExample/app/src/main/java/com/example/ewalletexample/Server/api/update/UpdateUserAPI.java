@@ -62,6 +62,10 @@ public class UpdateUserAPI {
         this.request.setEmail(email);
     }
 
+    public void setKey(String key){
+        this.request.setKey(key);
+    }
+
     public void UpdateUser(){
         new UpdateUserProfile().execute(ServerAPI.UPDATE_USER_API.GetUrl(), gson.toJson(request));
     }

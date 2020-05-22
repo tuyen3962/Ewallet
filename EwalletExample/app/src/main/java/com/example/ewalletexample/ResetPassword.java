@@ -1,44 +1,84 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.Button;
 import android.widget.Toast;
 
-import com.example.ewalletexample.Server.request.RequestServerAPI;
-import com.example.ewalletexample.Server.request.RequestServerFunction;
+import com.example.ewalletexample.Server.api.balance.BalanceResponse;
+import com.example.ewalletexample.Server.api.balance.GetBalanceAPI;
+import com.example.ewalletexample.Server.api.login.UserLoginAPI;
+import com.example.ewalletexample.Server.api.login.UserLoginRequest;
+import com.example.ewalletexample.Server.api.login.UserLoginResponse;
+import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
+import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.data.User;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
-import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.utilies.Encryption;
+import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.gson.Gson;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import javax.crypto.SecretKey;
 
-public class ResetPassword extends AppCompatActivity {
+public class ResetPassword extends AppCompatActivity implements ToolbarEvent, UpdateUserResponse, UserLoginResponse, BalanceResponse {
 
     FirebaseAuth auth;
-
-    ProgressDialog progressDialog;
+    CustomToolbarContext customToolbarContext;
+    ProgressBarManager progressBarManager;
     TextInputEditText etPassword, etConfirmPassword;
-    TextView tvError;
-    MaterialTextView tvUsername;
+    MaterialTextView tvUsername, tvError;
+    UpdateUserAPI updateUserAPI;
+    UserLoginAPI userLoginAPI;
+    Gson gson;
+    Button btnResetNewPassword;
+    String reason, email, phone, userid, encryptPasswordByAES, encodeSecretKeyByPublicKey;
+    User user;
 
-    private String reason, email, phone, userid;
+    TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (tvError.getVisibility() == View.VISIBLE){
+                tvError.setVisibility(View.GONE);
+            }
+
+            if (etConfirmPassword.length() == 6 && etPassword.length() == 6){
+                Utilies.SetEneableButton(btnResetNewPassword, true);
+            } else {
+                Utilies.SetEneableButton(btnResetNewPassword, false);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +92,17 @@ public class ResetPassword extends AppCompatActivity {
     }
 
     void Initialize(){
-        tvError = findViewById(R.id.tvError);
+        gson = new Gson();
         tvUsername = findViewById(R.id.tvUsername);
-        progressDialog = new ProgressDialog(this);
+        btnResetNewPassword = findViewById(R.id.btnResetNewPassword);
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResetNewPassword);
         etPassword = findViewById(R.id.etNewPassword);
+        tvError = findViewById(R.id.tvError);
         etConfirmPassword = findViewById(R.id.etConfirmNewPasswork);
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
+        customToolbarContext.SetTitle("Quên mật khẩu");
+        etConfirmPassword.addTextChangedListener(textWatcher);
+        etPassword.addTextChangedListener(textWatcher);
     }
 
     void GetValueFromIntent(){
@@ -73,19 +119,13 @@ public class ResetPassword extends AppCompatActivity {
             phone = intent.getStringExtra(Symbol.PHONE.GetValue());
             tvUsername.setText(phone);
         }
+
+        updateUserAPI = new UpdateUserAPI(userid, this);
     }
 
-    private void ShowProgressDialog(String message){
-        progressDialog.setTitle(message);
-        progressDialog.show();
-    }
-
-    private void HideProgressDialog(){
-        progressDialog.hide();
-    }
-
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void VerifyResetPasswordEvent(View view){
-        ShowProgressDialog("Loading...");
+        progressBarManager.ShowProgressBar("Loading...");
 
         String password = etPassword.getText().toString();
         String confirmPass = etConfirmPassword.getText().toString();
@@ -93,54 +133,81 @@ public class ResetPassword extends AppCompatActivity {
         Response response = CheckPassword(password, confirmPass);
 
         if(response.GetStatus()){
-            SendRequestResetPassword(password);
-        }
-        else{
-            ShowErrorText(response.GetMessage());
+            SecretKey secretKey = Encryption.getSecretKey();
+            encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), password);
+            encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
+
+            updateUserAPI.setPin(encryptPasswordByAES);
+            updateUserAPI.setKey(encodeSecretKeyByPublicKey);
+            updateUserAPI.UpdateUser();
+        } else {
+            progressBarManager.HideProgressBar();
         }
     }
 
     private Response CheckPassword(String pass, String confirmPass){
         if(TextUtils.isEmpty(pass)){
+            etPassword.setError("Hãy nhập mật khẩu mới");
             return new Response(ErrorCode.EMPTY_PIN);
         }
         else if(TextUtils.isEmpty(confirmPass)){
+            etConfirmPassword.setError("Hãy nhập lại mật khẩu mới");
             return new Response(ErrorCode.EMPTY_CONFIRM_PIN);
         }
         else if(!CheckInputField.PasswordIsValid(pass)){
+            etPassword.setError("Mật khẩu không hợp lệ");
             return new Response(ErrorCode.VALIDATE_PIN_INVALID);
         }
         else if(!pass.equalsIgnoreCase(confirmPass)){
+            etConfirmPassword.setError("Mật khẩu không trùng");
             return new Response(ErrorCode.UNVALID_PIN_AND_CONFIRM_PIN);
         }
 
         return new Response(ErrorCode.SUCCESS);
     }
 
-    public void CancelResetPasswordEvent(View view){
-        startActivity(new Intent(ResetPassword.this, LoginActivity.class));
+    @Override
+    public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 
-    private void SendRequestResetPassword(String pass){
-        JSONObject postData = new JSONObject();
-
-        try {
-            postData.put("userid", userid);
-            postData.put("pin",pass);
-            postData.put("cmnd","");
-            postData.put("address","");
-            postData.put("dob","");
-
-            new ResetPasswordEvent().execute(ServerAPI.UPDATE_USER_API.GetUrl(), postData.toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+    @Override
+    public void UpdateSuccess() {
+        UserLoginRequest request = new UserLoginRequest(phone, encryptPasswordByAES, encodeSecretKeyByPublicKey);
+        userLoginAPI = new UserLoginAPI(request, this);
+        userLoginAPI.StartLoginAPI();
     }
 
-    private void ShowErrorText(String message){
-        tvError.setText(message);
+    @Override
+    public void UpdateFail() {
+        ShowErrorText("Máy chủ không phản hồi");
+        progressBarManager.HideProgressBar();
+    }
+
+    @Override
+    public void LoginSucess(User user) {
+        this.user = user;
+        GetBalanceAPI getBalanceAPI = new GetBalanceAPI(user.getUserId(), this);
+        getBalanceAPI.GetBalance();
+    }
+
+    @Override
+    public void LoginFail(int code) {
+        progressBarManager.HideProgressBar();
+    }
+
+    void ShowErrorText(String mess){
+        tvError.setText(mess);
         tvError.setVisibility(View.VISIBLE);
-        HideProgressDialog();
+    }
+
+    @Override
+    public void GetBalanceResponse(long balance) {
+        Intent intent = new Intent(ResetPassword.this, MainLayoutActivity.class);
+        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        startActivity(intent);
     }
 
     class LoadingVerifyEmail extends Thread{
@@ -169,32 +236,6 @@ public class ResetPassword extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-        }
-    }
-
-    private class ResetPasswordEvent extends RequestServerAPI implements RequestServerFunction {
-        public ResetPasswordEvent(){
-            super();
-            SetRequestServerFunction(this);
-        }
-
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-            ShowError(code, "Doi mat khau that bai");
-            return false;
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            startActivity(new Intent(ResetPassword.this, LoginActivity.class));
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
-            ShowErrorText(message);
         }
     }
 }

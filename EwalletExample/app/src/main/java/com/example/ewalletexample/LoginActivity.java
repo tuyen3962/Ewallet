@@ -15,6 +15,9 @@ import com.davidmiguel.numberkeyboard.NumberKeyboard;
 import com.davidmiguel.numberkeyboard.NumberKeyboardListener;
 import com.example.ewalletexample.Server.api.balance.BalanceResponse;
 import com.example.ewalletexample.Server.api.balance.GetBalanceAPI;
+import com.example.ewalletexample.Server.api.login.UserLoginAPI;
+import com.example.ewalletexample.Server.api.login.UserLoginRequest;
+import com.example.ewalletexample.Server.api.login.UserLoginResponse;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
@@ -35,7 +38,7 @@ import org.json.JSONObject;
 
 import javax.crypto.SecretKey;
 
-public class LoginActivity extends AppCompatActivity implements BalanceResponse {
+public class LoginActivity extends AppCompatActivity implements BalanceResponse, UserLoginResponse {
     FirebaseAuth mAuth;
     MaterialTextView tvFullname, tvPhone;
     TextView tvError;
@@ -45,6 +48,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
     ProgressBarManager progressBarManager;
     SharedPreferenceLocal local;
     GetBalanceAPI balanceAPI;
+    UserLoginAPI userLoginAPI;
     Gson gson;
 
     @Override
@@ -108,6 +112,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
     }
 
     public void ShowNumberKeyBoard(){
+        tvError.setVisibility(View.GONE);
         keyboard.setVisibility(View.VISIBLE);
     }
 
@@ -130,7 +135,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
         Response response = CheckUsernameAndPassword(password);
 
         if(response.GetStatus()){
-            SecretKey secretKey = Encryption.generateAESKey();
+            SecretKey secretKey = Encryption.getSecretKey();
             String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), password);
             String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
             SendLoginRequest(encodeSecretKeyByPublicKey, encryptPasswordByAES);
@@ -153,18 +158,9 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
     }
 
     private void SendLoginRequest(String secretKey, String password){
-        JSONObject json = new JSONObject();
-
-        try{
-            json.put("phone",user.getPhoneNumber());
-            json.put("key", secretKey);
-            json.put("pin",password);
-
-            new LoginThread().execute(ServerAPI.LOGIN_API.GetUrl(), json.toString());
-        }catch (Exception e){
-            progressBarManager.HideProgressBar();
-            Log.d("TAG", "CheckUsernameAndPassword: "  + e.getMessage());
-        }
+        UserLoginRequest request = new UserLoginRequest(user.getPhoneNumber(), password, secretKey);
+        userLoginAPI = new UserLoginAPI(request, this);
+        userLoginAPI.StartLoginAPI();
     }
 
     public void UserForgetPasswordEvent(View view){
@@ -192,53 +188,21 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse 
 
     @Override
     public void GetBalanceResponse(long balance) {
-        local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
         Intent intent = new Intent(LoginActivity.this, MainLayoutActivity.class);
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         startActivity(intent);
     }
 
-    private class LoginThread extends RequestServerAPI implements RequestServerFunction {
-        public LoginThread() {
-            SetRequestServerFunction(this);
-        }
+    @Override
+    public void LoginSucess(User user) {
+        this.user = user;
+        GetUserBalance();
+    }
 
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if (code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-            else {
-                progressBarManager.HideProgressBar();
-                ShowError(code, "Fail");
-                return false;
-            }
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            user = new User();
-            user.setUserId(jsonData.getString("userid"));
-            user.setFullName(jsonData.getString("fullname"));
-            user.setAddress(jsonData.getString("address"));
-            user.setPhoneNumber(jsonData.getString("phone"));
-            user.setDateOfbirth(jsonData.getString("dob"));
-            user.setCmnd(jsonData.getString("cmnd"));
-            user.setEmail(jsonData.getString("email"));
-            user.setCmndFrontImage(jsonData.getString("cmndFontImg"));
-            user.setAvatar(jsonData.getString("avatar"));
-            user.setCmndBackImage(jsonData.getString("cmndBackImg"));
-            user.setStatus(jsonData.getInt("verify"));
-            GetUserBalance();
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
-            ShowErrorText("Số điện thoại hoặc mật khẩu sai");
-            if(errorCode == ErrorCode.USER_PASSWORD_WRONG.GetValue()){
-                ShowErrorText("Sai mật khẩu");
-            }
-        }
+    @Override
+    public void LoginFail(int code) {
+        ShowErrorText("Mật khẩu không đúng");
+        progressBarManager.HideProgressBar();
     }
 }

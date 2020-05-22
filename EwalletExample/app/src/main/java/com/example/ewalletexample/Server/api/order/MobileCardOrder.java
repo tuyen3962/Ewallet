@@ -32,10 +32,6 @@ public class MobileCardOrder extends Order {
         this.operator = mobileCode;
     }
 
-    public void StartCreateMobileCardOrder(){
-        verifyPinAPI.StartVerify();
-    }
-
     @Override
     protected void VerifyPinSuccess() throws JSONException {
         String[] arr = new String[]{"userid:"+userid,"amount:"+Long.valueOf(mobileCardAmount.GetAmount()), "cardtype:"+operator.GetMobileCode()};

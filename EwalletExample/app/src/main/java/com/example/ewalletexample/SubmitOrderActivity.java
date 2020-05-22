@@ -67,6 +67,7 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
     Gson gson;
     UserModel userModel;
     TransactionDetailAPI transactionDetail;
+    long balance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -283,10 +284,11 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
     }
 
     @Override
-    public void response(boolean isSuccess, int code, String transactionId) {
+    public void response(boolean isSuccess, int code, String transactionId, long balance) {
 
         if(isSuccess && code == ErrorCode.SUCCESS.GetValue()){
             transactionDetail = new TransactionDetailAPI(userid, transactionId, this);
+            this.balance = balance;
             transactionDetail.StartRequest();
         } else {
             if (code == ErrorCode.USER_PASSWORD_WRONG.GetValue()){
@@ -300,8 +302,6 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
     public void TransactionResponse(String json) {
         Intent intent = new Intent(SubmitOrderActivity.this, TransactionDetailActivity.class);
         intent.putExtra(Symbol.STYLE_TRANSACTION_DETAIL.GetValue(), Symbol.RESULT.GetValue());
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.PIN.GetValue(), passwordFieldFragment.getTextByImage());
         intent.putExtra(Symbol.TRANSACTION_DETAIL.GetValue(), json);
         startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
