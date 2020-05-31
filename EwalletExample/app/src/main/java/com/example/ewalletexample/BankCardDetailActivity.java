@@ -1,9 +1,11 @@
 package com.example.ewalletexample;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
@@ -28,7 +30,7 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     FirebaseStorageHandler storageHandler;
     ImageButton ibtnBack;
     MaterialTextView tvToolbarTitle;
-    String userid;
+    String userid, secretKeyString1, secretKeyString2;
     BankInfo bankInfo;
     BankSupport bankSupport;
     TextView tvBankName, tvCardNumber, tvStatus;
@@ -40,6 +42,7 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     long balance;
     Gson gson;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,11 +53,12 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
         SetTextBankCard();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     void Initialize(){
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         changeBalance = false;
         balance = 0;
-        client = new WebsocketClient(this);
+        client = new WebsocketClient(this, userid, this);
         tvBankName = findViewById(R.id.tvBankName);
         tvCardNumber = findViewById(R.id.tvCardNumber);
         tvStatus = findViewById(R.id.tvStatus);
@@ -78,6 +82,8 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         bankInfo = gson.fromJson(intent.getStringExtra(Symbol.BANK_INFO.GetValue()), BankInfo.class);
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         bankSupport = BankSupport.FindBankSupport(bankInfo.getBankCode());
     }
 
@@ -96,8 +102,9 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
         finish();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void UnlinkBank(View view){
-        unlinkBankAPI.StartUnlink();
+        unlinkBankAPI.StartUnlink(getString(R.string.public_key), secretKeyString1, secretKeyString2);
     }
 
     @Override

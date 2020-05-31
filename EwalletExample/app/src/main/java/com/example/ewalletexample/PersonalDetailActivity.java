@@ -1,10 +1,12 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -30,12 +32,14 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
     CircleImageView imgAccount;
     ProgressBarManager progressBarManager;
 
-    private User user;
-    private Gson gson;
+    User user;
+    String firstKey, secondKey;
+    Gson gson;
     WebsocketClient client;
     long balance;
     boolean changeBalance;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,8 +52,6 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         gson = new Gson();
         changeBalance = false;
         balance = 0;
-        client = new WebsocketClient(this);
-
         tvDateOfBirth = findViewById(R.id.tvDateOfBirth);
         tvAddress = findViewById(R.id.tvAddress);
         tvFullname = findViewById(R.id.tvFullName);
@@ -72,10 +74,14 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     void LoadDataFromIntent(){
         Intent intent = getIntent();
         user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
         user.setDate();
+        firstKey = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secondKey = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
+        client = new WebsocketClient(this, user.getUserId(), this);
         FillUserProfile();
         LoadImageAccount();
     }
@@ -108,6 +114,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         Intent intent = new Intent(PersonalDetailActivity.this, UpdateUserInformationActivity.class);
         intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), firstKey);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secondKey);
         startActivityForResult(intent, RequestCode.UPDATE_USER);
     }
 
@@ -117,6 +125,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
         intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), firstKey);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secondKey);
         intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
         intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
         startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
@@ -150,9 +160,18 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
             String imgLink = data.getStringExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue());
             CheckImageLink(imgLink);
             if(resultCode == RESULT_OK){
-                user.setAddress(data.getStringExtra(Symbol.ADDRESS.GetValue()));
-                user.setDateOfbirth(data.getStringExtra(Symbol.DOB.GetValue()));
-                user.setEmail(data.getStringExtra(Symbol.EMAIL.GetValue()));
+                String address = data.getStringExtra(Symbol.ADDRESS.GetValue());
+                String dob = data.getStringExtra(Symbol.DOB.GetValue());
+                String email = data.getStringExtra(Symbol.EMAIL.GetValue());
+                if (address.length() > 0){
+                    user.setAddress(address);
+                }
+                if (dob.length() > 0){
+                    user.setDateOfbirth(dob);
+                }
+                if (email.length() > 0){
+                    user.setEmail(email);
+                }
                 FillUserProfile();
             }
         } else if(requestCode == RequestCode.VERIFY_ACCOUNT_CODE && resultCode == RESULT_OK){

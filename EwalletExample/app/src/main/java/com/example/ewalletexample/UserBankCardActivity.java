@@ -2,6 +2,7 @@ package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +28,7 @@ import com.example.ewalletexample.Symbol.BankSupport;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
+import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.service.UserSelectFunction;
 import com.example.ewalletexample.service.recycleview.bank.ListBankConnectedRecycleView;
@@ -34,6 +37,7 @@ import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
@@ -41,6 +45,8 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.crypto.SecretKey;
 
 public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>,
         WebsocketResponse, UserSelectFunction<BankInfo>, ToolbarEvent {
@@ -56,13 +62,14 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     CustomToolbarContext customToolbarContext;
     RecyclerView listBankConnected;
     List<BankInfo> bankInfoList;
-
+    User user;
     WebsocketClient client;
+    String secretKeyString1, secretKeyString2;
     Gson gson;
-    String userid, cmnd;
     long balance;
     boolean changeBalance;
 
+    @RequiresApi(api = Build.VERSION_CODES.M | Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,11 +80,12 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         LoadBankConnected();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     void Initialize(){
         changeBalance = false;
         bankInfoList = new ArrayList<>();
         gson = new Gson();
-        client = new WebsocketClient(this);
+        client = new WebsocketClient(this, user.getUserId(), this);
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
 
         tvBalance = findViewById(R.id.tvBalance);
@@ -93,20 +101,26 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
         listBankConnected.setHasFixedSize(true);
         listBankConnected.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        listBankAPI = new ListBankConnectedAPI(this, userid);
+        listBankAPI = new ListBankConnectedAPI(this, user.getUserId());
         SetBalance(balance);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void LoadValueFromIntent(){
+        user = new User();
         Intent intent = getIntent();
-        userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
+        user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
         balance = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
-        cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
+        user.setCmnd(intent.getStringExtra(Symbol.CMND.GetValue()));
+        user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void LoadBankConnected(){
         progressBarManager.ShowProgressBar("Loading");
-        listBankAPI.GetListBank();
+        listBankAPI.GetListBank(getString(R.string.public_key), secretKeyString1, secretKeyString2);
     }
 
     void SetBalance(long amount){
@@ -115,17 +129,21 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
 
     public void AddNewBankCard(View view){
         Intent intent = new Intent(UserBankCardActivity.this, ChooseBankConnectActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-        intent.putExtra(Symbol.CMND.GetValue(), cmnd);
+        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
         startActivityForResult(intent, RequestCode.CONNECT_BANK_CODE);
     }
 
     @Override
     public void SelectModel(BankInfo model) {
         Intent intent = new Intent(UserBankCardActivity.this, BankCardDetailActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.BANK_INFO.GetValue(), gson.toJson(model));
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
         startActivityForResult(intent, RequestCode.UNLINK_BANK_CODE);
     }
 
@@ -186,7 +204,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     @Override
     public void UpdateWallet(String userid, long balance) {
         runOnUiThread(()->{
-            if(userid.equalsIgnoreCase(this.userid)){
+            if(userid.equalsIgnoreCase(this.user.getUserId())){
                 this.balance = balance;
                 this.changeBalance = true;
                 SetBalance(balance);

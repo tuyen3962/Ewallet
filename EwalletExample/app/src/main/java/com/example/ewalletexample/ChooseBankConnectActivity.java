@@ -1,6 +1,7 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -9,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ewalletexample.Server.api.bank.link.LinkAccountWithBankAPI;
+import com.example.ewalletexample.Server.api.bank.link.LinkBankRequest;
+import com.example.ewalletexample.Server.api.bank.link.LinkBankResponse;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.BankSupport;
@@ -44,7 +49,7 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, UserSelectFunction<BankSupport> {
+public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, UserSelectFunction<BankSupport>, LinkBankResponse {
     ProgressBarManager progressBarManager;
     FirebaseDatabaseHandler firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
@@ -62,7 +67,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
     BankSupport[] bankSupportList;
     BankSupport chosenBankConnect;
-    String userid, cmnd;
+    String userid, cmnd, secretKeyString1, secretKeyString2;
     UserModel model;
     long amount;
     Gson gson;
@@ -120,6 +125,8 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         amount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         cmnd = intent.getStringExtra(Symbol.CMND.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
     }
 
@@ -144,6 +151,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         chosenBankConnect = null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void CreateLinkAccountWithBank(View view){
         String cardNo = codeEditText.GetCombineText();
         String fullname = etFullNameCard.getText().toString();
@@ -154,18 +162,18 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         SendRequestForLinkingBank(cardNo, fullname, cmnd);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void SendRequestForLinkingBank(String cardID, String fullNameCard, String cmndCard){
         progressBarManager.ShowProgressBar("Loading");
-        String[] arr = new String[]{"userid:"+userid,"bankcode:"+chosenBankConnect.getBankCode(),
-                "cardno:"+cardID, "fullname:"+fullNameCard,"cmnd:"+cmndCard, "phone:"+model.getPhone()};
-
-        try {
-            String jsonData = HandlerJsonData.ExchangeToJsonString(arr);
-            new LinkAccountWithBank().execute(ServerAPI.LINK_BANK_CARD_API.GetUrl(), jsonData);
-        } catch (JSONException e) {
-            progressBarManager.HideProgressBar();
-            e.printStackTrace();
-        }
+        LinkBankRequest request = new LinkBankRequest();
+        request.userid = userid;
+        request.cardno = cardID;
+        request.bankcode = chosenBankConnect.getBankCode();
+        request.fullname = fullNameCard;
+        request.cmnd = cmndCard;
+        request.phone = model.getPhone();
+        LinkAccountWithBankAPI linkAccountWithBankAPI = new LinkAccountWithBankAPI(request, this);
+        linkAccountWithBankAPI.StartLinkCard(getString(R.string.public_key), secretKeyString1, secretKeyString2);
     }
 
     public void ReturnToUserBankActivity(){
@@ -178,45 +186,19 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         this.model = data;
     }
 
-    class LinkAccountWithBank extends RequestServerAPI implements RequestServerFunction{
-        public LinkAccountWithBank(){
-            SetRequestServerFunction(this);
-        }
+    @Override
+    public void GetBankInfo(BankInfo bankInfo) {
+        progressBarManager.HideProgressBar();
 
-        @Override
-        public boolean CheckReturnCode(int code) {
-            if(code == ErrorCode.SUCCESS.GetValue()){
-                return true;
-            }
-
-            return false;
-        }
-
-        @Override
-        public void DataHandle(JSONObject jsonData) throws JSONException {
-            int bankReturnCode = jsonData.getInt("bankreturncode");
-
-            if (bankReturnCode == 1){
-                BankInfo bankInfo = new BankInfo();
-                bankInfo.setBankCode(chosenBankConnect.getBankCode());
-                bankInfo.setCardName(chosenBankConnect.getBankName());
-                String cardNo = codeEditText.GetCombineText();
-                bankInfo.setF6CardNo(cardNo.substring(0, 6));
-                bankInfo.setL4CardNo(cardNo.substring(12));
-                Intent intent = new Intent();
-                intent.putExtra(Symbol.BANK_INFO_CONNECTION.GetValue(), Symbol.CONNECT_BANK.GetValue());
-                intent.putExtra(Symbol.BANK_INFO.GetValue(), gson.toJson(bankInfo));
-                setResult(RESULT_OK, intent);
-                finish();
-            } else {
-
-            }
-        }
-
-        @Override
-        public void ShowError(int errorCode, String message) {
-            progressBarManager.HideProgressBar();
-            Toast.makeText(ChooseBankConnectActivity.this, "Khong the lien ket voi tai khoan ngan hang", Toast.LENGTH_SHORT).show();
+        if (bankInfo != null){
+            bankInfo.setCardName(chosenBankConnect.getBankName());
+            Intent intent = new Intent();
+            intent.putExtra(Symbol.BANK_INFO_CONNECTION.GetValue(), Symbol.CONNECT_BANK.GetValue());
+            intent.putExtra(Symbol.BANK_INFO.GetValue(), gson.toJson(bankInfo));
+            setResult(RESULT_OK, intent);
+            finish();
+        } else {
+            Toast.makeText(ChooseBankConnectActivity.this, "Máy chủ không phản hồi", Toast.LENGTH_SHORT).show();
         }
     }
 }

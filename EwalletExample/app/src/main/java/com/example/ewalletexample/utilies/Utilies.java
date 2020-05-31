@@ -165,14 +165,6 @@ public class Utilies {
         return balance;
     }
 
-    public static byte[] ConvertStringToByte(String code){
-        return code.getBytes(Charset.forName("UTF-8"));
-    }
-
-    public static String ConvertByteToString(byte[] bytes){
-        return new String(bytes);
-    }
-
     public static void SetEneableButton(Button button, boolean isEnable){
         if (button.isEnabled() == !isEnable){
             button.setEnabled(isEnable);

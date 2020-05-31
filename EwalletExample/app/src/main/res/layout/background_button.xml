@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/mainButton"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="200dp"
+    android:layout_height="40dp"
+    android:background="@drawable/layout_button">
+
+    <TextView
+        android:id="@+id/tvTitleButton"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:textSize="21dp"
+        android:textStyle="bold"
+        android:textColor="@color/White"
+        android:text="Xasc thuc"
+        android:layout_margin="5dp"/>
+
+</RelativeLayout>

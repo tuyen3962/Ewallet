@@ -186,14 +186,15 @@ public class VerifyUserForForget extends AppCompatActivity implements HandleData
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == RequestCode.RESET_PASSWORD && resultCode == RESULT_CANCELED){
-            setResult(resultCode);
+        if (requestCode == RequestCode.RESET_PASSWORD){
+            setResult(resultCode, data);
             finish();
         }
     }
 
     @Override
     public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
         finish();
     }
 }

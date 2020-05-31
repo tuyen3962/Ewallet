@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -21,10 +22,13 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.CheckInputField;
+import com.example.ewalletexample.service.code.CheckOTPFunction;
 import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.email.GMailSender;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -34,41 +38,23 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class UpdateEmailActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, UpdateUserResponse, WebsocketResponse {
+public class UpdateEmailActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, WebsocketResponse,
+        ToolbarEvent, CheckOTPFunction {
 
     FirebaseAuth mAuth;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     ProgressBarManager progressBarManager;
 
-    View layoutCode, layoutEnterEmail;
     Button btnVerify;
-    UpdateUserAPI updateAPI;
-    String userid, email, code, newEmail;
+    String userid, email, code;
     CodeEditText codeEditText;
-    TextView tvError;
-    EditText etEmail, etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
+    TextView tvError, tvEmail, tvCountTimeDown;
+    EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     UserModel model;
-    boolean enterEmail, changeBalance;
+    CustomToolbarContext customToolbarContext;
+    CountDownTimer resendCountDownTime, timeValidationCode;
+    boolean changeBalance, isCodeValid;
     long balance;
-
-    TextWatcher textWatcher = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            if(tvError.getVisibility() == View.VISIBLE){
-                tvError.setVisibility(View.GONE);
-            }
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +62,8 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
         setContentView(R.layout.activity_update_email);
         GetValueFromIntent();
         Initialize();
+        SetupCountTimeDown();
+        SendCodeToEmail(tvCountTimeDown);
     }
 
     void GetValueFromIntent(){
@@ -85,49 +73,87 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
     }
 
     void Initialize(){
+        isCodeValid = false;
         changeBalance = false;
         mAuth = FirebaseAuth.getInstance();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
-        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnVerify));
-        progressBarManager.ShowProgressBar("Loading");
-        etEmail = findViewById(R.id.etEmail);
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnVerify), findViewById(R.id.btnChangeEmail), findViewById(R.id.btnBackToPreviousActivity));
+        tvEmail = findViewById(R.id.tvEmail);
+        tvEmail.setText(email);
+        tvCountTimeDown = findViewById(R.id.tvCountTimeDown);
         etCode01 = findViewById(R.id.etCode01);
         etCode02 = findViewById(R.id.etCode02);
         etCode03 = findViewById(R.id.etCode03);
         etCode04 = findViewById(R.id.etCode04);
         etCode05 = findViewById(R.id.etCode05);
         etCode06 = findViewById(R.id.etCode06);
-        etEmail.addTextChangedListener(textWatcher);
-        etCode01.addTextChangedListener(textWatcher);
-        etCode02.addTextChangedListener(textWatcher);
-        etCode03.addTextChangedListener(textWatcher);
-        etCode04.addTextChangedListener(textWatcher);
-        etCode05.addTextChangedListener(textWatcher);
-        etCode06.addTextChangedListener(textWatcher);
+        customToolbarContext = new CustomToolbarContext(this, this);
+
         tvError = findViewById(R.id.tvError);
-        layoutCode = findViewById(R.id.layoutCode);
-        layoutEnterEmail = findViewById(R.id.layoutEnterEmail);
-        etEmail.setHint(email);
         btnVerify = findViewById(R.id.btnVerify);
+        btnVerify.setEnabled(false);
         tvError.setVisibility(View.GONE);
-        updateAPI = new UpdateUserAPI(userid, this);
-        codeEditText = new CodeEditText(1, etCode01, etCode02, etCode03, etCode04, etCode05, etCode06);
+        codeEditText = new CodeEditText(1, this, etCode01, etCode02, etCode03, etCode04, etCode05, etCode06);
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
-        ShowEnterEmailLayout();
+    }
+
+    void SetupCountTimeDown(){
+        resendCountDownTime = new CountDownTimer(60000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                tvCountTimeDown.setText((millisUntilFinished/1000) + "");
+            }
+
+            @Override
+            public void onFinish() {
+                tvCountTimeDown.setEnabled(true);
+                tvCountTimeDown.setText("Gửi lại");
+            }
+        };
+
+        timeValidationCode = new CountDownTimer(180000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                isCodeValid = false;
+            }
+        };
+    }
+
+    @Override
+    public void IsFull() {
+        btnVerify.setEnabled(true);
+        if(tvError.getVisibility() == View.VISIBLE){
+            tvError.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void NotFull() {
+        btnVerify.setEnabled(false);
+        if(tvError.getVisibility() == View.VISIBLE){
+            tvError.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void GetModel(UserModel data) {
         this.model = data;
-        progressBarManager.HideProgressBar();
     }
 
-    void ShowErrorMessage(String message){
-        tvError.setVisibility(View.VISIBLE);
-        tvError.setText(message);
+    public void SendCodeToEmail(View view){
+        tvCountTimeDown.setEnabled(false);
+        resendCountDownTime.start();
+        code = Utilies.GetStringNumberByLength(6);
+        new SendCodeToEmailAddressThread().execute(email, code);
     }
 
-    public void BackPreviousActivity(View view){
+    @Override
+    public void BackToPreviousActivity() {
         Intent intent = new Intent();
         intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
@@ -135,46 +161,22 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
         finish();
     }
 
-    public void UpdateEmail(View view){
-        if(enterEmail){
-            SendCodeToEmail();
-        } else {
-            VerifyCode();
-        }
+    public void ChangeEmail(View view){
+        BackToPreviousActivity();
     }
 
-    void SendCodeToEmail(){
-        if(etEmail.getText().toString().isEmpty()){
-            ShowErrorMessage("Nhập email");
-        } else {
-            String email = etEmail.getText().toString();
-            if(CheckInputField.EmailIsValid(email)){
-                if(this.email.equalsIgnoreCase(email)){
-                    Toast.makeText(this, "Email bạn nhập trùng với email bạn đã yêu cầu xác thực", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                newEmail = email;
-                code = Utilies.GetStringNumberByLength(6);
-                new SendCodeToEmailAddressThread().execute(email, code);
-                ShowEnterCodeLayout();
+    public void VerifyOTPEmail(View view){
+        if (isCodeValid){
+            progressBarManager.ShowProgressBar("Loading");
+            String currentCode = codeEditText.GetCombineText();
+            if(currentCode.equalsIgnoreCase(code)){
+                CreateUserInFirebaseWithEmail(email);
             } else {
-                ShowErrorMessage("Định dạng email không đúng");
+                progressBarManager.HideProgressBar();
+                ShowErrorMessage("Mã xác nhận sai");
             }
-        }
-    }
-
-    void VerifyCode(){
-        progressBarManager.ShowProgressBar("Loading");
-        String currentCode = codeEditText.GetCombineText();
-        if(currentCode.equalsIgnoreCase(code)){
-            this.email = newEmail;
-            newEmail = "";
-            CreateUserInFirebaseWithEmail(email);
-            updateAPI.setEmail(email);
-            updateAPI.UpdateUser();
         } else {
-            progressBarManager.HideProgressBar();
-            ShowErrorMessage("Mã xác nhận sai");
+            Toast.makeText(this,"Mã xác thực đã quá hạn. Xin vui lòng nhấn gửi lại đế lấy mã mới.",Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -185,8 +187,9 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
                 FirebaseUser firebaseUser = mAuth.getCurrentUser();
                 if(firebaseUser != null){
                     model.setEmail(firebaseUser.getEmail());
-                    model.setEmailToken(firebaseUser.getUid());
                     firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), userid, model);
+                    setResult(RESULT_OK);
+                    finish();
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -213,40 +216,16 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
     }
 
     @Override
-    public void UpdateSuccess() {
-        Intent intent = new Intent();
-        intent.putExtra(Symbol.EMAIL.GetValue(), email);
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    @Override
-    public void UpdateFail() {
-        ShowErrorMessage("Lỗi kết nối");
-    }
-
-    void ShowEnterEmailLayout(){
-        layoutCode.setVisibility(View.GONE);
-        layoutEnterEmail.setVisibility(View.VISIBLE);
-        btnVerify.setText("Tiếp tục");
-        enterEmail = true;
-    }
-
-    void ShowEnterCodeLayout(){
-        layoutCode.setVisibility(View.VISIBLE);
-        layoutEnterEmail.setVisibility(View.GONE);
-        btnVerify.setText("Xác thực");
-        enterEmail = false;
-    }
-
-    @Override
     public void UpdateWallet(String userid, long balance) {
         changeBalance = true;
         if(this.userid.equalsIgnoreCase(userid)){
             this.balance = balance;
         }
+    }
+
+    void ShowErrorMessage(String message){
+        tvError.setVisibility(View.VISIBLE);
+        tvError.setText(message);
     }
 
     class SendCodeToEmailAddressThread extends AsyncTask<String, Void, Boolean>{
@@ -272,6 +251,8 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
             super.onPostExecute(result);
             if(result){
                 Toast.makeText(UpdateEmailActivity.this, "Đã gửi otp cho email của bạn. Xin hãy nhập mã OTP.", Toast.LENGTH_SHORT).show();
+                isCodeValid = true;
+                timeValidationCode.start();
             }
         }
     }

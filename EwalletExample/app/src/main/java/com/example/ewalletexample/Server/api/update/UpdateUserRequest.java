@@ -9,21 +9,24 @@ public class UpdateUserRequest {
     private String dob;
     private String email;
     private String key;
+    public String secondKey;
 
     private String cmndfontimg;
     private String cmndbackimg;
     private String avatar;
 
     public UpdateUserRequest(){
-        String userid = "";
-        String pin = "";
-        String cmnd = "";
-        String address = "";
-        String dob = "";
-
-        String cmndfontimg = "";
-        String cmndbackimg = "";
-        String avatar = "";
+        userid = "";
+        pin = "";
+        cmnd = "";
+        address = "";
+        dob = "";
+        email = "";
+        key = "";
+        secondKey = "";
+        cmndfontimg = "";
+        cmndbackimg = "";
+        avatar = "";
     }
 
     public String getUserid() {
@@ -104,5 +107,17 @@ public class UpdateUserRequest {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getSecondKey() {
+        return secondKey;
+    }
+
+    public void setSecondKey(String secondKey) {
+        this.secondKey = secondKey;
+    }
+
+    public String getString(){
+        return userid + address + avatar + cmnd + cmndbackimg + cmndfontimg + dob + pin;
     }
 }

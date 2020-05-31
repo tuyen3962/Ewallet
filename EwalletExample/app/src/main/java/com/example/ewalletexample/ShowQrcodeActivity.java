@@ -4,7 +4,6 @@ import androidmads.library.qrgenearator.QRGContents;
 import androidmads.library.qrgenearator.QRGEncoder;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
@@ -16,19 +15,16 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.utilies.Encryption;
-import com.example.ewalletexample.utilies.Utilies;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
 import com.google.zxing.WriterException;
@@ -36,7 +32,7 @@ import com.google.zxing.WriterException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler, View.OnClickListener {
+public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler, ToolbarEvent {
     private static final int colorChosen = R.color.colorPrimary;
     private static final int textColorChosen = R.color.White;
     private static final int colorDefault = R.color.White;
@@ -44,13 +40,12 @@ public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScanne
 
     ImageView imgQrCode;
     Button btnGenerateQrCode, btnScanQr;
-    ImageButton imgBack;
     View layoutQrCode;
-    Toolbar toolbar;
     Bitmap bitmap;
     QRGEncoder qrgEncoder;
     ZXingScannerView qrCodeScanner;
     String userId, encodedString;
+    CustomToolbarContext customToolbarContext;
     boolean isGenerate;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -68,15 +63,11 @@ public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScanne
         imgQrCode = findViewById(R.id.qr_image);
         btnGenerateQrCode = findViewById(R.id.btnGenerateQrCode);
         btnScanQr = findViewById(R.id.btnScanQrCode);
-        imgBack = findViewById(R.id.btnBackToPreviousActivity);
-        toolbar = findViewById(R.id.toolbarLayout);
         qrCodeScanner = findViewById(R.id.qrCodeScanner);
         layoutQrCode = findViewById(R.id.layoutQrCode);
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
+        customToolbarContext.SetTitle("Mã QR");
         qrCodeScanner.setResultHandler(this);
-        btnGenerateQrCode.setOnClickListener(this);
-        btnScanQr.setOnClickListener(this);
-        imgBack.setOnClickListener(this);
-        setSupportActionBar(toolbar);
         setScannerProperties();
     }
 
@@ -94,7 +85,7 @@ public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScanne
         Intent intent = getIntent();
         userId = intent.getStringExtra(Symbol.USER_ID.GetValue());
         isGenerate = intent.getStringExtra(Symbol.QRCODE.GetValue()).equalsIgnoreCase(Symbol.GENERATE.GetValue());
-        encodedString = Encryption.EncodeStringBase64(Utilies.ConvertStringToByte(userId));
+        encodedString = SecurityUtils.EncodeStringBase64(userId.getBytes());
     }
 
     @SuppressLint("ResourceAsColor")
@@ -151,19 +142,7 @@ public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScanne
         }
     }
 
-    @Override
-    public void onClick(View view){
-        if (btnScanQr.getId() == view.getId()){
-            ScaneQr();
-        } else if(btnGenerateQrCode.getId() == view.getId()) {
-            GenerateQrCode();
-        } else {
-            setResult(RESULT_CANCELED);
-            finish();
-        }
-    }
-
-    void GenerateQrCode(){
+    public void GenerateQrCode(View view){
         if (isGenerate)
              return;
 
@@ -178,7 +157,7 @@ public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScanne
         }
     }
 
-    void ScaneQr(){
+    public void ScanQr(View view){
         if (!isGenerate) return;
 
         isGenerate = false;
@@ -202,7 +181,17 @@ public class ShowQrcodeActivity extends AppCompatActivity implements ZXingScanne
     public void handleResult(Result result) {
         if (result != null) {
             String text = result.getText();
-            String decodedString = Utilies.ConvertByteToString(Encryption.DecodeStringBase64(text));
+            String decodedString = new String(SecurityUtils.DecodeStringBase64(text));
+            Intent intent = new Intent();
+            intent.putExtra(Symbol.USER_ID.GetValue(), decodedString);
+            setResult(RESULT_OK, intent);
+            finish();
         }
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 }

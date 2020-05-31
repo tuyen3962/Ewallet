@@ -20,15 +20,21 @@ import android.widget.TextView;
 
 import com.example.ewalletexample.MainLayoutActivity;
 import com.example.ewalletexample.R;
+import com.example.ewalletexample.SearchUserExchangeActivity;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.VerifyAccountActivity;
 import com.example.ewalletexample.data.User;
+import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.UserSelectFunction;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.example.ewalletexample.service.recycleview.service.RecycleHorzontalServiceView;
 import com.example.ewalletexample.service.recycleview.service.RecycleViewService;
 import com.example.ewalletexample.utilies.Utilies;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 
 public class HomeFragment extends Fragment implements UserSelectFunction<Service> {
 
@@ -115,7 +121,7 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
             }
             startActivity(intent);
         }
-        if (mainActivity.GetUserInformation().getStatus() == 1){
+        else if (mainActivity.GetUserInformation().getStatus() == 1){
             User user = mainActivity.GetUserInformation();
             Intent intent = new Intent(mainActivity, model.GetClassTransition());
             intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
@@ -123,6 +129,11 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
             intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
             intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
             intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), model.GetCode());
+            intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
+            intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
+            if (model == Service.EXCHANGE_SERVICE_TYPE){
+                intent.putExtra(Symbol.SEARCH_USER_EXCHANGNE.GetValue(), Symbol.NO_USER_EXCHANGE.GetValue());
+            }
             startActivityForResult(intent, model.GetRequestCode());
         }
         else {
@@ -139,6 +150,20 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
                 String imgBack = data.getStringExtra(Symbol.IMAGE_CMND_BACK.GetValue());
                 String cmnd = data.getStringExtra(Symbol.CMND.GetValue());
                 mainActivity.SetUserSecurityInfo(cmnd, imgFront, imgBack);
+            }
+        } else if (requestCode == RequestCode.SCAN_QR_CODE || requestCode == RequestCode.QR_CODE){
+            if (resultCode == ((Activity) mainActivity).RESULT_OK){
+                String friendId = data.getStringExtra(Symbol.USER_ID.GetValue());
+                User user = mainActivity.GetUserInformation();
+                Intent intent = new Intent(mainActivity, SearchUserExchangeActivity.class);
+                Service service = Service.EXCHANGE_SERVICE_TYPE;
+                intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+                intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
+                intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
+                intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), service.GetCode());
+                intent.putExtra(Symbol.SEARCH_USER_EXCHANGNE.GetValue(), Symbol.HAS_USER_EXCHANGE.GetValue());
+                intent.putExtra(Symbol.FRIEND_ID.GetValue(), friendId);
+                startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
             }
         }
     }

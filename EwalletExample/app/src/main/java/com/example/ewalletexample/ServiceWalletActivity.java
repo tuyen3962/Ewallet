@@ -1,6 +1,7 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -43,7 +44,7 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
 
     FirebaseStorageHandler firebaseStorageHandler;
     RecycleViewListBankConnected recycleViewListBankConnected;
-    String userid;
+    String userid, secretKeyString1, secretKeyString2;
     long userAmount;
     View sourceFundLayout;
     List<BankInfo> bankInfoList;
@@ -103,6 +104,7 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,6 +136,8 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         this.service = Service.Find(intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0));
         customToolbarContext.SetTitle(this.service.GetName());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         sourceFundLayout.setVisibility(View.VISIBLE);
         listBankConnectedAPI = new ListBankConnectedAPI(this, userid);
     }
@@ -181,9 +185,10 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         finish();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void LoadListBankConnected(){
         progressBarManager.ShowProgressBar("Loading");
-        listBankConnectedAPI.GetListBank();
+        listBankConnectedAPI.GetListBank(getString(R.string.public_key), secretKeyString1, secretKeyString2);
     }
 
     @Override

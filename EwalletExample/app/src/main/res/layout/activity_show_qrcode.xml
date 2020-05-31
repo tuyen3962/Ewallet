@@ -70,7 +70,8 @@
                 android:layout_marginRight="10dp"
                 android:backgroundTint="@color/White"
                 android:textColor="@color/Black"
-                android:paddingHorizontal="40dp"/>
+                android:paddingHorizontal="40dp"
+                android:onClick="GenerateQrCode"/>
 
             <Button
                 android:id="@+id/btnScanQrCode"
@@ -81,7 +82,8 @@
                 android:layout_marginLeft="10dp"
                 android:backgroundTint="@color/White"
                 android:textColor="@color/Black"
-                android:paddingHorizontal="30dp"/>
+                android:paddingHorizontal="30dp"
+                android:onClick="ScanQr"/>
 
         </LinearLayout>
 

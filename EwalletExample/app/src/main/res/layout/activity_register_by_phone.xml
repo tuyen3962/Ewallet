@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,153 +7,174 @@
     android:layout_height="match_parent"
     tools:context=".RegisterByPhone">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginBottom="65dp"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <include
+            layout="@layout/custom_action_bar"
+            android:id="@+id/toolbarLayout"/>
+
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Button
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Trở về"
-                    android:textSize="16dp"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:textColor="@color/Grey"
-                    android:drawableLeft="@drawable/ic_action_navigation_arrow_back"
-                    android:onClick="CancelEvent"/>
-
-                <TextView
-                    android:id="@+id/tvRegisterByPhone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="15dp"
-                    android:textColor="@color/Black"
-                    android:layout_centerHorizontal="true"
-                    android:textSize="30dp"
-                    android:text="Đăng kí"/>
-            </RelativeLayout>
-
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="20dp"
-                android:textColor="@color/Black"
-                android:gravity="center"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="5dp"
-                android:text="Nhập thông tin cần thiết cho số điện thoại"/>
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvPhone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="20dp"
-                android:textColor="@color/Black"
-                android:gravity="center"
-                android:layout_marginTop="5dp"/>
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvError"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="20dp"
-                android:textColor="@color/Red"
-                android:gravity="center"
-                android:layout_marginVertical="5dp"/>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/input_layout_fullname"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginVertical="5dp"
-                android:layout_marginHorizontal="20dp"
-                android:hint="Nhập họ và tên"
-                app:boxBackgroundColor="@color/SoftWhite"
-                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etFullname"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/Black"
-                    android:textSize="18sp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
+            android:layout_height="match_parent">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <FrameLayout
-                    android:id="@+id/passwordLayout"
-                    android:layout_width="250dp"
-                    android:layout_height="60dp"
-                    android:layout_marginVertical="5dp"
-                    android:layout_centerHorizontal="true"/>
-
-                <FrameLayout
-                    android:id="@+id/confirmPasswordLayout"
-                    android:layout_width="250dp"
-                    android:layout_height="60dp"
-                    android:layout_marginVertical="5dp"
-                    android:layout_centerHorizontal="true"
-                    android:layout_below="@id/passwordLayout"/>
-
                 <LinearLayout
-                    android:id="@+id/buttonLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="5dp"
-                    android:layout_below="@id/confirmPasswordLayout"
-                    android:gravity="center">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
-                    <Button
-                        android:id="@+id/btnRegister"
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tvRegisterByPhone"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="15dp"
+                            android:textColor="@color/Black"
+                            android:layout_centerHorizontal="true"
+                            android:textSize="30dp"
+                            android:text="Đăng kí"/>
+                    </RelativeLayout>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="10dp"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:backgroundTint="@color/colorAccent"
+                        android:textSize="20dp"
+                        android:textColor="@color/Black"
                         android:gravity="center"
-                        android:onClick="RegisterEvent"
-                        android:text="Tiếp tục" />
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="5dp"
+                        android:text="Nhập thông tin cần thiết cho số điện thoại"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="20dp"
+                        android:textColor="@color/Black"
+                        android:gravity="center"
+                        android:layout_marginTop="5dp"/>
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="20dp"
+                        android:textColor="@color/Red"
+                        android:gravity="center"
+                        android:layout_marginVertical="5dp"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/input_layout_fullname"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginVertical="5dp"
+                        android:hint="Nhập họ và tên"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="20dp"
+                        app:boxBackgroundColor="@color/SoftWhite"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etFullname"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:drawableLeft="@drawable/ic_action_person"
+                            android:background="@drawable/edit_round_textview"
+                            android:textColor="@color/Black"
+                            android:textSize="22dp" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/input_layout_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginTop="25dp"
+                            android:layout_marginRight="20dp"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etPassword"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:textSize="22dp"
+                                android:gravity="center"
+                                android:hint="Nhập mật khẩu"
+                                android:drawableLeft="@drawable/ic_action_password"
+                                android:inputType="numberPassword"
+                                android:padding="5dp"
+                                android:maxLength="6"
+                                android:background="@drawable/edit_round_textview"/>
+
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/input_layout_confirm_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="60dp"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginTop="30dp"
+                            android:layout_marginRight="20dp"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/etConfirmPasswork"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:textSize="22dp"
+                                android:hint="Nhập lại mật khẩu"
+                                android:drawableLeft="@drawable/ic_action_password"
+                                android:inputType="numberPassword"
+                                android:gravity="center"
+                                android:padding="5dp"
+                                android:maxLength="6"
+                                android:background="@drawable/edit_round_textview"/>
+
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-                <com.davidmiguel.numberkeyboard.NumberKeyboard
-                    android:id="@+id/keyboard"
-                    xmlns:android="http://schemas.android.com/apk/res/android"
-                    xmlns:keyboard="http://schemas.android.com/apk/res-auto"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_marginBottom="5dp"
-                    keyboard:numberkeyboard_numberKeyTextColor="@color/colorAccent"
-                    keyboard:numberkeyboard_keyWidth="match_parent"
-                    keyboard:numberkeyboard_keyHeight="match_parent"
-                    keyboard:numberkeyboard_keyboardType="custom"
-                    keyboard:numberkeyboard_leftAuxBtnIcon="@drawable/ic_action_point_light"
-                    keyboard:numberkeyboard_leftAuxBtnBackground="@drawable/ic_action_point_dark"
-                    keyboard:numberkeyboard_rightAuxBtnIcon="@drawable/ic_action_arrow_right"
-                    keyboard:numberkeyboard_rightAuxBtnBackground="@drawable/ic_action_point_dark"
-                    android:layout_below="@id/buttonLayout"
-                    android:visibility="visible"/>
-
             </RelativeLayout>
 
-        </LinearLayout>
+        </ScrollView>
 
-    </RelativeLayout>
+    </LinearLayout>
 
-</ScrollView>
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="19dp"
+        android:textStyle="bold"
+        android:backgroundTint="@color/colorAccent"
+        android:gravity="center"
+        android:onClick="RegisterEvent"
+        android:paddingHorizontal="50dp"
+        android:paddingVertical="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:text="Tiếp tục" />
+
+</RelativeLayout>

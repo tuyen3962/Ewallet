@@ -15,6 +15,8 @@ import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandl
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.storageFirebase.ResponseImageUri;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,12 +33,11 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MainLayoutActivity extends AppCompatActivity implements ResponseImageUri, ResponseModelByKey<UserModel> {
+public class MainLayoutActivity extends AppCompatActivity implements ResponseImageUri, ResponseModelByKey<UserModel>, ToolbarEvent {
 
     long userAmount;
     View securityLayout;
     FirebaseAuth auth;
-    Toolbar toolbar;
     BottomNavigationView bottomNavigation;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler storageHandler;
@@ -44,7 +45,9 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
     Uri imageUri;
     User user;
     UserModel model;
+    CustomToolbarContext customToolbarContext;
     Gson gson;
+    String firstKeyString, secondKeyString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,13 +74,12 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
         bottomNavigation = findViewById(R.id.nav_view);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), bottomNavigation);
-        toolbar = findViewById(R.id.toolbarLayout);
-        setSupportActionBar(toolbar);
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
+        customToolbarContext.SetTitle("Màn hình chính");
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_notifications, R.id.navigation_personal)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(bottomNavigation, navController);
     }
 
@@ -86,6 +88,8 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
         user = new User();
         Intent intent = getIntent();
         user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
+        firstKeyString = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secondKeyString = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
         FindImageUriFromInternet();
@@ -98,6 +102,14 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
             this.imageUri = null;
             progressBarManager.HideProgressBar();
         }
+    }
+
+    public String GetFirstKeyString(){
+        return firstKeyString;
+    }
+
+    public String GetSecondKeyString(){
+        return secondKeyString;
     }
 
     @Override
@@ -130,18 +142,9 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
         user = gson.fromJson(json, User.class);
     }
 
-    public void SwitchToBankConnectedActivity(){
-        Intent intent = new Intent(MainLayoutActivity.this, UserBankCardActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
-        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
-        startActivity(intent);
-    }
-
     @Override
     public void GetModel(UserModel data) {
         this.model = data;
-//        auth.signInWithCustomToken(model.getPhoneToken());
     }
 
     public Gson GetGson(){
@@ -181,5 +184,11 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
             user.setCmndFrontImage(data.getStringExtra(Symbol.IMAGE_CMND_FRONT.GetValue()));
             user.setCmnd(data.getStringExtra(Symbol.CMND.GetValue()));
         }
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 }

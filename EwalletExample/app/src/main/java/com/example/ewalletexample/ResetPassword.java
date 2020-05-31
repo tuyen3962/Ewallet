@@ -26,10 +26,13 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.Response;
+import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.CheckInputField;
+import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
+import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
-import com.example.ewalletexample.utilies.Encryption;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -37,12 +40,16 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import javax.crypto.SecretKey;
 
-public class ResetPassword extends AppCompatActivity implements ToolbarEvent, UpdateUserResponse, UserLoginResponse, BalanceResponse {
+public class ResetPassword extends AppCompatActivity implements ToolbarEvent, UpdateUserResponse, UserLoginResponse, BalanceResponse, HandleDataFromFirebaseDatabase<UserModel> {
 
+    FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseAuth auth;
     CustomToolbarContext customToolbarContext;
     ProgressBarManager progressBarManager;
@@ -52,8 +59,9 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
     UserLoginAPI userLoginAPI;
     Gson gson;
     Button btnResetNewPassword;
-    String reason, email, phone, userid, encryptPasswordByAES, encodeSecretKeyByPublicKey;
+    String reason, secretKeyString1, secretKeyString2;
     User user;
+    SecretKey secretKey1, secretKey2;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -80,6 +88,7 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,9 +101,12 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
     }
 
     void Initialize(){
+        user = new User();
         gson = new Gson();
+        firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
         tvUsername = findViewById(R.id.tvUsername);
         btnResetNewPassword = findViewById(R.id.btnResetNewPassword);
+        btnResetNewPassword.setEnabled(false);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), btnResetNewPassword);
         etPassword = findViewById(R.id.etNewPassword);
         tvError = findViewById(R.id.tvError);
@@ -105,22 +117,47 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
         etPassword.addTextChangedListener(textWatcher);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void GetValueFromIntent(){
         Intent intent = getIntent();
         reason = intent.getStringExtra(Symbol.VERRIFY_FORGET.GetValue());
-        userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         if(reason.equalsIgnoreCase(Symbol.VERIFY_FORGET_BY_EMAIL.GetValue())){
-            email = intent.getStringExtra(Symbol.EMAIL.GetValue());
-            LoadingVerifyEmail verifyEmail = new LoadingVerifyEmail(email);
+            user.setEmail(intent.getStringExtra(Symbol.EMAIL.GetValue()));
+            LoadingVerifyEmail verifyEmail = new LoadingVerifyEmail(user.getEmail());
             verifyEmail.start();
         }
         else
         {
-            phone = intent.getStringExtra(Symbol.PHONE.GetValue());
-            tvUsername.setText(phone);
+            user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
+            tvUsername.setText(user.getPhoneNumber());
+            firebaseDatabaseHandler.RegisterDataListener();
+            progressBarManager.ShowProgressBar("Loading");
         }
+    }
 
-        updateUserAPI = new UpdateUserAPI(userid, this);
+    @Override
+    public void HandleDataModel(UserModel data) {
+        progressBarManager.HideProgressBar();
+        btnResetNewPassword.setEnabled(false);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @Override
+    public void HandleDataSnapShot(DataSnapshot dataSnapshot) {
+        for(DataSnapshot data : dataSnapshot.child(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue()).getChildren()){
+            UserModel model = data.getValue(UserModel.class);
+            if (model != null && model.getPhone().equalsIgnoreCase(user.getPhoneNumber())){
+                user.setUserId(data.getKey());
+                updateUserAPI = new UpdateUserAPI(user.getUserId(), getString(R.string.public_key),this);
+                firebaseDatabaseHandler.UnregisterValueListener(null);
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void HandlerDatabaseError(DatabaseError databaseError) {
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -133,13 +170,14 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
         Response response = CheckPassword(password, confirmPass);
 
         if(response.GetStatus()){
-            SecretKey secretKey = Encryption.getSecretKey();
-            encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), password);
-            encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
+            secretKey1 = SecurityUtils.generateAESKey();
+            secretKey2 = SecurityUtils.generateAESKey();
 
-            updateUserAPI.setPin(encryptPasswordByAES);
-            updateUserAPI.setKey(encodeSecretKeyByPublicKey);
-            updateUserAPI.UpdateUser();
+            String encryptPasswordByAES = SecurityUtils.EncryptStringBySecretKey(secretKey1, getString(R.string.share_key), password);
+            String encryptAESPassBySecondSecretKey = SecurityUtils.encryptAES(secretKey2, encryptPasswordByAES);
+
+            updateUserAPI.setPin(encryptAESPassBySecondSecretKey);
+            updateUserAPI.UpdateUser(secretKey1, secretKey2);
         } else {
             progressBarManager.HideProgressBar();
         }
@@ -172,10 +210,12 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
         finish();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void UpdateSuccess() {
-        UserLoginRequest request = new UserLoginRequest(phone, encryptPasswordByAES, encodeSecretKeyByPublicKey);
-        userLoginAPI = new UserLoginAPI(request, this);
+        UserLoginRequest request = new UserLoginRequest(user.getPhoneNumber(), etPassword.getText().toString(),
+                SecurityUtils.EncodeStringBase64(secretKey1.getEncoded()), SecurityUtils.EncodeStringBase64(secretKey2.getEncoded()));
+        userLoginAPI = new UserLoginAPI(getString(R.string.share_key), getString(R.string.public_key), request, this);
         userLoginAPI.StartLoginAPI();
     }
 
@@ -185,11 +225,18 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
         progressBarManager.HideProgressBar();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
-    public void LoginSucess(User user) {
+    public void LoginSucess(User user, String customToken, String secretKey1, String secretKey2) {
         this.user = user;
-        GetBalanceAPI getBalanceAPI = new GetBalanceAPI(user.getUserId(), this);
-        getBalanceAPI.GetBalance();
+        this.secretKeyString1 = SecurityUtils.DecryptAESbyTwoSecretKey(this.secretKey2, this.secretKey1, secretKey1);
+        this.secretKeyString2 = SecurityUtils.DecryptAESbyTwoSecretKey(this.secretKey2, this.secretKey1, secretKey2);
+        if (auth.getCurrentUser() != null){
+            auth.signOut();
+        }
+        auth.signInWithCustomToken(customToken);
+        GetBalanceAPI getBalanceAPI = new GetBalanceAPI(SecurityUtils.generatePublicKey(getString(R.string.public_key)), user.getUserId(), gson, this);
+        getBalanceAPI.GetBalance(secretKeyString1, secretKeyString2);
     }
 
     @Override
@@ -204,10 +251,13 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
 
     @Override
     public void GetBalanceResponse(long balance) {
-        Intent intent = new Intent(ResetPassword.this, MainLayoutActivity.class);
+        Intent intent = new Intent();
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
-        startActivity(intent);
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     class LoadingVerifyEmail extends Thread{

@@ -4,11 +4,13 @@ public class UserLoginRequest {
     private String phone;
     private String pin;
     private String key;
+    private String secondKey;
 
-    public UserLoginRequest(String phone, String pin, String key) {
+    public UserLoginRequest(String phone, String pin, String key, String secondKey) {
         this.phone = phone;
         this.pin = pin;
         this.key = key;
+        this.secondKey = secondKey;
     }
 
     public String getPhone() {
@@ -33,5 +35,17 @@ public class UserLoginRequest {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getSecondKey() {
+        return secondKey;
+    }
+
+    public void setSecondKey(String secondKey) {
+        this.secondKey = secondKey;
+    }
+
+    public String getString(){
+        return phone + pin + key + secondKey;
     }
 }

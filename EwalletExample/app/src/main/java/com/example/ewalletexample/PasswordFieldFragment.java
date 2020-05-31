@@ -141,11 +141,7 @@ public class PasswordFieldFragment extends Fragment {
         controlListImage.SetCanEditText(true);
         btnTextVisibility.setImageResource(invisibilityTextDrawable);
 
-        if (loginActivity != null){
-            loginActivity.ShowNumberKeyBoard();
-        } else if(registerByPhone != null) {
-            registerByPhone.ShowNumberKeyBoard(getId());
-        } else if(submitOrderActivity != null){
+        if(submitOrderActivity != null){
             submitOrderActivity.ShowNumberKeyBoard();
         }
     }

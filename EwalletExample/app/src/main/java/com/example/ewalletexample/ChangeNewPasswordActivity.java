@@ -5,12 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
-import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,7 +20,7 @@ import com.example.ewalletexample.Server.api.VerifyPin.VerifyResponse;
 import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
 import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.Symbol;
-import com.example.ewalletexample.utilies.Encryption;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.android.material.textview.MaterialTextView;
 
 import javax.crypto.SecretKey;
@@ -67,13 +65,14 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_new_password);
 
         Initialize();
-        GetValueFromInten();
+        GetValueFromIntent();
     }
 
     void Initialize(){
@@ -101,11 +100,12 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
         });
     }
 
-    void GetValueFromInten(){
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    void GetValueFromIntent(){
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         verifyPinAPI = new VerifyPinAPI(userid, this);
-        updateUserAPI = new UpdateUserAPI(userid, this);
+        updateUserAPI = new UpdateUserAPI(userid, getString(R.string.public_key), this);
     }
 
     public void ChangePasswordEvent(View view){
@@ -119,13 +119,15 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
     public void VerifyPinResponse(boolean isSuccess) {
         if(isSuccess){
             if (CheckNewPassword()){
-                SecretKey secretKey = Encryption.getSecretKey();
-                String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), etNewPassword.getText().toString());
-                String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
+                String password = etNewPassword.getText().toString();
+                SecretKey secretKey1 = SecurityUtils.generateAESKey();
+                SecretKey secretKey2 = SecurityUtils.generateAESKey();
 
-                updateUserAPI.setPin(encryptPasswordByAES);
-                updateUserAPI.setKey(encodeSecretKeyByPublicKey);
-                updateUserAPI.UpdateUser();
+                String encryptPasswordByAES = SecurityUtils.EncryptStringBySecretKey(secretKey1, getString(R.string.share_key), password);
+                String encryptAESPassBySecondSecretKey = SecurityUtils.encryptAES(secretKey2, encryptPasswordByAES);
+
+                updateUserAPI.setPin(encryptAESPassBySecondSecretKey);
+                updateUserAPI.UpdateUser(secretKey1, secretKey2);
             }
         } else {
             ClearEditText();

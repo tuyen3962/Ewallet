@@ -15,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -38,6 +39,8 @@ import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.recycleview.search.RecycleViewFriendProfileAdapter;
 import com.example.ewalletexample.service.recycleview.search.RecycleViewUserProfileAdapter;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
@@ -50,7 +53,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class SearchUserExchangeActivity extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel>, UserSelectFunction<UserSearchModel>, ResponseModelByKey<UserModel>, CheckListResponse {
+public class SearchUserExchangeActivity extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel>, UserSelectFunction<UserSearchModel>,
+        ResponseModelByKey<UserModel>, CheckListResponse, ToolbarEvent {
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
     ProgressBarManager progressBarManager;
@@ -60,16 +64,18 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     TextInputEditText etUserSearch, etNote;
     AutoFormatEditText etCash;
     ImageView imgUserProfile;
+    Button btnScanQrCode;
     RecyclerView lvUserRecommend, lvUserContact, lvFriendProfile;
     RecycleViewUserProfileAdapter userProfileAdapter, userInContactProfileAdapter;
     View layoutInfoTransaction, layoutInfoReceiver;
-    String userid, phone;
+    String userid, phone, friendId, hasFriend;
     long userAmount;
-    boolean hasGetContact;
+    boolean hasGetContact, isGetFriend;
     UserSearchModel currentReceiverModel;
-    UserModel currentUserModel;
+    UserModel currentUserModel, friendModel;
     CheckListAPI checkListAPI;
     GetListFriend getListFriend;
+    CustomToolbarContext customToolbarContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +108,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar),
                 findViewById(R.id.btnVerify), tvSearchUser, findViewById(R.id.btnFind));
         etNote = findViewById(R.id.etNote);
+        btnScanQrCode = findViewById(R.id.btnScanQrCode);
         lvUserRecommend.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         lvUserContact.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         lvFriendProfile.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -109,6 +116,8 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         listPhoneContacts = new ArrayList<>();
         ShowLayoutTransactionDetail();
         hasGetContact = false;
+        isGetFriend = false;
+        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
         LoadContact();
     }
 
@@ -117,6 +126,11 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+        hasFriend = intent.getStringExtra(Symbol.SEARCH_USER_EXCHANGNE.GetValue());
+        if (hasFriend.equalsIgnoreCase(Symbol.HAS_USER_EXCHANGE.GetValue())){
+            friendId = intent.getStringExtra(Symbol.FRIEND_ID.GetValue());
+            progressBarManager.ShowProgressBar("Lấy thông tin người dùng");
+        }
     }
 
     void LoadContact() {
@@ -134,6 +148,13 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
 
     public void SearchReceiverPhoneRecommend(View view){
         firebaseDatabaseHandler.RegisterDataListener();
+    }
+
+    public void ScanQRCodeEvent(View view){
+        Intent intent = new Intent(SearchUserExchangeActivity.this, ShowQrcodeActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.QRCODE.GetValue(), Symbol.SCAN.GetValue());
+        startActivityForResult(intent, RequestCode.QR_CODE);
     }
 
     @Override
@@ -212,6 +233,10 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     }
 
     public void ShowLayoutInfoReceiver(View view){
+        if (hasFriend.equalsIgnoreCase(Symbol.HAS_USER_EXCHANGE.GetValue())){
+            return;
+        }
+
         if (!hasGetContact){
             LoadContact();
             if (hasPhoneContactsPermission(Manifest.permission.READ_CONTACTS)){
@@ -225,6 +250,19 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         layoutInfoTransaction.setVisibility(View.GONE);
         etUserSearch.setText("");
         listUserRecommend.clear();
+    }
+
+    void ShowFriendProfileLayout(){
+        btnScanQrCode.setVisibility(View.GONE);
+        tvTitleListReceiver.setVisibility(View.GONE);
+        lvFriendProfile.setVisibility(View.GONE);
+        tvSearchUser.setText(friendModel.getFullname());
+        Utilies.LoadImageFromFirebase(this, firebaseStorageHandler, friendModel.getImgLink(), imgUserProfile);
+        currentReceiverModel = new UserSearchModel();
+        currentReceiverModel.setFullName(friendModel.getFullname());
+        currentReceiverModel.setImgLink(friendModel.getImgLink());
+        currentReceiverModel.setPhone(friendModel.getPhone());
+        currentReceiverModel.setUserid(friendId);
     }
 
     public void StartCreateExchangeOrder(View view){
@@ -266,13 +304,24 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
 
     @Override
     public void GetModel(UserModel data) {
-        currentUserModel = data;
-        List<String> friends = currentUserModel.getFriends();
-        if (friends == null || (friends != null && friends.size() == 0)){
-            tvTitleListReceiver.setVisibility(View.GONE);
-            lvFriendProfile.setVisibility(View.GONE);
+        if (isGetFriend){
+            friendModel = data;
+            ShowFriendProfileLayout();
+            progressBarManager.HideProgressBar();
         } else {
-            getListFriend = new GetListFriend(this, lvFriendProfile, firebaseStorageHandler, friends);
+            currentUserModel = data;
+            List<String> friends = currentUserModel.getFriends();
+            if (friends == null || (friends != null && friends.size() == 0)){
+                tvTitleListReceiver.setVisibility(View.GONE);
+                lvFriendProfile.setVisibility(View.GONE);
+            } else {
+                getListFriend = new GetListFriend(this, lvFriendProfile, firebaseStorageHandler, friends);
+            }
+
+            if (hasFriend.equalsIgnoreCase(Symbol.HAS_USER_EXCHANGE.GetValue())){
+                isGetFriend = true;
+                firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, friendId, UserModel.class, this);
+            }
         }
     }
 
@@ -299,6 +348,12 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         if (progressBarManager.IsVivisible()){
             progressBarManager.HideProgressBar();
         }
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 
     class GetListFriend implements CheckListResponse, UserSelectFunction<UserSearchModel>{
@@ -385,6 +440,10 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
                 setResult(resultCode);
                 finish();
             }
+        } else if (requestCode == RequestCode.QR_CODE && resultCode == RESULT_OK){
+            isGetFriend = true;
+            friendId = data.getStringExtra(Symbol.FRIEND_ID.GetValue());
+            firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, friendId, UserModel.class, this);
         }
     }
 }

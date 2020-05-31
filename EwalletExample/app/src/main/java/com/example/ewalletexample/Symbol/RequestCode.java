@@ -10,12 +10,13 @@ public class RequestCode {
     public static final int UPDATE_EMAIL = 6;
     public static final int SETTING_ACCOUNT = 7;
     public static final int SUBMIT_ORDER = 8;
-    public static final int SCANE_QR_CODE = 10;
+    public static final int SCAN_QR_CODE = 10;
     public static final int QR_CODE = 11;
     public static final int WALLET_CODE = 12;
     public static final int SECURITY_CODE = 13;
     public static final int RESET_PASSWORD = 14;
     public static final int VIEW_TRANSACTION = 15;
+    public static final int UPDATE_REGISTER = 16;
     public final static int TAKE_PHOTO_REQUEST = 100;
     public final static int PICK_IMAGE_REQUEST = 101;
 }

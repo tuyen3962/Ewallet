@@ -50,10 +50,13 @@ public class EnterPhoneStartAppActivity extends AppCompatActivity implements Han
 
     void CheckCurrentPhone(){
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
+        String userid = local.GetValueStringByKey(Symbol.KEY_USERID.GetValue());
         String phone = local.GetValueStringByKey(Symbol.KEY_PHONE.GetValue());
         String fullName = local.GetValueStringByKey(Symbol.KEY_FULL_NAME.GetValue());
-        if(!phone.isEmpty() && !fullName.isEmpty()){
+        if(!phone.isEmpty() && !fullName.isEmpty() && !userid.isEmpty()){
             Intent intent = new Intent(EnterPhoneStartAppActivity.this, LoginActivity.class);
+            intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
+            intent.putExtra(Symbol.USER_ID.GetValue(), userid);
             intent.putExtra(Symbol.PHONE.GetValue(), phone);
             intent.putExtra(Symbol.FULLNAME.GetValue(), fullName);
             startActivity(intent);
@@ -210,7 +213,6 @@ public class EnterPhoneStartAppActivity extends AppCompatActivity implements Han
                 Intent intent = new Intent(EnterPhoneStartAppActivity.this, VerifyByPhoneActivity.class);
                 intent.putExtra(Symbol.PHONE.GetValue(), phone);
                 intent.putExtra(Symbol.FULLNAME.GetValue(), model.getFullname());
-                Log.d("TAG", "onClick: " + model.getFullname());
                 intent.putExtra(Symbol.USER_ID.GetValue(), userid);
                 intent.putExtra(Symbol.REASION_VERIFY.GetValue(), Symbol.REASON_VERIFY_FOR_LOGIN.GetValue());
                 startActivity(intent);

@@ -272,7 +272,7 @@
                             android:textSize="17dp"
                             android:textColor="@drawable/text_button_pressed_color_change"
                             style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:onClick="BackPreviousActivity"/>
+                            android:onClick="MoveToNextActivity"/>
 
                     </LinearLayout>
                 </LinearLayout>

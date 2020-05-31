@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -33,14 +34,23 @@ import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal
 import com.example.ewalletexample.service.ResponseMethod;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.storageFirebase.LoadImageResponse;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.service.websocket.WebsocketResponse;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.Utilies;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.IOException;
 
-public class VerifyAccountActivity extends AppCompatActivity implements ResponseMethod, UpdateUserResponse {
+import javax.crypto.SecretKey;
+
+public class VerifyAccountActivity extends AppCompatActivity implements ResponseMethod, UpdateUserResponse, ToolbarEvent, WebsocketResponse {
     private final static int TAKE_PHOTO_FRONT_SIDE_REQUEST = 100;
     private final static int TAKE_PHOTO_BACK_SIDE_REQUEST = 101;
     private final static int CHOOSE_PICTURE_FRONT_SIDE_REQUEST = 102;
@@ -49,19 +59,26 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     FirebaseStorageHandler firebaseStorageHandler;
     ProgressBarManager progressBarManager;
     User user;
-    TextView tvFullName, tvBack;
-    EditText etCMND;
+    TextView tvFullName;
+    TextInputEditText etCMND;
+    TextInputLayout inputLayoutCMND;
     View btnVerify;
+    Button btnSkip;
     ImageView imgFrontIdentifierCard, imgBackIdentifierCard;
     String frontPhotoPath, backPhotoPath;
     File frontPhotoFile, backPhotoFile;
     Uri frontPhotoUri, backPhotoUri;
     UpdateUserAPI updateAPI;
-    boolean hasUploadTwoImages;
+    boolean hasUploadTwoImages, changeBalance;
     SharedPreferenceLocal local;
-    String update;
+    String update, secretKeyString1, secretKeyString2;
     Gson gson;
+    SecretKey secretKey1, secretKey2;
+    CustomToolbarContext customToolbarContext;
+    WebsocketClient websocketClient;
+    long balance;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,34 +89,46 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         FillUserProfile();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void Initialize(){
         frontPhotoUri = null;
         backPhotoUri = null;
+        changeBalance = false;
+        balance = 0;
+        inputLayoutCMND = findViewById(R.id.input_layout_cmnd);
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         tvFullName = findViewById(R.id.tvFullName);
-        tvBack = findViewById(R.id.tvBack);
+        btnSkip = findViewById(R.id.btnSkip);
         etCMND = findViewById(R.id.etCMND);
         imgFrontIdentifierCard = findViewById(R.id.imgFrontIdentifierCard);
         imgBackIdentifierCard = findViewById(R.id.imgBackIdentifierCard);
         btnVerify = findViewById(R.id.btnVerify);
+        websocketClient = new WebsocketClient(this, user.getUserId(), this);
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar),
                 btnVerify, imgFrontIdentifierCard, imgBackIdentifierCard);
-        updateAPI = new UpdateUserAPI(user.getUserId(), this);
+        updateAPI = new UpdateUserAPI(user.getUserId(), getString(R.string.public_key), this);
         hasUploadTwoImages = false;
+        customToolbarContext = new CustomToolbarContext(this, "Xác thực ví", this::BackToPreviousActivity);
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
-            tvBack.setText("Skip");
+            btnSkip.setText("Bỏ qua");
             tvFullName.setCompoundDrawables(null,null,null,null);
+            customToolbarContext.SetVisibilityImageButtonBack(View.GONE);
         } else {
-            tvBack.setVisibility(View.GONE);
+            btnSkip.setVisibility(View.GONE);
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void GetValueFromIntent(){
         gson = new Gson();
         user = new User();
         Intent intent = getIntent();
         update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKey1 = SecurityUtils.generateAESKeyFromText(secretKeyString1);
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
+        secretKey2 = SecurityUtils.generateAESKeyFromText(secretKeyString2);
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
             user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
         } else {
@@ -114,7 +143,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void FillUserProfile(){
         tvFullName.setText(user.getFullName());
         if(!user.getCmnd().isEmpty()){
-            etCMND.setHint("********" + user.getCmnd().substring(8));
+            inputLayoutCMND.setHint("********" + user.getCmnd().substring(8));
         }
         LoadImage();
         if (user.getStatus() == 1){
@@ -127,19 +156,17 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
             SwitchToMain();
         } else {
-            setResult(RESULT_CANCELED);
-            finish();
+            BackToPreviousActivity();
         }
     }
 
     void LoadImage(){
-        if(!user.getCmndFrontImage().isEmpty()){
-            String[] images = user.getCmndFrontImage().split(",");
+        if(!user.getCmndFrontImage().isEmpty() && !user.getCmndBackImage().isEmpty()){
             BlurImage frontImage = new BlurImage(firebaseStorageHandler, this, findViewById(R.id.frontImage),
-                    images[0], imgFrontIdentifierCard);
+                    user.getCmndFrontImage(), imgFrontIdentifierCard);
 
             BlurImage backImage = new BlurImage(firebaseStorageHandler, this, findViewById(R.id.frontImage),
-                    images[1], imgBackIdentifierCard);
+                    user.getCmndBackImage(), imgBackIdentifierCard);
         }
     }
 
@@ -277,6 +304,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         progressBarManager.HideProgressBar();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void GetImageServerFile(String serverFile) {
         if(!hasUploadTwoImages){
@@ -294,7 +322,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             updateAPI.setCmnd(etCMND.getText().toString());
             updateAPI.setCmndFrontImage(frontPhotoPath);
             updateAPI.setCmndBackImage(backPhotoPath);
-            updateAPI.UpdateUser();
+            updateAPI.UpdateUser(secretKey1, secretKey2);
         }
     }
 
@@ -307,6 +335,8 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
             intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
             intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -318,9 +348,28 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     }
 
     void SwitchToMain(){
-        Intent intent = new Intent(VerifyAccountActivity.this, MainLayoutActivity.class);
+        Intent intent = new Intent();
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
-        startActivity(intent);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        setResult(RESULT_CANCELED);
+        finish();
+    }
+
+    @Override
+    public void UpdateWallet(String userid, long balance) {
+        if (userid.equalsIgnoreCase(user.getUserId())){
+            this.balance = balance;
+        }
     }
 
     class BlurImage implements LoadImageResponse {

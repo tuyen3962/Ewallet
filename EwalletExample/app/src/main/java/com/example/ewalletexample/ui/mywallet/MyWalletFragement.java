@@ -24,6 +24,7 @@ import com.example.ewalletexample.R;
 import com.example.ewalletexample.SettingActivity;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.UserBankCardActivity;
 import com.example.ewalletexample.VerifyAccountActivity;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
@@ -32,7 +33,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     MyWalletViewModel myWalletViewModel;
     CircleImageView imgAccount;
     View layoutUserAccount, layoutSetting, layoutBankAccount, layoutHistoryTransaction, layoutSecurityAccount;
-    TextView tvFullName, tvPhone, tvNumCardConnected;
+    TextView tvFullName, tvPhone;
     SharedPreferenceLocal local;
 
     MainLayoutActivity mainActivity;
@@ -74,7 +75,6 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         layoutSetting = view.findViewById(R.id.layoutSetting);
         layoutBankAccount = view.findViewById(R.id.layoutBankAccount);
         tvFullName = view.findViewById(R.id.tvFullName);
-        tvNumCardConnected = view.findViewById(R.id.tvNumCard);
         tvPhone = view.findViewById(R.id.tvPhone);
         layoutHistoryTransaction = view.findViewById(R.id.layoutHistoryTransaction);
         layoutSecurityAccount = view.findViewById(R.id.layoutSecurityAccount);
@@ -98,7 +98,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         if(v.getId() == layoutUserAccount.getId()){
             SwitchToPersonalDetailActivity();
         }else if(v.getId() == layoutBankAccount.getId()){
-            mainActivity.SwitchToBankConnectedActivity();
+            SwitchToBankConnectedActivity();
         }else if(v.getId() == layoutHistoryTransaction.getId()){
             ShowTransactionHistory();
         } else if(v.getId() == layoutSetting.getId()){
@@ -125,6 +125,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     public void SwitchToPersonalDetailActivity(){
         Intent intent = new Intent(mainActivity, PersonalDetailActivity.class);
         intent.putExtra(Symbol.USER.GetValue(), mainActivity.GetGson().toJson(mainActivity.GetUserInformation()));
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
         startActivityForResult(intent, RequestCode.MODIFY_INFORMATION);
     }
 
@@ -139,6 +141,16 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
         startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
     }
+
+    public void SwitchToBankConnectedActivity(){
+        User user = mainActivity.GetUserInformation();
+        Intent intent = new Intent(mainActivity, UserBankCardActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
+        intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+        startActivity(intent);
+    }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -155,10 +167,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             }
         } else if (requestCode == RequestCode.SETTING_ACCOUNT){
             if (resultCode == ((Activity)mainActivity).RESULT_CANCELED){
-                Intent intent = new Intent(mainActivity, LoginActivity.class);
-                intent.putExtra(Symbol.FULLNAME.GetValue(), local.GetValueStringByKey(Symbol.KEY_FULL_NAME.GetValue()));
-                intent.putExtra(Symbol.PHONE.GetValue(), local.GetValueStringByKey(Symbol.KEY_PHONE.GetValue()));
-                startActivity(intent);
+                mainActivity.BackToPreviousActivity();
             }
         } else if (requestCode == RequestCode.VERIFY_ACCOUNT_CODE){
             if (resultCode == ((Activity)mainActivity).RESULT_OK){

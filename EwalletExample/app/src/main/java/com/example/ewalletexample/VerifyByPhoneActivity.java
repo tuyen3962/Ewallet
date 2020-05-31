@@ -32,7 +32,7 @@ import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
-import com.example.ewalletexample.utilies.Encryption;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -48,6 +48,7 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.PublicKey;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
@@ -63,12 +64,14 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
 
     EditText etCode01, etCode02, etCode03, etCode04, etCode05, etCode06;
     CodeEditText codeEditText;
-    Button btnVerifyPhone, btnResendVerifyCode, btnChangePhone;
+    Button btnResendVerifyCode, btnChangePhone;
     TextView tvError, txVerifyPhone;
     ProgressBarManager progressBarManager;
     CustomToolbarContext customToolbarContext;
     CountDownTimer countDown;
+    TextView tvTitleButton;
     boolean canResendCode;
+    View btnVerifyPhone;
 
     PhoneAuthProvider.ForceResendingToken token;
     SharedPreferenceLocal local;
@@ -88,8 +91,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
 
     void Initalize(){
         gson = new Gson();
-        customToolbarContext = new CustomToolbarContext(this, this::BackToPreviousActivity);
-        customToolbarContext.SetTitle("Nhập mã OTP");
+        customToolbarContext = new CustomToolbarContext(this, "Nhập mã OTP", this::BackToPreviousActivity);
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         auth = FirebaseAuth.getInstance();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
@@ -100,6 +102,7 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         etCode04 = findViewById(R.id.etCode04);
         etCode05 = findViewById(R.id.etCode05);
         etCode06 = findViewById(R.id.etCode06);
+        tvTitleButton = findViewById(R.id.tvTitleButton);
         tvError = findViewById(R.id.tvError);
         btnVerifyPhone = findViewById(R.id.btnVerifyPhone);
         btnVerifyPhone.setEnabled(false);
@@ -127,21 +130,21 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_FORGET.GetValue())){
             verifyForget = intent.getStringExtra(Symbol.VERRIFY_FORGET.GetValue());
             user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
-            user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
-            btnVerifyPhone.setText("Tiếp tục");
+            user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
+            tvTitleButton.setText("Tiếp tục");
             txVerifyPhone.setText("Nhập mã code đổi mật khẩu");
         }
         else if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_LOGIN.GetValue())){
             user.setUserId(intent.getStringExtra(Symbol.USER_ID.GetValue()));
             user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
             user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
-            btnVerifyPhone.setText("Tiếp tục");
+            tvTitleButton.setText("Tiếp tục");
             txVerifyPhone.setText("Nhập mã code");
         } else {
             user.setPassword(intent.getStringExtra(Symbol.PASSWORD.GetValue()));
             user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
             user.setPhoneNumber(intent.getStringExtra(Symbol.PHONE.GetValue()));
-            btnVerifyPhone.setText("Xác thực");
+            tvTitleButton.setText("Xác thực");
             txVerifyPhone.setText("Nhập mã code");
         }
     }
@@ -174,15 +177,13 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
 
     void SendVerifyCodeToPhoneNumber(){
         String phone = "+84" + user.getPhoneNumber().substring(1);
-
+        Log.d("TAG", "SendVerifyCodeToPhoneNumber: " + phone);
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
                 phone,
-                15,
+                60,
                 TimeUnit.SECONDS,
                 TaskExecutors.MAIN_THREAD,
                 mCallbacks);
-
-        Toast.makeText(this, "has send code " + phone, Toast.LENGTH_SHORT).show();
     }
 
     public void ResendVerifyCodeEvent(View view){
@@ -218,12 +219,14 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
 
         @Override
         public void onVerificationFailed(FirebaseException e) {
+            Toast.makeText(VerifyByPhoneActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e("TAG", "onVerificationFailed: " + e.getMessage());
             ShowErrorText(e.getMessage());
         }
 
         @Override
         public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
-            super.onCodeSent(s, token);
+//            super.onCodeSent(s, token);
             //storing the verification id that is sent to the user
             mVerificationId = s;
             token = forceResendingToken;
@@ -271,8 +274,6 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void VerifySuccess(){
-        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
-        local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
         local.AddNewStringIntoSetString(Symbol.KEY_PHONES.GetValue(), user.getPhoneNumber());
 
         if(reason.equalsIgnoreCase(Symbol.REASON_VERIFY_FOR_REGISTER.GetValue())){
@@ -287,9 +288,15 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
     }
 
     private void SendRequestLogin(){
+        local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
+        local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
+        local.WriteValueByKey(Symbol.KEY_USERID.GetValue(), user.getUserId());
+
         Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
+        intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_INFORMATION.GetValue());
         intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
         intent.putExtra(Symbol.FULLNAME.GetValue(), user.getFullName());
+        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         startActivity(intent);
     }
 
@@ -299,25 +306,41 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         Intent intent = new Intent(VerifyByPhoneActivity.this, ResetPassword.class);
         intent.putExtra(Symbol.VERRIFY_FORGET.GetValue(), Symbol.VERIFY_FORGET_BY_PHONE.GetValue());
         intent.putExtra(Symbol.PHONE.GetValue(), user.getPhoneNumber());
-        intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         startActivityForResult(intent, RequestCode.RESET_PASSWORD);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void SendRequestRegister(){
+        PublicKey publicKey = SecurityUtils.generatePublicKey(getString(R.string.public_key));
+
         JSONObject postData = new JSONObject();
 
-        SecretKey secretKey = Encryption.generateAESKey();
-        String encryptPasswordByAES = Encryption.EncryptStringBySecretKey(secretKey, getString(R.string.share_key), user.getPassword());
-        String encodeSecretKeyByPublicKey = Encryption.EncryptSecretKeyByPublicKey(getString(R.string.public_key), secretKey);
+        SecretKey secretKey1 = SecurityUtils.generateAESKey();
+        SecretKey secretKey2 = SecurityUtils.generateAESKey();
+
+        String hashPassword = SecurityUtils.EncryptStringByShareKey(getString(R.string.share_key), user.getPassword());
+        String encryptPasswordByFirstKeyAES = SecurityUtils.encryptAES(secretKey1, hashPassword);
+        String encryptPasswordBySecondKeyAES = SecurityUtils.encryptAES(secretKey2, encryptPasswordByFirstKeyAES);
+        String encryptPinByPK = SecurityUtils.encryptRSA(publicKey, encryptPasswordBySecondKeyAES);
+
+        String encodeSecretKey1 = SecurityUtils.EncodeStringBase64(secretKey1.getEncoded());
+        String encryptSecretKey1ByPK = SecurityUtils.encryptRSA(publicKey, encodeSecretKey1);
+
+        String encodeSecretKey2 = SecurityUtils.EncodeStringBase64(secretKey2.getEncoded());
+        String encryptSecretKey2ByPK = SecurityUtils.encryptRSA(publicKey, SecurityUtils.encryptAES(secretKey1, encodeSecretKey2));
+
+        String headerStringEncrypt = user.getFullName() + user.getPhoneNumber() + hashPassword + encodeSecretKey1 + encodeSecretKey2;
+        String hashAuthorizationTextAPI = SecurityUtils.EncryptStringBySecretKey(secretKey1, getString(R.string.share_key), headerStringEncrypt);
+        String encryptPublicKeyAuthorization = SecurityUtils.encryptRSA(publicKey, SecurityUtils.encryptAES(secretKey2, hashAuthorizationTextAPI));
 
         try {
             postData.put("fullname",user.getFullName());
-            postData.put("pin" , encryptPasswordByAES);
+            postData.put("pin" , encryptPinByPK);
             postData.put("phone", user.getPhoneNumber());
-            postData.put("key", encodeSecretKeyByPublicKey);
+            postData.put("key", encryptSecretKey1ByPK);
+            postData.put("secondKey", encryptSecretKey2ByPK);
 
-            new RegisterEvent().execute(ServerAPI.REGISTER_API.GetUrl(), postData.toString());
+            new RegisterEvent(secretKey1, secretKey2).execute(ServerAPI.REGISTER_API.GetUrl(), postData.toString(), encryptPublicKeyAuthorization);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -339,7 +362,11 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
     }
 
     private class RegisterEvent extends RequestServerAPI implements RequestServerFunction {
-        public RegisterEvent(){
+        SecretKey secretKey1, secretKey2;
+
+        public RegisterEvent(SecretKey secretKey1, SecretKey secretKey2){
+            this.secretKey1 = secretKey1;
+            this.secretKey2 = secretKey2;
             SetRequestServerFunction(this);
         }
 
@@ -353,14 +380,28 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
             return false;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void DataHandle(JSONObject jsonData) throws JSONException {
             user.setUserId(jsonData.getString("userid"));
-            progressBarManager.HideProgressBar();
+            String customToken = jsonData.getString("customToken");
+            if (auth.getCurrentUser() != null){
+                auth.signOut();
+            }
+            auth.signInWithCustomToken(customToken);
 
-            Intent intent = new Intent(VerifyByPhoneActivity.this, UpdateUserInformationActivity.class);
+            local.WriteValueByKey(Symbol.KEY_PHONE.GetValue(), user.getPhoneNumber());
+            local.WriteValueByKey(Symbol.KEY_FULL_NAME.GetValue(), user.getFullName());
+            local.WriteValueByKey(Symbol.KEY_USERID.GetValue(), user.getUserId());
+
+            progressBarManager.HideProgressBar();
+            String secretKey1String = SecurityUtils.DecryptAESbyTwoSecretKey(this.secretKey1, this.secretKey2, jsonData.getString("secretKey1"));
+            String secretKey2String = SecurityUtils.DecryptAESbyTwoSecretKey(this.secretKey1, this.secretKey2,jsonData.getString("secretKey2"));
+            Intent intent = new Intent(VerifyByPhoneActivity.this, LoginActivity.class);
             intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
             intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+            intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKey1String);
+            intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKey2String);
             startActivity(intent);
         }
 
@@ -375,10 +416,8 @@ public class VerifyByPhoneActivity extends AppCompatActivity implements CheckOTP
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RequestCode.RESET_PASSWORD)
         {
-            if (resultCode == RESULT_CANCELED){
-                setResult(resultCode);
-                finish();
-            }
+            setResult(resultCode, data);
+            finish();
         }
     }
 }

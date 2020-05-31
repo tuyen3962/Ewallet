@@ -37,13 +37,30 @@
         android:textStyle="bold"
         android:textColor="@color/Black"/>
 
-    <FrameLayout
-        android:id="@+id/passwordFrameLayout"
-        android:layout_width="250dp"
-        android:layout_height="60dp"
-        android:layout_marginVertical="15dp"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/input_layout_password"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/tvPhone"/>
+        android:layout_marginVertical="20dp"
+        android:layout_marginHorizontal="60dp"
+        android:gravity="center"
+        android:layout_below="@id/tvPhone"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etPassword"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textSize="23dp"
+            android:hint="@string/Enter_current_password"
+            android:drawableLeft="@drawable/ic_action_password"
+            android:inputType="numberPassword"
+            android:padding="5dp"
+            android:maxLength="6"
+            android:background="@drawable/edit_round_textview"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/btnLogin"
@@ -51,7 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_marginTop="15dp"
-        android:layout_below="@id/passwordFrameLayout"
+        android:layout_below="@id/input_layout_password"
         android:background="@drawable/edit_round_button"
         android:textSize="20dp"
         android:textStyle="bold"
@@ -101,26 +118,6 @@
         android:layout_below="@id/btnForgetPass"
         android:text="Đăng kí"
         android:visibility="gone"/>
-
-    <com.davidmiguel.numberkeyboard.NumberKeyboard
-        android:id="@+id/keyboard"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:keyboard="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_marginHorizontal="10dp"
-        android:layout_marginBottom="5dp"
-        keyboard:numberkeyboard_numberKeyTextColor="@color/colorAccent"
-        keyboard:numberkeyboard_keyWidth="match_parent"
-        keyboard:numberkeyboard_keyHeight="match_parent"
-        keyboard:numberkeyboard_keyboardType="custom"
-        keyboard:numberkeyboard_leftAuxBtnIcon="@drawable/ic_action_point_light"
-        keyboard:numberkeyboard_leftAuxBtnBackground="@drawable/ic_action_point_dark"
-        keyboard:numberkeyboard_rightAuxBtnIcon="@drawable/ic_action_arrow_right"
-        keyboard:numberkeyboard_rightAuxBtnBackground="@drawable/ic_action_point_dark"
-        android:layout_below="@id/btnForgetPass"
-        android:visibility="visible"/>
 
     <include
         android:id="@+id/progressBar"

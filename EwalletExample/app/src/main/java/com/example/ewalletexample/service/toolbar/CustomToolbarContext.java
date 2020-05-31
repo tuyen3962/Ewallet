@@ -18,6 +18,24 @@ public class CustomToolbarContext {
     private Activity context;
     private ToolbarEvent event;
 
+    public CustomToolbarContext(Activity context, String title, ToolbarEvent event){
+        this.context = context;
+        this.toolbar = context.findViewById(R.id.toolbarLayout);
+        this.tvTitle = context.findViewById(R.id.tvToolbarTitle);
+        this.btnBack = context.findViewById(R.id.btnBackToPreviousActivity);
+        this.tvTitle.setText(title);
+        this.event = event;
+        ((AppCompatActivity)this.context).setSupportActionBar(toolbar);
+
+        this.btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                event.BackToPreviousActivity();
+            }
+        });
+    }
+
+
     public CustomToolbarContext(Activity context, ToolbarEvent event){
         this.context = context;
         this.toolbar = context.findViewById(R.id.toolbarLayout);

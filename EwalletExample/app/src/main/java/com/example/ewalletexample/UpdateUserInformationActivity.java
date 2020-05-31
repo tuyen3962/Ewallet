@@ -29,12 +29,14 @@ import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
+import com.example.ewalletexample.data.UserNotifyEntity;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
 import com.example.ewalletexample.service.AnimationManager;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.ResponseMethod;
 import com.example.ewalletexample.service.UserSelectFunction;
+import com.example.ewalletexample.service.notification.NotificationCreator;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.recycleview.listitem.RecycleViewListSingleItem;
@@ -42,6 +44,7 @@ import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -65,6 +68,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Calendar;
 
+import javax.crypto.SecretKey;
+
 public class UpdateUserInformationActivity extends AppCompatActivity implements ResponseMethod,
         ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener, UpdateUserResponse, WebsocketResponse, UserSelectFunction<String> {
 
@@ -81,7 +86,6 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     Gson gson;
     User user;
     UserModel model;
-    String currentPhotoPath;
     File photoFile;
     Uri photoUri;
     WebsocketClient client;
@@ -91,10 +95,12 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     UpdateUserAPI updateAPI;
     AnimationManager animationManager;
     DatePickerDialog datePickerDialog;
-    String update;
+    String update, secretKey1, secretKey2, currentPhotoPath;
+    SecretKey firstKey, secondKey;
     String[] arrCities;
     CustomToolbarContext customToolbarContext;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,11 +111,11 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         GetValueFromIntent();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     void Initialize(){
         uploadImage = false;
         changeBalance = false;
         balance = 0;
-        client = new WebsocketClient(this);
         gson = new Gson();
         datePickerDialog = new DatePickerDialog(this,this,1998,1,1);
         btnUpload = findViewById(R.id.btnUpload);
@@ -167,11 +173,17 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void GetValueFromIntent(){
         user = new User();
         Intent intent = getIntent();
         update = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
         user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
+        secretKey1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        firstKey = SecurityUtils.generateAESKeyFromText(secretKey1);
+        secretKey2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
+        secondKey = SecurityUtils.generateAESKeyFromText(secretKey2);
+        client = new WebsocketClient(this, user.getUserId(), this);
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
             tvBack.setVisibility(View.GONE);
             user.setDate();
@@ -182,7 +194,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, user.getUserId(), UserModel.class, this);
         FillUserDetail();
-        updateAPI = new UpdateUserAPI(user.getUserId(), this);
+        updateAPI = new UpdateUserAPI(user.getUserId(), getString(R.string.public_key), this);
     }
 
     void FillUserDetail(){
@@ -272,6 +284,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -289,7 +302,39 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else if(requestCode == RequestCode.UPDATE_EMAIL){
+            if (resultCode == RESULT_CANCELED){
+                input_email_layout.setError("Xác thực thất bại");
+                etEmail.setText("");
+            } else if (resultCode == RESULT_OK){
+                UpdateUser();
+            }
+        } else if (requestCode == RequestCode.UPDATE_REGISTER){
+            boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if (!changeBalance){
+                data.putExtra(Symbol.CHANGE_BALANCE.GetValue(), this.changeBalance);
+                data.putExtra(Symbol.AMOUNT.GetValue(), this.balance);
+            }
+            setResult(resultCode, data);
+            finish();
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    void UpdateUser(){
+        uploadImage = false;
+        progressBarManager.ShowProgressBar("Loading");
+        String dob = tvDay.getText().toString()+"/"+tvMonth.getText().toString()+"/"+tvYear.getText().toString();
+        String address = etAddress.getText().toString();
+        String email = etEmail.getText().toString();
+        user.setAddress(address);
+        user.setDateOfbirth(dob);
+        user.setEmail(email);
+        updateAPI.setDateOfBirth(dob);
+        updateAPI.setAddress(address);
+        updateAPI.setEmail(email);
+
+        updateAPI.UpdateUser(firstKey, secondKey);
     }
 
     public void VerifyUploadImage(){
@@ -300,6 +345,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         storageHandler.UploadImage(photoUri, this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void GetImageServerFile(String serverFile) {
         uploadImage = true;
@@ -307,7 +353,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         model.setImgLink(serverFile);
         firebaseDatabaseHandler.UpdateData(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE.GetValue(), user.getUserId(), model);
         updateAPI.setImageProfile(serverFile);
-        updateAPI.UpdateUser();
+        updateAPI.UpdateUser(firstKey, secondKey);
     }
 
     @Override
@@ -329,28 +375,26 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         tvYear.setText(year + "");
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void UpdateUserInfo(View view){
         String email = etEmail.getText().toString();
-        if (!email.isEmpty()){
+        if (!email.equalsIgnoreCase("")){
             if (!CheckInputField.EmailIsValid(email)){
                 etEmail.setError("Email không hợp lệ. Xin nhập lại.");
                 return;
             }
-            else {
-
+            else if (!user.getEmail().equalsIgnoreCase("") && email.equalsIgnoreCase(user.getEmail())){
+                etEmail.setError("Email trùng với email đã xác thực");
+                return;
+            } else {
+                Intent intent = new Intent(UpdateUserInformationActivity.this, UpdateEmailActivity.class);
+                intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
+                intent.putExtra(Symbol.EMAIL.GetValue(), etEmail.getText().toString());
+                startActivityForResult(intent, RequestCode.UPDATE_EMAIL);
+                return;
             }
         }
-        uploadImage = false;
-        progressBarManager.ShowProgressBar("Loading");
-        String dob = tvDay.getText().toString()+"/"+tvMonth.getText().toString()+"/"+tvYear.getText().toString();
-        String address = etAddress.getText().toString();
-        user.setAddress(address);
-        user.setDateOfbirth(dob);
-        user.setEmail(email);
-        updateAPI.setDateOfBirth(dob);
-        updateAPI.setAddress(address);
-        updateAPI.setEmail(email);
-        updateAPI.UpdateUser();
+        UpdateUser();
     }
 
     @Override
@@ -363,6 +407,8 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
                 Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
                 intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
                 intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+                intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKey1);
+                intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKey2);
                 startActivity(intent);
             } else if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
                 Intent intent = new Intent();
@@ -444,10 +490,13 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         finish();
     }
 
-    public void BackPreviousActivity(View view){
+    public void MoveToNextActivity(View view){
         Intent intent = new Intent(UpdateUserInformationActivity.this, VerifyAccountActivity.class);
         intent.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), Symbol.UPDATE_FOR_REGISTER.GetValue());
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
-        startActivity(intent);
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKey1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKey2);
+        startActivityForResult(intent, RequestCode.UPDATE_REGISTER);
     }
+
 }
