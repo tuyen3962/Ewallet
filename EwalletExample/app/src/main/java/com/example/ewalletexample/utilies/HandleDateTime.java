@@ -15,7 +15,7 @@ public class HandleDateTime {
     private static SimpleDateFormat dayFormatter = new SimpleDateFormat("dd-MM-yyyy");
     private static SimpleDateFormat dayTimeFormatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
 
-    private static long GetCurrentTimeMillis(){
+    public static long GetCurrentTimeMillis(){
         return System.currentTimeMillis();
     }
 

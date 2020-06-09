@@ -41,6 +41,8 @@ import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandl
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.recycleview.bank.ListBankSupportRecycleView;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -49,7 +51,7 @@ import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, UserSelectFunction<BankSupport>, LinkBankResponse {
+public class ChooseBankConnectActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, UserSelectFunction<BankSupport>, LinkBankResponse, ToolbarEvent {
     ProgressBarManager progressBarManager;
     FirebaseDatabaseHandler firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
@@ -61,7 +63,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
     EditText etFullNameCard, etCardNo0, etCardNo1, etCardNo2, etCardNo3;
     CodeEditText codeEditText;
-    TextView tvBack;
 
     AnimationManager animationManager;
 
@@ -72,6 +73,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     long amount;
     Gson gson;
     boolean isShowing;
+    CustomToolbarContext customToolbarContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,13 +82,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
         Initialize();
         GetValueFromIntent();
-
-        tvBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ReturnToUserBankActivity();
-            }
-        });
     }
 
     void Initialize(){
@@ -109,12 +104,12 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnLinkAccount));
 
         etFullNameCard = findViewById(R.id.etFullNameBank);
-        tvBack = findViewById(R.id.tvBack);
 
         etCardNo0 = findViewById(R.id.etCardNo0);
         etCardNo1 = findViewById(R.id.etCardNo1);
         etCardNo2 = findViewById(R.id.etCardNo2);
         etCardNo3 = findViewById(R.id.etCardNo3);
+        customToolbarContext = new CustomToolbarContext(this, "Chọn ngân hàng liên kết", this::BackToPreviousActivity);
 
         codeEditText = new CodeEditText(4, etCardNo0, etCardNo1, etCardNo2, etCardNo3);
         isShowing = false;
@@ -176,11 +171,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         linkAccountWithBankAPI.StartLinkCard(getString(R.string.public_key), secretKeyString1, secretKeyString2);
     }
 
-    public void ReturnToUserBankActivity(){
-        setResult(RESULT_CANCELED);
-        finish();
-    }
-
     @Override
     public void GetModel(UserModel data) {
         this.model = data;
@@ -200,5 +190,11 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         } else {
             Toast.makeText(ChooseBankConnectActivity.this, "Máy chủ không phản hồi", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        setResult(RESULT_CANCELED);
+        finish();
     }
 }

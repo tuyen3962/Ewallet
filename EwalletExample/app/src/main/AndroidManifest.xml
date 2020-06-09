@@ -15,16 +15,22 @@
         <activity android:name=".ChangeNewPasswordActivity" />
         <activity android:name=".ShowQrcodeActivity" />
         <activity android:name=".EnterPhoneStartAppActivity">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+        <activity android:name=".UpdateEmailActivity" />
+        <activity android:name=".UpdateUserInformationActivity" />
+        <activity android:name=".AddUserAutomatic" />
+        <activity android:name=".AddMobileCardAuto" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UpdateEmailActivity" />
-        <activity android:name=".UpdateUserInformationActivity" />
-        <activity android:name=".AddUserAutomatic" />
-        <activity android:name=".AddMobileCardAuto" />
         <activity
             android:name=".ResetPassword"
             android:parentActivityName=".LoginActivity" />

@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.ewalletexample.MainLayoutActivity;
 import com.example.ewalletexample.R;
 import com.example.ewalletexample.SearchUserExchangeActivity;
@@ -32,13 +34,14 @@ import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandl
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.example.ewalletexample.service.recycleview.service.RecycleHorzontalServiceView;
 import com.example.ewalletexample.service.recycleview.service.RecycleViewService;
+import com.example.ewalletexample.ui.shareData.ShareDataViewModel;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 
 public class HomeFragment extends Fragment implements UserSelectFunction<Service> {
 
-    HomeViewModel homeViewModel;
+    ShareDataViewModel shareDataViewModel;
     RecyclerView rvService, rvMainService;
     CircleImageView imgAccount;
     TextView tvBalance, tvIntroduce, tvVerifyAccount;
@@ -59,9 +62,9 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
-        homeViewModel = ViewModelProviders.of(this).get(HomeViewModel.class);
         Initialize(view);
         SetupUI();
+        SetupViewModel();
         return view;
     }
 
@@ -96,9 +99,13 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
     }
 
     public void SetupUI(){
-        mainActivity.SetImageUriForImageView(imgAccount);
-        tvBalance.setText(Utilies.HandleBalanceTextView(String.valueOf(mainActivity.GetUserBalance())));
+        tvBalance.setText(mainActivity.getBalance());
         tvIntroduce.setText("Xin chào, " + mainActivity.GetUserInformation().getFullName() +"!");
+        if(mainActivity.getImageUri() != null){
+            Glide.with(this).load(mainActivity.getImageUri()).into(imgAccount);
+        }else {
+            Utilies.SetImageDrawable(mainActivity, imgAccount);
+        }
         if (mainActivity.GetUserInformation().getStatus() == 0){
             tvVerifyAccount.setVisibility(View.VISIBLE);
         } else if (mainActivity.GetUserInformation().getStatus() == 2){
@@ -107,6 +114,20 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
         } else {
             tvVerifyAccount.setVisibility(View.GONE);
         }
+    }
+
+    void SetupViewModel(){
+        shareDataViewModel = new ViewModelProvider(requireActivity()).get(ShareDataViewModel.class);
+        shareDataViewModel.getBalance().observe(getViewLifecycleOwner(), model -> {
+            tvBalance.setText(model);
+        });
+        shareDataViewModel.getImageUri().observe(getViewLifecycleOwner(), imageUri -> {
+            if(imageUri != null){
+                Glide.with(this).load(imageUri).into(imgAccount);
+            }else {
+                Utilies.SetImageDrawable(mainActivity, imgAccount);
+            }
+        });
     }
 
     @Override

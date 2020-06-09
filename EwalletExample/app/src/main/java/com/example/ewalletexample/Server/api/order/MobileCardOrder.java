@@ -1,5 +1,7 @@
 package com.example.ewalletexample.Server.api.order;
 
+import android.os.Build;
+
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
@@ -10,6 +12,7 @@ import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
 import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,6 +23,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
+
+import androidx.annotation.RequiresApi;
 
 public class MobileCardOrder extends Order {
     private String cardnumber, serinumber;
@@ -32,23 +37,33 @@ public class MobileCardOrder extends Order {
         this.operator = mobileCode;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void VerifyPinSuccess() throws JSONException {
-        String[] arr = new String[]{"userid:"+userid,"amount:"+Long.valueOf(mobileCardAmount.GetAmount()), "cardtype:"+operator.GetMobileCode()};
-        String json = HandlerJsonData.ExchangeToJsonString(arr);
-        CreateOrder(ServerAPI.CREATE_MOBILE_CARD_ORDER, json);
+        String[] arr = new String[]{"userid:"+userid,"amount:"+Long.valueOf(mobileCardAmount.GetAmount()),
+                "cardtype:"+operator.GetMobileCode(),"key:"+encryptSecretKey1,"secondKey:"+encryptSecretKey2};
+        String header = userid + mobileCardAmount.GetAmount() + operator.GetMobileCode() + secretKeyString1 + secretKeyString2;
+        String hashHeader = SecurityUtils.encryptHmacSha256(secretKey1, header);
+        String encryptHeader = SecurityUtils.encryptAES(secretKey2, hashHeader);
+        String encryptHeaderByRSA = SecurityUtils.encryptRSA(publicKey, encryptHeader);
+        CreateOrder(ServerAPI.CREATE_MOBILE_CARD_ORDER, HandlerJsonData.ExchangeToJsonString(arr), encryptHeaderByRSA);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void CreateOrderSuccess() throws JSONException {
         String[] arr = new String[]{"userid:"+userid,"orderid:"+orderid,"sourceoffund:"+sourceFund.GetCode(),
                 "bankcode:", "f6cardno:", "l4cardno:","amount:"+ mobileCardAmount.GetAmount(),"pin:"+pin,
-                "servicetype:"+ Service.MOBILE_CARD_SERVICE_TYPE.GetCode()};
-
-        String json = HandlerJsonData.ExchangeToJsonString(arr);
-        SubmitOrder(json);
+                "servicetype:"+ Service.MOBILE_CARD_SERVICE_TYPE.GetCode(),"key:"+encryptSecretKey1,"secondKey:"+encryptSecretKey2};
+        String header = userid + orderid + sourceFund.GetCode() + amount + pin +
+                Service.TOPUP_SERVICE_TYPE.GetCode() + secretKeyString1 + secretKeyString2;
+        String hashHeader = SecurityUtils.encryptHmacSha256(secretKey1, header);
+        String encryptHeader = SecurityUtils.encryptAES(secretKey2, hashHeader);
+        String encryptHeaderByRSA = SecurityUtils.encryptRSA(publicKey, encryptHeader);
+        SubmitOrder(HandlerJsonData.ExchangeToJsonString(arr), encryptHeaderByRSA);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void SubmitOrderSuccess() {
         GetStausOrder(ServerAPI.GET_STATUS_MOBILE_CARD_ORDER);

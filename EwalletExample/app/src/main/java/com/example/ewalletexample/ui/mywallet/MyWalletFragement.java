@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.ewalletexample.HistoryTransactionActivity;
 import com.example.ewalletexample.LoginActivity;
 import com.example.ewalletexample.MainLayoutActivity;
@@ -28,14 +30,15 @@ import com.example.ewalletexample.UserBankCardActivity;
 import com.example.ewalletexample.VerifyAccountActivity;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
+import com.example.ewalletexample.ui.shareData.ShareDataViewModel;
+import com.example.ewalletexample.utilies.Utilies;
 
 public class MyWalletFragement extends Fragment implements View.OnClickListener{
-    MyWalletViewModel myWalletViewModel;
+    ShareDataViewModel shareDataViewModel;
     CircleImageView imgAccount;
     View layoutUserAccount, layoutSetting, layoutBankAccount, layoutHistoryTransaction, layoutSecurityAccount;
     TextView tvFullName, tvPhone;
     SharedPreferenceLocal local;
-
     MainLayoutActivity mainActivity;
 
     public MyWalletFragement() {
@@ -55,7 +58,6 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_my_wallet, container, false);
-        myWalletViewModel = ViewModelProviders.of(this).get(MyWalletViewModel.class);
         Initialize(view);
         SetupUI();
         layoutSetting.setOnClickListener(this);
@@ -63,7 +65,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         layoutBankAccount.setOnClickListener(this);
         layoutHistoryTransaction.setOnClickListener(this);
         layoutSecurityAccount.setOnClickListener(this);
-
+        SetupViewModel();
 
         return view;
     }
@@ -81,7 +83,11 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     }
 
     void SetupUI(){
-        mainActivity.SetImageUriForImageView(imgAccount);
+        if(mainActivity.getImageUri() != null){
+            Glide.with(this).load(mainActivity.getImageUri()).into(imgAccount);
+        }else {
+            Utilies.SetImageDrawable(mainActivity, imgAccount);
+        }
         SetTextviewDetail();
     }
 
@@ -91,6 +97,17 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
             tvFullName.setText(user.getFullName());
             tvPhone.setText(user.getPhoneNumber());
         }
+    }
+
+    void SetupViewModel(){
+        shareDataViewModel = new ViewModelProvider(requireActivity()).get(ShareDataViewModel.class);
+        shareDataViewModel.getImageUri().observe(getViewLifecycleOwner(), image -> {
+            if(image != null){
+                Glide.with(this).load(image).into(imgAccount);
+            }else {
+                Utilies.SetImageDrawable(mainActivity, imgAccount);
+            }
+        });
     }
 
     @Override

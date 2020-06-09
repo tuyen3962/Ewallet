@@ -1,13 +1,22 @@
 package com.example.ewalletexample.Server.api.VerifyPin;
 
+import android.os.Build;
+
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.security.PublicKey;
+
+import javax.crypto.SecretKey;
+
+import androidx.annotation.RequiresApi;
 
 public class VerifyPinAPI {
     private String userid, pin;
@@ -28,11 +37,27 @@ public class VerifyPinAPI {
         this.pin = pin;
     }
 
-    public void StartVerify(){
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void StartVerify(String publicKeyString, String secretKeyString1, String secretKeyString2){
         try {
-            String[] arr = new String[]{"userid:"+userid,"pin:"+pin};
-            String json = HandlerJsonData.ExchangeToJsonString(arr);
-            new RequestVerifyPin().execute(ServerAPI.VERIFY_PIN_API.GetUrl(), json);
+            PublicKey publicKey = SecurityUtils.generatePublicKey(publicKeyString);
+            SecretKey secretKey1 = SecurityUtils.generateAESKeyFromText(secretKeyString1);
+            SecretKey secretKey2 = SecurityUtils.generateAESKeyFromText(secretKeyString2);
+
+            String encryptSecretKey1ByAES = SecurityUtils.encryptAES(secretKey2, secretKeyString1);
+            String encryptSecretKey1ByRSA = SecurityUtils.encryptRSA(publicKey, encryptSecretKey1ByAES);
+
+            String encryptSecondKey = SecurityUtils.encryptRSA(publicKey, secretKeyString2);
+
+            String rawHeader = userid + pin + secretKeyString1 + secretKeyString2;
+            String hashHeader = SecurityUtils.encryptHmacSha256(secretKey1, rawHeader);
+            String encryptHeader = SecurityUtils.encryptAES(secretKey2, hashHeader);
+            String encryptHeaderByRSA = SecurityUtils.encryptRSA(publicKey, encryptHeader);
+
+            String[] arr = new String[]{"userid:"+userid,"pin:"+pin,
+                    "key:"+encryptSecretKey1ByRSA,"secondKey:"+encryptSecondKey};
+            new RequestVerifyPin().execute(ServerAPI.VERIFY_PIN_API.GetUrl(),
+                    HandlerJsonData.ExchangeToJsonString(arr), encryptHeaderByRSA);
         }catch (JSONException e){
             return;
         }

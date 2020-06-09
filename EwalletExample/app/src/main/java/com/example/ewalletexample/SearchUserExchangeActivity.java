@@ -2,6 +2,7 @@ package com.example.ewalletexample;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -68,7 +69,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     RecyclerView lvUserRecommend, lvUserContact, lvFriendProfile;
     RecycleViewUserProfileAdapter userProfileAdapter, userInContactProfileAdapter;
     View layoutInfoTransaction, layoutInfoReceiver;
-    String userid, phone, friendId, hasFriend;
+    String userid, phone, friendId, hasFriend, secretKeyString1, secretKeyString2;
     long userAmount;
     boolean hasGetContact, isGetFriend;
     UserSearchModel currentReceiverModel;
@@ -77,6 +78,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     GetListFriend getListFriend;
     CustomToolbarContext customToolbarContext;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +88,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         Initialize();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void Initialize(){
         listUserRecommend = new ArrayList<>();
         listFriendProfile = new ArrayList<>();
@@ -127,12 +130,15 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         phone = intent.getStringExtra(Symbol.PHONE.GetValue());
         hasFriend = intent.getStringExtra(Symbol.SEARCH_USER_EXCHANGNE.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         if (hasFriend.equalsIgnoreCase(Symbol.HAS_USER_EXCHANGE.GetValue())){
             friendId = intent.getStringExtra(Symbol.FRIEND_ID.GetValue());
             progressBarManager.ShowProgressBar("Lấy thông tin người dùng");
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void LoadContact() {
         if(!hasPhoneContactsPermission(Manifest.permission.READ_CONTACTS)) {
             requestPermission(Manifest.permission.READ_CONTACTS);
@@ -141,7 +147,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
             List<String> phones = Utilies.LoadListContact(this);
             checkListAPI.SetList(phones);
             checkListAPI.SetPhone(phone);
-            checkListAPI.StartRequest();
+            checkListAPI.StartRequest(getString(R.string.public_key), secretKeyString1, secretKeyString2);
             hasGetContact = true;
         }
     }
@@ -232,6 +238,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         layoutInfoReceiver.setVisibility(View.GONE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void ShowLayoutInfoReceiver(View view){
         if (hasFriend.equalsIgnoreCase(Symbol.HAS_USER_EXCHANGE.GetValue())){
             return;
@@ -302,6 +309,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         SetCurrentReceiverModel(model);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void GetModel(UserModel data) {
         if (isGetFriend){
@@ -352,8 +360,19 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
 
     @Override
     public void BackToPreviousActivity() {
-        setResult(RESULT_CANCELED);
-        finish();
+        if (layoutInfoReceiver.getVisibility() == View.VISIBLE){
+            ShowLayoutTransactionDetail();
+        } else {
+            if (this.currentReceiverModel != null) {
+                this.currentReceiverModel = null;
+                tvSearchUser.setText("");
+                imgUserProfile.setImageResource(R.drawable.ic_action_person);
+                lvFriendProfile.setVisibility(View.VISIBLE);
+            } else {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        }
     }
 
     class GetListFriend implements CheckListResponse, UserSelectFunction<UserSearchModel>{
@@ -364,13 +383,14 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         private Context context;
         private FirebaseStorageHandler storageHandler;
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
         public GetListFriend(Context context, RecyclerView lvFriendProfile, FirebaseStorageHandler storageHandler, List<String> friends){
             this.lvFriendProfile = lvFriendProfile;
             this.context = context;
             this.storageHandler = storageHandler;
             api = new CheckListAPI(this);
             api.SetList(friends);
-            api.StartRequest();
+            api.StartRequest(context.getString(R.string.public_key), secretKeyString1, secretKeyString2);
         }
 
         @Override

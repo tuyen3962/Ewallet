@@ -1,5 +1,7 @@
 package com.example.ewalletexample.Server.api.transaction;
 
+import android.os.Build;
+
 import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
@@ -7,6 +9,7 @@ import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.data.TransactionDetail;
 import com.example.ewalletexample.data.TransactionHistory;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.gson.Gson;
 
@@ -14,8 +17,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.crypto.SecretKey;
+
+import androidx.annotation.RequiresApi;
 
 public class TransactionHistoryAPI {
     BankMappingCallback response;
@@ -40,12 +48,26 @@ public class TransactionHistoryAPI {
         this.startTime = time;
     }
 
-    public void StartGetHistoryTransaction() {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void StartGetHistoryTransaction(String publicKeyString, String secretKeyString1, String secretKeyString2) {
         try {
-            String[] arr = new String[]{"userid:"+userid,"starttime:"+startTime,"pagesize:"+ pageSize};
-            String json = HandlerJsonData.ExchangeToJsonString(arr);
+            PublicKey publicKey = SecurityUtils.generatePublicKey(publicKeyString);
+            SecretKey secretKey1 = SecurityUtils.generateAESKeyFromText(secretKeyString1);
+            SecretKey secretKey2 = SecurityUtils.generateAESKeyFromText(secretKeyString2);
 
-            new GetTransactionHistoryAPI().execute(ServerAPI.HISTORY_TRANSACTION.GetUrl(), json);
+            String encryptSecondKeyByRSA = SecurityUtils.encryptRSA(publicKey, secretKeyString2);
+
+            String encryptKeyByRSA = SecurityUtils.encryptRSA(publicKey, secretKeyString1);
+            String encryptKeyByAES = SecurityUtils.decryptAES(secretKey2, encryptKeyByRSA);
+
+            String header = userid + startTime + pageSize + secretKeyString1 + secretKeyString2;
+            String hashHeader = SecurityUtils.encryptHmacSha256(secretKey1, header);
+            String encryptHeader = SecurityUtils.encryptAES(secretKey2, hashHeader);
+            String encryptHeaderByRSA = SecurityUtils.encryptRSA(publicKey, encryptHeader);
+
+            String[] arr = new String[]{"userid:"+userid,"starttime:"+startTime,"pagesize:"+ pageSize, "key:"+encryptKeyByAES,"secondKey:"+encryptSecondKeyByRSA};
+
+            new GetTransactionHistoryAPI().execute(ServerAPI.HISTORY_TRANSACTION.GetUrl(), HandlerJsonData.ExchangeToJsonString(arr), encryptHeaderByRSA);
         } catch (JSONException e){
             response.MappingResponse(false, null);
         }

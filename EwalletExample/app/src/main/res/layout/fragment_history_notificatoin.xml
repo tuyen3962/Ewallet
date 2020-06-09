@@ -5,10 +5,54 @@
     android:layout_height="match_parent"
     tools:context=".HistoryNotificatoinFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="" />
+        android:orientation="vertical">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvListNotifycation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:padding="10dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/SoftWhite"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvLoadContinueTransaction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tải tiếp"
+                android:gravity="center"
+                android:textSize="18dp"
+                android:padding="10dp"
+                android:visibility="gone"/>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="10dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/tvFullTransaction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hết thông báo"
+                android:textSize="18dp"
+                android:padding="10dp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </FrameLayout>

@@ -1,41 +1,32 @@
 package com.example.ewalletexample;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.DatePickerDialog;
-import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
-import com.example.ewalletexample.Server.api.transaction.BankInfo;
-import com.example.ewalletexample.Server.api.transaction.ExchangeInfo;
-import com.example.ewalletexample.Server.api.transaction.MobileCardInfo;
 import com.example.ewalletexample.Server.api.transaction.TransactionHistoryAPI;
 import com.example.ewalletexample.Symbol.RequestCode;
-import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.TransactionHistory;
+import com.example.ewalletexample.service.LoadItem.LoadItemLayout;
+import com.example.ewalletexample.service.LoadItem.LoadItemLayoutFunction;
 import com.example.ewalletexample.service.UserSelectFunction;
-import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 import com.example.ewalletexample.service.recycleview.listitem.TransactionDetailAdapter;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.utilies.HandleDateTime;
-import com.example.ewalletexample.utilies.Utilies;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
@@ -44,15 +35,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HistoryTransactionActivity extends AppCompatActivity implements BankMappingCallback<List<TransactionHistory>>,
-        DatePickerDialog.OnDateSetListener , ToolbarEvent, UserSelectFunction<TransactionHistory> {
+        DatePickerDialog.OnDateSetListener , ToolbarEvent, UserSelectFunction<TransactionHistory>, LoadItemLayoutFunction {
 
     RecyclerView rvTransactionDetail;
-    String userid, currentDate, fullName;
+    String userid, currentDate, fullName, secretKeyString1, secretKeyString2;
     FirebaseStorageHandler storageHandler;
     CustomToolbarContext customToolbarContext;
     TransactionHistoryAPI history;
-    TextView tvFullTransaction, tvLoadContinueTransaction, tvStartDateSearchTransaction;
-    ProgressBar progressBar;
+    LoadItemLayout loadItemLayout;
+    TextView tvStartDateSearchTransaction;
     List<TransactionHistory> transactionDetailList;
     Button btnSearchTransaction;
     Gson gson;
@@ -74,6 +65,8 @@ public class HistoryTransactionActivity extends AppCompatActivity implements Ban
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         fullName = intent.getStringExtra(Symbol.FULLNAME.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         history = new TransactionHistoryAPI(this, userid, 0, 10);
     }
 
@@ -82,9 +75,7 @@ public class HistoryTransactionActivity extends AppCompatActivity implements Ban
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         transactionDetailList = new ArrayList<>();
         gson = new Gson();
-        progressBar = findViewById(R.id.progressBar);
-        tvFullTransaction = findViewById(R.id.tvFullTransaction);
-        tvLoadContinueTransaction = findViewById(R.id.tvLoadContinueTransaction);
+        loadItemLayout = new LoadItemLayout(this, this::LoadContinue);
         rvTransactionDetail = findViewById(R.id.transactionDetail);
         btnSearchTransaction = findViewById(R.id.btnSearchTransaction);
         tvStartDateSearchTransaction = findViewById(R.id.tvStartDateSearchTransaction);
@@ -99,9 +90,6 @@ public class HistoryTransactionActivity extends AppCompatActivity implements Ban
         rvTransactionDetail.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
         btnSearchTransaction.setEnabled(false);
-        tvLoadContinueTransaction.setVisibility(View.GONE);
-        tvFullTransaction.setVisibility(View.GONE);
-        progressBar.setVisibility(View.GONE);
     }
 
     public void ShowDatePickerDialog(View view){
@@ -122,11 +110,10 @@ public class HistoryTransactionActivity extends AppCompatActivity implements Ban
         btnSearchTransaction.setEnabled(true);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void SearchTransactionByCurrentDate(View view) throws ParseException {
         isLoadMore = false;
         String currentSearchDay = tvStartDateSearchTransaction.getText().toString();
-        tvFullTransaction.setVisibility(View.GONE);
-        tvLoadContinueTransaction.setVisibility(View.GONE);
         if (currentSearchDay.isEmpty()){
             tvStartDateSearchTransaction.setError("Chưa nhập ngày");
             return;
@@ -141,32 +128,31 @@ public class HistoryTransactionActivity extends AppCompatActivity implements Ban
 
         history.SetStartTime(timeMilisecond);
         history.SetPageSize(pageSize);
-        history.StartGetHistoryTransaction();
-        progressBar.setVisibility(View.VISIBLE);
+        history.StartGetHistoryTransaction(getString(R.string.public_key), secretKeyString1, secretKeyString2);
+        loadItemLayout.ShowProgressBar();
     }
 
-    public void LoadMoreTransaction(View view){
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @Override
+    public void LoadContinue() {
         isLoadMore = true;
-        tvLoadContinueTransaction.setVisibility(View.GONE);
         history.SetStartTime(Long.valueOf(currentDate));
         history.SetPageSize(pageSize + 1);
-        history.StartGetHistoryTransaction();
-        progressBar.setVisibility(View.VISIBLE);
+        history.StartGetHistoryTransaction(getString(R.string.public_key), secretKeyString1, secretKeyString2);
+        loadItemLayout.ShowProgressBar();
     }
 
     @Override
     public void MappingResponse(boolean response, List<TransactionHistory> callback)  {
-        progressBar.setVisibility(View.GONE);
         if (response){
             if (isLoadMore){
                 callback.remove(0);
             }
             if (callback.size() == 0){
-                tvFullTransaction.setVisibility(View.VISIBLE);
-                tvLoadContinueTransaction.setVisibility(View.GONE);
+                loadItemLayout.ShowFull();
                 return;
             }
-            tvLoadContinueTransaction.setVisibility(View.VISIBLE);
+            loadItemLayout.ShowLoad();
             transactionDetailList.addAll(callback);
             currentDate = callback.get(callback.size() - 1).getTimemilliseconds();
             transactionDetailAdapter = new TransactionDetailAdapter(this, transactionDetailList, fullName, gson, this);

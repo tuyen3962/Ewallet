@@ -1,10 +1,12 @@
 package com.example.ewalletexample;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -49,7 +51,7 @@ import java.util.List;
 
 public class SubmitOrderActivity extends AppCompatActivity implements OrderResponse, ResponseModelByKey<UserModel>, TransactionDetailResponse {
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
-    String userid, amount, receiverphone, receiverFullname, phone, note;
+    String userid, amount, receiverphone, receiverFullname, phone, note, secretKeyString1, secretKeyString2;
     long fee;
     Service service;
     SourceFund source;
@@ -146,6 +148,8 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
         fee = intent.getLongExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
         service = Service.Find(intent.getIntExtra(Symbol.SERVICE_TYPE.GetValue(), 0));
         source = SourceFund.Find(intent.getShortExtra(Symbol.SOURCE_OF_FUND.GetValue(), Short.parseShort("0")));
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
         if(service == Service.EXCHANGE_SERVICE_TYPE){
             receiverphone = intent.getStringExtra(Symbol.RECEIVER_PHONE.GetValue());
@@ -249,6 +253,7 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
         verifyPasswordLayout.setVisibility(View.GONE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void VerifyPin(View view) throws JSONException {
         progressBarManager.ShowProgressBar("Loading");
         String pin = passwordFieldFragment.getTextByImage();
@@ -264,21 +269,26 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
         CheckOrder(pin);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void CheckOrder(String pin) {
         if (service == Service.TOPUP_SERVICE_TYPE){
             TopupOrder topupOrder = new TopupOrder(userid,pin,amount,fee,source,bankInfo, this);
+            topupOrder.SetSecretKeyString(getString(R.string.public_key), secretKeyString1, secretKeyString2);
             topupOrder.StartCreateOrder();
         }
         else if(service == Service.WITHDRAW_SERVICE_TYPE){
             WithdrawOrder withdrawOrder = new WithdrawOrder(userid, pin, amount, fee, source, bankInfo, this);
+            withdrawOrder.SetSecretKeyString(getString(R.string.public_key), secretKeyString1, secretKeyString2);
             withdrawOrder.StartCreateOrder();
         }
         else if(service == Service.EXCHANGE_SERVICE_TYPE){
             ExchangeMoneyOrder exchangeMoneyOrder = new ExchangeMoneyOrder(userid, receiverphone, pin, amount, fee, source, note, this);
+            exchangeMoneyOrder.SetSecretKeyString(getString(R.string.public_key), secretKeyString1, secretKeyString2);
             exchangeMoneyOrder.StartCreateOrder();
         }
         else if(service == Service.MOBILE_CARD_SERVICE_TYPE){
             MobileCardOrder order = new MobileCardOrder(userid, pin, mobileCardAmount, mobileCardOperator, fee, source, this);
+            order.SetSecretKeyString(getString(R.string.public_key), secretKeyString1, secretKeyString2);
             order.StartCreateOrder();
         }
     }
@@ -289,7 +299,7 @@ public class SubmitOrderActivity extends AppCompatActivity implements OrderRespo
         if(isSuccess && code == ErrorCode.SUCCESS.GetValue()){
             transactionDetail = new TransactionDetailAPI(userid, transactionId, this);
             this.balance = balance;
-            transactionDetail.StartRequest();
+            transactionDetail.StartRequest(getString(R.string.public_key), secretKeyString1, secretKeyString2);
         } else {
             if (code == ErrorCode.USER_PASSWORD_WRONG.GetValue()){
                 progressBarManager.HideProgressBar();

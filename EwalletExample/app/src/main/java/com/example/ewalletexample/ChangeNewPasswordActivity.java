@@ -108,10 +108,11 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
         updateUserAPI = new UpdateUserAPI(userid, getString(R.string.public_key), this);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void ChangePasswordEvent(View view){
         String currentPin = etCurrentPassword.getText().toString();
         verifyPinAPI.SetPin(currentPin);
-        verifyPinAPI.StartVerify();
+        verifyPinAPI.StartVerify(getString(R.string.public_key), getString(R.string.share_key), SecurityUtils.EncodeStringBase64(SecurityUtils.generateAESKey().getEncoded()));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
