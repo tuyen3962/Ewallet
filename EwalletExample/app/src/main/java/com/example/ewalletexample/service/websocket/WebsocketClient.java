@@ -21,12 +21,25 @@ public class WebsocketClient {
     private static final String WEBSOCKET_TOPIC = "/ws/topic/updated_wallet";
     private static String WEBSOCKET_NOTIFICATION_TOPIC = "/ws/topic/notify_";
 
-    private StompClient mStompClient;
     private WebsocketResponse response;
+    private StompClient mStompClient;
     private Context context;
     private String userid;
-    private boolean hasUser;
+    private boolean hasUser, changeBalance;
     private Gson gson;
+    private long newBalance;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public WebsocketClient(Context context, String userid){
+        hasUser = true;
+        this.context = context;
+        gson = new Gson();
+        this.userid = userid;
+        WEBSOCKET_NOTIFICATION_TOPIC += userid;
+        changeBalance = false;
+        newBalance = 0;
+        createConnection();
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public WebsocketClient(Context context, String userid, WebsocketResponse response){
@@ -36,6 +49,8 @@ public class WebsocketClient {
         gson = new Gson();
         this.userid = userid;
         WEBSOCKET_NOTIFICATION_TOPIC += userid;
+        changeBalance = false;
+        newBalance = 0;
         createConnection();
     }
 
@@ -64,12 +79,15 @@ public class WebsocketClient {
         // replace with your topics
         mStompClient.topic(WEBSOCKET_TOPIC)
                 .subscribe(stompMessage -> {
-                    if (response != null){
-                        JSONObject json = new JSONObject(stompMessage.getPayload());
-                        Log.d("TAG", "createConnection: " + stompMessage.getPayload());
-                        String userid = json.getString("userid");
-                        long balance = json.getLong("balance");
-                        response.UpdateWallet(userid, balance);
+                    JSONObject json = new JSONObject(stompMessage.getPayload());
+                    String userId = json.getString("userid");
+                    long balance = json.getLong("balance");
+                    if (this.userid.isEmpty() == false && this.userid.equalsIgnoreCase(userId)){
+                        changeBalance = true;
+                        newBalance = balance;
+                        if (response != null){
+                            response.UpdateWallet(newBalance);
+                        }
                     }
                 });
 
@@ -82,6 +100,14 @@ public class WebsocketClient {
                         }
                     });
         }
+    }
+
+    public boolean IsUpdateBalance(){
+        return changeBalance;
+    }
+
+    public long getNewBalance(){
+        return newBalance;
     }
 
     public void disconnect(){

@@ -31,6 +31,7 @@ import com.example.ewalletexample.VerifyAccountActivity;
 import com.example.ewalletexample.data.User;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.ui.shareData.ShareDataViewModel;
+import com.example.ewalletexample.utilies.GsonUtils;
 import com.example.ewalletexample.utilies.Utilies;
 
 public class MyWalletFragement extends Fragment implements View.OnClickListener{
@@ -128,6 +129,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
     void ShowLayoutSetting(){
         Intent intent = new Intent(mainActivity, SettingActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), mainActivity.GetUserInformation().getUserId());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
         startActivityForResult(intent, RequestCode.SETTING_ACCOUNT);
     }
 
@@ -136,12 +139,14 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         intent.putExtra(Symbol.USER_ID.GetValue(), mainActivity.GetUserInformation().getUserId());
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
         intent.putExtra(Symbol.PHONE.GetValue(), mainActivity.GetUserInformation().getPhoneNumber());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
         startActivity(intent);
     }
 
     public void SwitchToPersonalDetailActivity(){
         Intent intent = new Intent(mainActivity, PersonalDetailActivity.class);
-        intent.putExtra(Symbol.USER.GetValue(), mainActivity.GetGson().toJson(mainActivity.GetUserInformation()));
+        intent.putExtra(Symbol.USER.GetValue(), GsonUtils.toJsonString(mainActivity.GetUserInformation()));
         intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
         intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
         startActivityForResult(intent, RequestCode.MODIFY_INFORMATION);
@@ -156,6 +161,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
         intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
         intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
         startActivityForResult(intent, RequestCode.VERIFY_ACCOUNT_CODE);
     }
 
@@ -165,6 +172,8 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         intent.putExtra(Symbol.USER_ID.GetValue(), user.getUserId());
         intent.putExtra(Symbol.AMOUNT.GetValue(), mainActivity.GetUserBalance());
         intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), mainActivity.GetFirstKeyString());
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), mainActivity.GetSecondKeyString());
         startActivity(intent);
     }
 
@@ -175,7 +184,7 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
         if(requestCode == RequestCode.MODIFY_INFORMATION && resultCode == ((Activity)mainActivity).RESULT_OK){
             boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
             if(changeBalance){
-                mainActivity.SetUserBalance(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
+                mainActivity.UpdateWallet(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
             }
             String imageLink = mainActivity.GetUserInformation().getAvatar();
             mainActivity.SetUserInformationByJson(data.getStringExtra(Symbol.USER.GetValue()));
@@ -183,10 +192,20 @@ public class MyWalletFragement extends Fragment implements View.OnClickListener{
                 mainActivity.FindImageUriFromInternet();
             }
         } else if (requestCode == RequestCode.SETTING_ACCOUNT){
+            boolean isChange = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if (isChange) {
+                mainActivity.UpdateWallet(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
+            }
+
             if (resultCode == ((Activity)mainActivity).RESULT_CANCELED){
                 mainActivity.BackToPreviousActivity();
             }
         } else if (requestCode == RequestCode.VERIFY_ACCOUNT_CODE){
+            boolean isChange = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if (isChange) {
+                mainActivity.UpdateWallet(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
+            }
+
             if (resultCode == ((Activity)mainActivity).RESULT_OK){
                 String cmndFrontImage = data.getStringExtra(Symbol.IMAGE_CMND_FRONT.GetValue());
                 String cmndBackImage = data.getStringExtra(Symbol.IMAGE_CMND_BACK.GetValue());

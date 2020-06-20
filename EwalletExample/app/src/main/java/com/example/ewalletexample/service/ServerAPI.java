@@ -24,6 +24,7 @@ public enum  ServerAPI {
     UNLINK_BANK_CARD_API("/bank-mapping/unlink"),
     GET_BANK_LINKING_API("/bank-mapping/list"),
     GET_LIST_BANK_SUPPORT("/bank-mapping/support-bank"),
+    GET_TRANSACTION_FEE("/get-service-fee"),
 
     CHECK_LIST_PHONE("/check-list"),
 

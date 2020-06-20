@@ -43,6 +43,8 @@ import com.example.ewalletexample.service.recycleview.bank.ListBankSupportRecycl
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.utilies.GsonUtils;
 import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -71,9 +73,9 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     String userid, cmnd, secretKeyString1, secretKeyString2;
     UserModel model;
     long amount;
-    Gson gson;
     boolean isShowing;
     CustomToolbarContext customToolbarContext;
+    WebsocketClient websocketClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +87,6 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
     }
 
     void Initialize(){
-        gson = new Gson();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler(FirebaseDatabase.getInstance().getReference());
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
         animationManager = new AnimationManager(this);
@@ -123,6 +124,7 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
         secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         firebaseDatabaseHandler.GetModelByKey(Symbol.CHILD_NAME_USERS_FIREBASE_DATABASE, userid, UserModel.class, this);
+        websocketClient = new WebsocketClient(this, userid);
     }
 
     @Override
@@ -183,8 +185,10 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
         if (bankInfo != null){
             bankInfo.setCardName(chosenBankConnect.getBankName());
             Intent intent = new Intent();
+            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+            intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
             intent.putExtra(Symbol.BANK_INFO_CONNECTION.GetValue(), Symbol.CONNECT_BANK.GetValue());
-            intent.putExtra(Symbol.BANK_INFO.GetValue(), gson.toJson(bankInfo));
+            intent.putExtra(Symbol.BANK_INFO.GetValue(), GsonUtils.toJsonString(bankInfo));
             setResult(RESULT_OK, intent);
             finish();
         } else {
@@ -194,7 +198,10 @@ public class ChooseBankConnectActivity extends AppCompatActivity implements Resp
 
     @Override
     public void BackToPreviousActivity() {
-        setResult(RESULT_CANCELED);
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
+        setResult(RESULT_CANCELED, intent);
         finish();
     }
 }

@@ -20,12 +20,11 @@ import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
-import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
-public class BankCardDetailActivity extends AppCompatActivity implements BankMappingCallback<Object>, WebsocketResponse {
+public class BankCardDetailActivity extends AppCompatActivity implements BankMappingCallback<Object> {
 
     FirebaseStorageHandler storageHandler;
     ImageButton ibtnBack;
@@ -38,8 +37,6 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     Toolbar toolbar;
     UnlinkBankConnectedAPI unlinkBankAPI;
     WebsocketClient client;
-    boolean changeBalance;
-    long balance;
     Gson gson;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -56,9 +53,7 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
     @RequiresApi(api = Build.VERSION_CODES.M)
     void Initialize(){
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
-        changeBalance = false;
-        balance = 0;
-        client = new WebsocketClient(this, userid, this);
+        client = new WebsocketClient(this, userid);
         tvBankName = findViewById(R.id.tvBankName);
         tvCardNumber = findViewById(R.id.tvCardNumber);
         tvStatus = findViewById(R.id.tvStatus);
@@ -96,8 +91,8 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
 
     void ReturnPreviousActivity(){
         Intent intent = new Intent();
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
         setResult(RESULT_CANCELED, intent);
         finish();
     }
@@ -113,21 +108,13 @@ public class BankCardDetailActivity extends AppCompatActivity implements BankMap
             String bankInfoString = gson.toJson(bankInfo);
             Intent intent = new Intent();
             intent.putExtra(Symbol.BANK_INFO.GetValue(), bankInfoString);
-            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+            intent.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
             setResult(RESULT_OK, intent);
             finish();
         }
         else {
             Toast.makeText(this, "Huy lien ket that bai", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-        if(userid.equalsIgnoreCase(this.userid)){
-            this.balance = balance;
-            changeBalance = true;
         }
     }
 }

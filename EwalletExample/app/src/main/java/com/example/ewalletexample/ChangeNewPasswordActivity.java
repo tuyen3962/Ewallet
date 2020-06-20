@@ -20,21 +20,26 @@ import com.example.ewalletexample.Server.api.VerifyPin.VerifyResponse;
 import com.example.ewalletexample.Server.api.update.UpdateUserAPI;
 import com.example.ewalletexample.Server.api.update.UpdateUserResponse;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.android.material.textview.MaterialTextView;
 
 import javax.crypto.SecretKey;
 
-public class ChangeNewPasswordActivity extends AppCompatActivity implements VerifyResponse, UpdateUserResponse {
+public class ChangeNewPasswordActivity extends AppCompatActivity implements VerifyResponse, UpdateUserResponse, ToolbarEvent {
 
     MaterialTextView tvToolbarTitle, tvErrorCurrentPassword, tvErrorNewPassword;
     ImageButton imgBtnBack;
     EditText etCurrentPassword, etNewPassword, etConfirmPassword;
     Button btnUpdatePassword;
-    String userid;
+    String userid, secretKeyString1, secretKeyString2;
     VerifyPinAPI verifyPinAPI;
     Toolbar toolbar;
     UpdateUserAPI updateUserAPI;
+    WebsocketClient websocketClient;
+    CustomToolbarContext customToolbarContext;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -86,6 +91,7 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
         etConfirmPassword.addTextChangedListener(textWatcher);
         etCurrentPassword.addTextChangedListener(textWatcher);
         btnUpdatePassword.setEnabled(false);
+        customToolbarContext = new CustomToolbarContext(this, "Đổi mật khẩu",this::BackToPreviousActivity);
         tvToolbarTitle.setText(getString(R.string.Change_password));
         imgBtnBack = findViewById(R.id.btnBackToPreviousActivity);
         tvErrorCurrentPassword = findViewById(R.id.tvErrorCurrentPass);
@@ -104,15 +110,18 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
     void GetValueFromIntent(){
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         verifyPinAPI = new VerifyPinAPI(userid, this);
         updateUserAPI = new UpdateUserAPI(userid, getString(R.string.public_key), this);
+        websocketClient = new WebsocketClient(this, userid);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void ChangePasswordEvent(View view){
         String currentPin = etCurrentPassword.getText().toString();
         verifyPinAPI.SetPin(currentPin);
-        verifyPinAPI.StartVerify(getString(R.string.public_key), getString(R.string.share_key), SecurityUtils.EncodeStringBase64(SecurityUtils.generateAESKey().getEncoded()));
+        verifyPinAPI.StartVerify(getString(R.string.public_key), secretKeyString1, secretKeyString2);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -121,8 +130,8 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
         if(isSuccess){
             if (CheckNewPassword()){
                 String password = etNewPassword.getText().toString();
-                SecretKey secretKey1 = SecurityUtils.generateAESKey();
-                SecretKey secretKey2 = SecurityUtils.generateAESKey();
+                SecretKey secretKey1 = SecurityUtils.generateAESKeyFromText(secretKeyString1);
+                SecretKey secretKey2 = SecurityUtils.generateAESKeyFromText(secretKeyString2);
 
                 String encryptPasswordByAES = SecurityUtils.EncryptStringBySecretKey(secretKey1, getString(R.string.share_key), password);
                 String encryptAESPassBySecondSecretKey = SecurityUtils.encryptAES(secretKey2, encryptPasswordByAES);
@@ -157,12 +166,24 @@ public class ChangeNewPasswordActivity extends AppCompatActivity implements Veri
 
     @Override
     public void UpdateSuccess() {
-        setResult(RESULT_OK);
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
+        setResult(RESULT_OK, intent);
         finish();
     }
 
     @Override
     public void UpdateFail() {
         Toast.makeText(this, "Máy chủ đang bận. Xin hãy thử lại", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void BackToPreviousActivity() {
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
+        setResult(RESULT_CANCELED, intent);
+        finish();
     }
 }

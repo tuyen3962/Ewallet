@@ -24,7 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 
-public class PersonalDetailActivity extends AppCompatActivity implements WebsocketResponse {
+public class PersonalDetailActivity extends AppCompatActivity {
     FirebaseStorageHandler firebaseStorageHandler;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     View layoutAddress, layoutDob, layoutImageAccount, layoutVerifyAccount, layoutEmail;
@@ -35,9 +35,8 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
     User user;
     String firstKey, secondKey;
     Gson gson;
-    WebsocketClient client;
     long balance;
-    boolean changeBalance;
+    WebsocketClient client;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -50,8 +49,6 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
 
     void Initialize(){
         gson = new Gson();
-        changeBalance = false;
-        balance = 0;
         tvDateOfBirth = findViewById(R.id.tvDateOfBirth);
         tvAddress = findViewById(R.id.tvAddress);
         tvFullname = findViewById(R.id.tvFullName);
@@ -81,7 +78,7 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
         user.setDate();
         firstKey = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
         secondKey = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
-        client = new WebsocketClient(this, user.getUserId(), this);
+        client = new WebsocketClient(this, user.getUserId());
         FillUserProfile();
         LoadImageAccount();
     }
@@ -134,19 +131,11 @@ public class PersonalDetailActivity extends AppCompatActivity implements Websock
 
     public void BackToMainEvent(View view){
         Intent intent = new Intent();
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
         setResult(RESULT_OK, intent);
         finish();
-    }
-
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-        if(userid.equalsIgnoreCase(user.getUserId())){
-            this.balance = balance;
-            changeBalance = true;
-        }
     }
 
     @Override

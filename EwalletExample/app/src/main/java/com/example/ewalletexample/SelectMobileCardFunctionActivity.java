@@ -15,10 +15,14 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeAPI;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeRequest;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeResponse;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
+import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.MobileCardModel;
 import com.example.ewalletexample.service.mobilecard.MobileCard;
 import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
@@ -37,11 +41,12 @@ import com.google.firebase.storage.FirebaseStorage;
 
 import java.util.List;
 
-public class SelectMobileCardFunctionActivity extends AppCompatActivity implements SelectMobileCardFunction, HandleDataFromFirebaseDatabase<MobileCardModel> {
+public class SelectMobileCardFunctionActivity extends AppCompatActivity implements SelectMobileCardFunction,
+        HandleDataFromFirebaseDatabase<MobileCardModel>, GetServiceFeeResponse {
     private final int colorDefault = R.color.Grey;
     private final int colorChosen = R.color.Black;
 
-    String userid, phone;
+    String userid, phone, secretKeyString1, secretKeyString2;
     long userAmount;
     boolean hasChangeOperator;
 
@@ -50,6 +55,9 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
 
     RecyclerView  rvMobileCardOperator, layoutCardAmount;
     TextView tvQuantity;
+    GetServiceFeeAPI getServiceFeeAPI;
+    GetServiceFeeRequest request;
+    ProgressBarManager progressBarManager;
     MobileCardOperator[] arrMobileCardNetwork;
 
     MobileCardOperatorAdapter mobileCardOperatorAdapter;
@@ -73,7 +81,7 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
 
     void Initialize(){
         hasChangeOperator = false;
-
+        progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnVerify));
         arrMobileCardNetwork = MobileCard.GetInstance().GetMobileCardOperator();
 
         firebaseStorageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
@@ -98,6 +106,14 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
         phone = intent.getStringExtra(Symbol.PHONE.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
+
+        request = new GetServiceFeeRequest();
+        request.service_code = Service.MOBILE_CARD_SERVICE_TYPE.GetCode();
+        request.key = secretKeyString1;
+        request.secondKey = secretKeyString2;
+        getServiceFeeAPI = new GetServiceFeeAPI(request, this::GetTransactionFee);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -159,19 +175,13 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
         firebaseDatabaseHandler.RegisterDataListener();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void StartCreateMobileOrder(){
-        Intent intent = new Intent(SelectMobileCardFunctionActivity.this, SubmitOrderActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
-        intent.putExtra(Symbol.PHONE.GetValue(), phone);
-        intent.putExtra(Symbol.MOBILE_CODE.GetValue(), mobileCardOperatorChosen.GetMobileCode());
-        intent.putExtra(Symbol.MOBILE_AMOUNT.GetValue() , currentAmount.GetAmount());
-        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
-        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.MOBILE_CARD_SERVICE_TYPE.GetCode());
-        intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
-        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
+        getServiceFeeAPI.StartRequest(getString(R.string.public_key));
+        progressBarManager.ShowProgressBar("Lấy phí giao dịch");
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void HandleDataModel(MobileCardModel model) {
         if(model != null){
@@ -209,5 +219,26 @@ public class SelectMobileCardFunctionActivity extends AppCompatActivity implemen
                 finish();
             }
         }
+    }
+
+    @Override
+    public void GetTransactionFee(long fee) {
+        if (fee == -1) {
+            progressBarManager.HideProgressBar();
+            Toast.makeText(this, "Không lấy được phí giao dịch", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(SelectMobileCardFunctionActivity.this, SubmitOrderActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT.GetValue(), userAmount);
+        intent.putExtra(Symbol.PHONE.GetValue(), phone);
+        intent.putExtra(Symbol.MOBILE_CODE.GetValue(), mobileCardOperatorChosen.GetMobileCode());
+        intent.putExtra(Symbol.MOBILE_AMOUNT.GetValue() , currentAmount.GetAmount());
+        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
+        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.MOBILE_CARD_SERVICE_TYPE.GetCode());
+        intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
 }

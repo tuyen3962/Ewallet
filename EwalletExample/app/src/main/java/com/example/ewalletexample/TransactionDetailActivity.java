@@ -1,20 +1,17 @@
 package com.example.ewalletexample;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.example.ewalletexample.Server.api.transaction.BankInfo;
-import com.example.ewalletexample.Server.api.transaction.ExchangeInfo;
-import com.example.ewalletexample.Server.api.transaction.MobileCardInfo;
+import com.example.ewalletexample.Server.api.transaction.model.BankInfo;
+import com.example.ewalletexample.Server.api.transaction.model.ExchangeInfo;
+import com.example.ewalletexample.Server.api.transaction.model.MobileCardInfo;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;

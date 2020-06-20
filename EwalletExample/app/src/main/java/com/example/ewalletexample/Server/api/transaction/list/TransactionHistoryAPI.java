@@ -1,4 +1,4 @@
-package com.example.ewalletexample.Server.api.transaction;
+package com.example.ewalletexample.Server.api.transaction.list;
 
 import android.os.Build;
 

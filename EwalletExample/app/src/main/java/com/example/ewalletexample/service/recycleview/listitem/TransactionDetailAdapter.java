@@ -8,9 +8,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.ewalletexample.R;
-import com.example.ewalletexample.Server.api.transaction.BankInfo;
-import com.example.ewalletexample.Server.api.transaction.ExchangeInfo;
-import com.example.ewalletexample.Server.api.transaction.MobileCardInfo;
+import com.example.ewalletexample.Server.api.transaction.model.BankInfo;
+import com.example.ewalletexample.Server.api.transaction.model.ExchangeInfo;
+import com.example.ewalletexample.Server.api.transaction.model.MobileCardInfo;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.data.TransactionHistory;
 import com.example.ewalletexample.service.UserSelectFunction;

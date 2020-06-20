@@ -29,6 +29,7 @@ import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandl
 import com.example.ewalletexample.service.realtimeDatabase.ResponseModelByKey;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -38,7 +39,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class UpdateEmailActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>, WebsocketResponse,
+public class UpdateEmailActivity extends AppCompatActivity implements ResponseModelByKey<UserModel>,
         ToolbarEvent, CheckOTPFunction {
 
     FirebaseAuth mAuth;
@@ -53,7 +54,8 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
     UserModel model;
     CustomToolbarContext customToolbarContext;
     CountDownTimer resendCountDownTime, timeValidationCode;
-    boolean changeBalance, isCodeValid;
+    WebsocketClient client;
+    boolean isCodeValid;
     long balance;
 
     @Override
@@ -74,7 +76,6 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
 
     void Initialize(){
         isCodeValid = false;
-        changeBalance = false;
         mAuth = FirebaseAuth.getInstance();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference());
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar), findViewById(R.id.btnVerify), findViewById(R.id.btnChangeEmail), findViewById(R.id.btnBackToPreviousActivity));
@@ -88,7 +89,7 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
         etCode05 = findViewById(R.id.etCode05);
         etCode06 = findViewById(R.id.etCode06);
         customToolbarContext = new CustomToolbarContext(this, this);
-
+        client = new WebsocketClient(this, userid);
         tvError = findViewById(R.id.tvError);
         btnVerify = findViewById(R.id.btnVerify);
         btnVerify.setEnabled(false);
@@ -155,8 +156,8 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
     @Override
     public void BackToPreviousActivity() {
         Intent intent = new Intent();
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
         setResult(RESULT_CANCELED, intent);
         finish();
     }
@@ -213,14 +214,6 @@ public class UpdateEmailActivity extends AppCompatActivity implements ResponseMo
                 });
             }
         });
-    }
-
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-        changeBalance = true;
-        if(this.userid.equalsIgnoreCase(userid)){
-            this.balance = balance;
-        }
     }
 
     void ShowErrorMessage(String message){

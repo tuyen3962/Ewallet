@@ -71,7 +71,7 @@ import java.util.Calendar;
 import javax.crypto.SecretKey;
 
 public class UpdateUserInformationActivity extends AppCompatActivity implements ResponseMethod,
-        ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener, UpdateUserResponse, WebsocketResponse, UserSelectFunction<String> {
+        ResponseModelByKey<UserModel>, DatePickerDialog.OnDateSetListener, UpdateUserResponse, UserSelectFunction<String> {
 
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler storageHandler;
@@ -89,8 +89,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     File photoFile;
     Uri photoUri;
     WebsocketClient client;
-    long balance;
-    boolean changeBalance, uploadImage;
+    boolean uploadImage;
     RecycleViewListSingleItem recycleViewListSingleItem;
     UpdateUserAPI updateAPI;
     AnimationManager animationManager;
@@ -114,8 +113,6 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
     @RequiresApi(api = Build.VERSION_CODES.M)
     void Initialize(){
         uploadImage = false;
-        changeBalance = false;
-        balance = 0;
         gson = new Gson();
         datePickerDialog = new DatePickerDialog(this,this,1998,1,1);
         btnUpload = findViewById(R.id.btnUpload);
@@ -183,7 +180,7 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         firstKey = SecurityUtils.generateAESKeyFromText(secretKey1);
         secretKey2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         secondKey = SecurityUtils.generateAESKeyFromText(secretKey2);
-        client = new WebsocketClient(this, user.getUserId(), this);
+        client = new WebsocketClient(this, user.getUserId());
         if(update.equalsIgnoreCase(Symbol.UPDATE_FOR_INFORMATION.GetValue())){
             tvBack.setVisibility(View.GONE);
             user.setDate();
@@ -312,8 +309,8 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         } else if (requestCode == RequestCode.UPDATE_REGISTER){
             boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
             if (!changeBalance){
-                data.putExtra(Symbol.CHANGE_BALANCE.GetValue(), this.changeBalance);
-                data.putExtra(Symbol.AMOUNT.GetValue(), this.balance);
+                data.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+                data.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
             }
             setResult(resultCode, data);
             finish();
@@ -416,8 +413,8 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
                 intent.putExtra(Symbol.DOB.GetValue(), user.getDateOfbirth());
                 intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getAvatar());
                 intent.putExtra(Symbol.EMAIL.GetValue(), user.getEmail());
-                intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-                intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+                intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+                intent.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
                 setResult(RESULT_OK, intent);
                 finish();
             }
@@ -473,19 +470,11 @@ public class UpdateUserInformationActivity extends AppCompatActivity implements 
         }
     }
 
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-        if(userid.equalsIgnoreCase(this.user.getUserId())){
-            this.balance = balance;
-            changeBalance = true;
-        }
-    }
-
     public void BackPreviousActivity(){
         Intent intent = new Intent();
         intent.putExtra(Symbol.IMAGE_ACCOUNT_LINK.GetValue(), user.getAvatar());
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-        intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), client.getNewBalance());
         setResult(RESULT_CANCELED, intent);
         finish();
     }

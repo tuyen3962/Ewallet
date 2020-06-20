@@ -15,19 +15,21 @@ import com.example.ewalletexample.service.AnimationManager;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.UserSelectFunction;
 import com.example.ewalletexample.service.recycleview.listitem.RecycleViewListSingleItem;
+import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.google.android.material.textview.MaterialTextView;
 
 public class SettingActivity extends AppCompatActivity implements UserSelectFunction<String> {
 
-    ImageButton btnBackToPreviousActivity;
     View layoutListItem, listItem;
     RecyclerView rvListItem;
-    MaterialTextView tvTitle, tvLanguage, tvToolbarTitle;
+    MaterialTextView tvTitle, tvLanguage;
     SharedPreferenceLocal local;
     RecycleViewListSingleItem recycleViewListSingleItem;
-    String userid;
-    Toolbar toolbar;
+    String userid, secretKeyString1, secretKeyString2;
     AnimationManager animationManager;
+    WebsocketClient websocketClient;
+    CustomToolbarContext customToolbarContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,27 +46,19 @@ public class SettingActivity extends AppCompatActivity implements UserSelectFunc
         layoutListItem = findViewById(R.id.layoutListItem);
         tvTitle = findViewById(R.id.tvTitle);
         tvLanguage = findViewById(R.id.tvLanguage);
-        toolbar = findViewById(R.id.toolbarLayout);
-        tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
-        btnBackToPreviousActivity = findViewById(R.id.btnBackToPreviousActivity);
-        tvToolbarTitle.setText("Cài đặt");
-        setSupportActionBar(toolbar);
+        customToolbarContext = new CustomToolbarContext(this, "Cài đặt", this::BackToPreviousActivity);
         layoutListItem.setVisibility(View.GONE);
         animationManager = new AnimationManager(this);
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         rvListItem.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-
-        btnBackToPreviousActivity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BackToPreviousActivity();
-            }
-        });
     }
 
     void GetValueFromIntent(){
         Intent intent = getIntent();
         userid = intent.getStringExtra(Symbol.USER_ID.GetValue());
+        secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
+        secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
+        websocketClient = new WebsocketClient(this, userid);
     }
 
     public void ShowListLanguage(View view){
@@ -81,13 +75,18 @@ public class SettingActivity extends AppCompatActivity implements UserSelectFunc
     }
 
     public void UserLogoutPhoneEvent(View view){
-        setResult(RESULT_CANCELED);
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
+        setResult(RESULT_CANCELED, intent);
         finish();
     }
 
     public void ChangeNewPassword(View view){
         Intent intent = new Intent(SettingActivity.this, ChangeNewPasswordActivity.class);
         intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
         startActivity(intent);
     }
 
@@ -97,7 +96,10 @@ public class SettingActivity extends AppCompatActivity implements UserSelectFunc
     }
 
     void BackToPreviousActivity(){
-        setResult(RESULT_OK);
+        Intent intent = new Intent();
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+        intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
+        setResult(RESULT_OK, intent);
         finish();
     }
 }

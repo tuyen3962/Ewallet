@@ -1,7 +1,7 @@
 package com.example.ewalletexample.Symbol;
 
 public enum  Symbol {
-    BASE_ADDRESS("10.86.152.69"),
+    BASE_ADDRESS("192.168.1.35"),
 
     PIN("PIN"),
     STYLE_TRANSACTION_DETAIL("STYLE_TRANSACTION_DETAIL"),

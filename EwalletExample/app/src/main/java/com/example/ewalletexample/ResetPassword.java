@@ -32,6 +32,7 @@ import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandl
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
 import com.example.ewalletexample.service.toolbar.ToolbarEvent;
+import com.example.ewalletexample.utilies.GsonUtils;
 import com.example.ewalletexample.utilies.SecurityUtils;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -57,7 +58,6 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
     MaterialTextView tvUsername, tvError;
     UpdateUserAPI updateUserAPI;
     UserLoginAPI userLoginAPI;
-    Gson gson;
     Button btnResetNewPassword;
     String reason, secretKeyString1, secretKeyString2;
     User user;
@@ -102,7 +102,6 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
 
     void Initialize(){
         user = new User();
-        gson = new Gson();
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
         tvUsername = findViewById(R.id.tvUsername);
         btnResetNewPassword = findViewById(R.id.btnResetNewPassword);
@@ -235,7 +234,7 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
             auth.signOut();
         }
         auth.signInWithCustomToken(customToken);
-        GetBalanceAPI getBalanceAPI = new GetBalanceAPI(SecurityUtils.generatePublicKey(getString(R.string.public_key)), user.getUserId(), gson, this);
+        GetBalanceAPI getBalanceAPI = new GetBalanceAPI(SecurityUtils.generatePublicKey(getString(R.string.public_key)), user.getUserId(), this);
         getBalanceAPI.GetBalance(secretKeyString1, secretKeyString2);
     }
 
@@ -252,7 +251,7 @@ public class ResetPassword extends AppCompatActivity implements ToolbarEvent, Up
     @Override
     public void GetBalanceResponse(long balance) {
         Intent intent = new Intent();
-        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+        intent.putExtra(Symbol.USER.GetValue(), GsonUtils.toJsonString(user));
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
         intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);

@@ -49,7 +49,7 @@ import java.util.List;
 import javax.crypto.SecretKey;
 
 public class UserBankCardActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>,
-        WebsocketResponse, UserSelectFunction<BankInfo>, ToolbarEvent {
+        UserSelectFunction<BankInfo>, ToolbarEvent {
     FirebaseStorageHandler storageHandler;
 
     ListBankConnectedAPI listBankAPI;
@@ -67,7 +67,6 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     String secretKeyString1, secretKeyString2;
     Gson gson;
     long balance;
-    boolean changeBalance;
 
     @RequiresApi(api = Build.VERSION_CODES.M | Build.VERSION_CODES.O)
     @Override
@@ -82,10 +81,9 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     void Initialize(){
-        changeBalance = false;
         bankInfoList = new ArrayList<>();
         gson = new Gson();
-        client = new WebsocketClient(this, user.getUserId(), this);
+        client = new WebsocketClient(this, user.getUserId());
         storageHandler = new FirebaseStorageHandler(FirebaseStorage.getInstance(), this);
 
         tvBalance = findViewById(R.id.tvBalance);
@@ -202,20 +200,14 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     }
 
     @Override
-    public void UpdateWallet(String userid, long balance) {
-        runOnUiThread(()->{
-            if(userid.equalsIgnoreCase(this.user.getUserId())){
-                this.balance = balance;
-                this.changeBalance = true;
-                SetBalance(balance);
-            }
-        });
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RequestCode.CONNECT_BANK_CODE){
+            boolean changeBalance = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if (changeBalance){
+                this.balance = data.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
+            }
+
             if (resultCode == RESULT_OK){
                 BankInfo bank = gson.fromJson(data.getStringExtra(Symbol.BANK_INFO.GetValue()), BankInfo.class);
                 if(bank != null){
@@ -238,7 +230,7 @@ public class UserBankCardActivity extends AppCompatActivity implements BankMappi
     @Override
     public void BackToPreviousActivity() {
         Intent intent = new Intent();
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), client.getNewBalance());
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         setResult(RESULT_OK, intent);
         finish();

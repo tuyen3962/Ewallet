@@ -50,7 +50,7 @@ import java.io.IOException;
 
 import javax.crypto.SecretKey;
 
-public class VerifyAccountActivity extends AppCompatActivity implements ResponseMethod, UpdateUserResponse, ToolbarEvent, WebsocketResponse {
+public class VerifyAccountActivity extends AppCompatActivity implements ResponseMethod, UpdateUserResponse, ToolbarEvent {
     private final static int TAKE_PHOTO_FRONT_SIDE_REQUEST = 100;
     private final static int TAKE_PHOTO_BACK_SIDE_REQUEST = 101;
     private final static int CHOOSE_PICTURE_FRONT_SIDE_REQUEST = 102;
@@ -69,7 +69,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     File frontPhotoFile, backPhotoFile;
     Uri frontPhotoUri, backPhotoUri;
     UpdateUserAPI updateAPI;
-    boolean hasUploadTwoImages, changeBalance;
+    boolean hasUploadTwoImages;
     SharedPreferenceLocal local;
     String update, secretKeyString1, secretKeyString2;
     Gson gson;
@@ -93,7 +93,6 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void Initialize(){
         frontPhotoUri = null;
         backPhotoUri = null;
-        changeBalance = false;
         balance = 0;
         inputLayoutCMND = findViewById(R.id.input_layout_cmnd);
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
@@ -103,7 +102,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
         imgFrontIdentifierCard = findViewById(R.id.imgFrontIdentifierCard);
         imgBackIdentifierCard = findViewById(R.id.imgBackIdentifierCard);
         btnVerify = findViewById(R.id.btnVerify);
-        websocketClient = new WebsocketClient(this, user.getUserId(), this);
+        websocketClient = new WebsocketClient(this, user.getUserId());
         progressBarManager = new ProgressBarManager(findViewById(R.id.progressBar),
                 btnVerify, imgFrontIdentifierCard, imgBackIdentifierCard);
         updateAPI = new UpdateUserAPI(user.getUserId(), getString(R.string.public_key), this);
@@ -335,8 +334,8 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
             intent.putExtra(Symbol.IMAGE_CMND_FRONT.GetValue(), user.getCmndFrontImage());
             intent.putExtra(Symbol.IMAGE_CMND_BACK.GetValue(), user.getCmndBackImage());
             intent.putExtra(Symbol.CMND.GetValue(), user.getCmnd());
-            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
-            intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
+            intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
+            intent.putExtra(Symbol.AMOUNT.GetValue(), websocketClient.getNewBalance());
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -350,7 +349,7 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     void SwitchToMain(){
         Intent intent = new Intent();
         intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         setResult(RESULT_OK, intent);
         finish();
@@ -359,17 +358,10 @@ public class VerifyAccountActivity extends AppCompatActivity implements Response
     @Override
     public void BackToPreviousActivity() {
         Intent intent = new Intent();
-        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), changeBalance);
+        intent.putExtra(Symbol.CHANGE_BALANCE.GetValue(), websocketClient.IsUpdateBalance());
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
         setResult(RESULT_CANCELED);
         finish();
-    }
-
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-        if (userid.equalsIgnoreCase(user.getUserId())){
-            this.balance = balance;
-        }
     }
 
     class BlurImage implements LoadImageResponse {
