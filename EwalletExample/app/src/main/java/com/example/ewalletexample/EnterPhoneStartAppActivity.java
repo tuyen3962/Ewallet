@@ -17,6 +17,7 @@ import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
 import com.example.ewalletexample.service.realtimeDatabase.HandleDataFromFirebaseDatabase;
+import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -34,6 +35,7 @@ public class EnterPhoneStartAppActivity extends AppCompatActivity implements Han
     ProgressBarManager progressBarManager;
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     TextInputLayout inputLayoutPhone;
+    View btnContinue;
     TextInputEditText etPhone;
     String phone, userid;
     String[] phones;
@@ -68,6 +70,8 @@ public class EnterPhoneStartAppActivity extends AppCompatActivity implements Han
         progressBarManager.HideProgressBar();
         inputLayoutPhone = findViewById(R.id.etPhoneNumber);
         etPhone = findViewById(R.id.etPhone);
+        btnContinue = findViewById(R.id.btnContinue);
+        btnContinue.setEnabled(false);
         firebaseDatabaseHandler = new FirebaseDatabaseHandler<>(FirebaseDatabase.getInstance().getReference(), this);
         AddTextWatcher();
         GetListPhone();
@@ -102,7 +106,15 @@ public class EnterPhoneStartAppActivity extends AppCompatActivity implements Han
 
             @Override
             public void afterTextChanged(Editable s) {
-
+                if (s.length() == 10){
+                    if (!btnContinue.isEnabled()){
+                        btnContinue.setEnabled(true);
+                    }
+                } else {
+                    if (btnContinue.isEnabled()){
+                        btnContinue.setEnabled(false);
+                    }
+                }
             }
         });
     }

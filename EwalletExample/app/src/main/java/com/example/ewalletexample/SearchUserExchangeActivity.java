@@ -25,6 +25,9 @@ import android.widget.Toast;
 import com.aldoapps.autoformatedittext.AutoFormatEditText;
 import com.example.ewalletexample.Server.api.checklist.CheckListAPI;
 import com.example.ewalletexample.Server.api.checklist.CheckListResponse;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeAPI;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeRequest;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeResponse;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
@@ -54,8 +57,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class SearchUserExchangeActivity extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel>, UserSelectFunction<UserSearchModel>,
-        ResponseModelByKey<UserModel>, CheckListResponse, ToolbarEvent {
+public class SearchUserExchangeActivity extends AppCompatActivity implements HandleDataFromFirebaseDatabase<UserModel>,
+        UserSelectFunction<UserSearchModel>, ResponseModelByKey<UserModel>, CheckListResponse, ToolbarEvent, GetServiceFeeResponse {
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;
     FirebaseStorageHandler firebaseStorageHandler;
     ProgressBarManager progressBarManager;
@@ -69,7 +72,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     RecyclerView lvUserRecommend, lvUserContact, lvFriendProfile;
     RecycleViewUserProfileAdapter userProfileAdapter, userInContactProfileAdapter;
     View layoutInfoTransaction, layoutInfoReceiver;
-    String userid, phone, friendId, hasFriend, secretKeyString1, secretKeyString2;
+    String userid, phone, friendId, hasFriend, secretKeyString1, secretKeyString2, cash;
     long userAmount;
     boolean hasGetContact, isGetFriend;
     UserSearchModel currentReceiverModel;
@@ -77,6 +80,7 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
     CheckListAPI checkListAPI;
     GetListFriend getListFriend;
     CustomToolbarContext customToolbarContext;
+    GetServiceFeeAPI getServiceFeeAPI;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -272,14 +276,14 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
         currentReceiverModel.setUserid(friendId);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void StartCreateExchangeOrder(View view){
         if (currentReceiverModel == null){
             tvSearchUser.setError("Tìm người nhận");
             return;
         }
 
-        String cash = etCash.getText().toString();
-        cash = cash.replaceAll(",","");
+        cash = etCash.getText().toString().replaceAll(",","");
         long money = Long.parseLong(cash);
         if(cash.isEmpty()){
             etCash.setError("Hãy nhập số tiền");
@@ -291,16 +295,14 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
             etCash.setError("Bạn không đủ số tiền để chuyển. Xin nhập lại!");
             return;
         }
-        Intent intent = new Intent(SearchUserExchangeActivity.this, SubmitOrderActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), cash);
-        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
-        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.EXCHANGE_SERVICE_TYPE.GetCode());
-        intent.putExtra(Symbol.NOTE.GetValue(), etNote.getText().toString());
-        intent.putExtra(Symbol.RECEIVER_PHONE.GetValue(), currentReceiverModel.getPhone());
-        intent.putExtra(Symbol.RECEIVER_FULL_NAME.GetValue(), currentReceiverModel.getFullName());
-        intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
-        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
+
+        GetServiceFeeRequest request = new GetServiceFeeRequest();
+        request.service_code = Service.EXCHANGE_SERVICE_TYPE.GetCode();
+        request.key = secretKeyString1;
+        request.secondKey = secretKeyString2;
+        getServiceFeeAPI = new GetServiceFeeAPI(request, this::GetTransactionFee);
+        getServiceFeeAPI.StartRequest(getString(R.string.public_key));
+        progressBarManager.ShowProgressBar("Lấy phí giao dịch");
     }
 
     @Override
@@ -373,6 +375,27 @@ public class SearchUserExchangeActivity extends AppCompatActivity implements Han
                 finish();
             }
         }
+    }
+
+    @Override
+    public void GetTransactionFee(long fee) {
+        if (fee == -1) {
+            progressBarManager.HideProgressBar();
+            Toast.makeText(this,"Lỗi mạng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(SearchUserExchangeActivity.this, SubmitOrderActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), cash);
+        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), fee);
+        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), Service.EXCHANGE_SERVICE_TYPE.GetCode());
+        intent.putExtra(Symbol.NOTE.GetValue(), etNote.getText().toString());
+        intent.putExtra(Symbol.RECEIVER_PHONE.GetValue(), currentReceiverModel.getPhone());
+        intent.putExtra(Symbol.RECEIVER_FULL_NAME.GetValue(), currentReceiverModel.getFullName());
+        intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
 
     class GetListFriend implements CheckListResponse, UserSelectFunction<UserSearchModel>{

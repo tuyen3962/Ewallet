@@ -21,6 +21,7 @@ import com.example.ewalletexample.service.toolbar.ToolbarEvent;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
 import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.ui.shareData.ShareDataViewModel;
+import com.example.ewalletexample.utilies.GsonUtils;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -53,7 +54,6 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
     Uri imageUri;
     String balance;
     CustomToolbarContext customToolbarContext;
-    Gson gson;
     String firstKeyString, secondKeyString;
     WebsocketClient websocketClient;
 
@@ -76,7 +76,6 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
     }
 
     void Initialize(){
-        gson = new Gson();
         imageUri = null;
         securityLayout = findViewById(R.id.securityLayout);
         HideSecurityLayout(securityLayout);
@@ -98,11 +97,11 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
     private void LoadDataFromIntent(){
         user = new User();
         Intent intent = getIntent();
-        user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
+        user = GsonUtils.getGson().fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
         firstKeyString = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
         secondKeyString = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         userAmount = intent.getLongExtra(Symbol.AMOUNT.GetValue(), 0);
-        websocketClient = new WebsocketClient(this, user.getUserId(), this);
+        websocketClient = new WebsocketClient(this, user.getUserId(), this::UpdateWallet);
         FindImageUriFromInternet();
     }
 
@@ -112,6 +111,12 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
         } else {
             storageHandler.GetUriImageFromServerFile(user.getAvatar(), this);
         }
+    }
+
+    public Intent AddSecretKeyIntoIntent(Intent intent){
+        intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), firstKeyString);
+        intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secondKeyString);
+        return intent;
     }
 
     public String GetFirstKeyString(){
@@ -132,7 +137,7 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
         return userAmount;
     }
 
-    public void SetUserBalance(long balance){
+    private void SetUserBalance(long balance){
         this.userAmount = balance;
     }
 
@@ -141,11 +146,7 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
     }
 
     public void SetUserInformationByJson(String json){
-        user = gson.fromJson(json, User.class);
-    }
-
-    public Gson GetGson(){
-        return gson;
+        user = GsonUtils.getGson().fromJson(json, User.class);
     }
 
     public void SetUserSecurityInfo(String cmnd, String imgCMNDFront, String imgCMNDBack){
@@ -189,19 +190,18 @@ public class MainLayoutActivity extends AppCompatActivity implements ResponseIma
         finish();
     }
 
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-        if (user != null && user.getUserId().equalsIgnoreCase(userid)){
-            this.balance = Utilies.HandleBalanceTextView(String.valueOf(balance));
-            shareDataViewModel.setBalanceData(this.balance);
-        }
-    }
-
     public String getBalance(){
         return this.balance;
     }
 
     public Uri getImageUri(){
         return this.imageUri;
+    }
+
+    @Override
+    public void UpdateWallet(long balance) {
+        SetUserBalance(balance);
+        this.balance = Utilies.HandleBalanceTextView(String.valueOf(balance));
+        shareDataViewModel.setBalanceData(this.balance);
     }
 }

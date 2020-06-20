@@ -6,6 +6,7 @@ import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.service.ServerAPI;
+import com.example.ewalletexample.utilies.GsonUtils;
 import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.gson.Gson;
 
@@ -22,15 +23,13 @@ public class GetBalanceAPI {
     private GetBalanceRequest request;
     private String userid;
     private BalanceResponse balanceResponse;
-    private Gson gson;
     private PublicKey publicKey;
 
-    public GetBalanceAPI(PublicKey publicKey, String userid, Gson gson, BalanceResponse response){
+    public GetBalanceAPI(PublicKey publicKey, String userid, BalanceResponse response){
         this.userid = userid;
         this.publicKey = publicKey;
         request = new GetBalanceRequest();
         balanceResponse = response;
-        this.gson = gson;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -50,7 +49,7 @@ public class GetBalanceAPI {
         String hashHeaderBySecretKey1 = SecurityUtils.encryptHmacSha256(secretKey1, header);
         String encryptAESHeaderBySecretKey2 = SecurityUtils.encryptAES(secretKey2, hashHeaderBySecretKey1);
         String encryptRSAHeader = SecurityUtils.encryptRSA(publicKey, encryptAESHeaderBySecretKey2);
-        new GetBalance().execute(ServerAPI.GET_BALANCE_API.GetUrl(), gson.toJson(request), encryptRSAHeader);
+        new GetBalance().execute(ServerAPI.GET_BALANCE_API.GetUrl(), GsonUtils.toJsonString(request), encryptRSAHeader);
     }
 
     class GetBalance extends RequestServerAPI implements RequestServerFunction{

@@ -2,13 +2,11 @@ package com.example.ewalletexample.Server.api.notification;
 
 import android.os.Build;
 
-import com.example.ewalletexample.Server.api.transaction.TransactionDetailAPI;
 import com.example.ewalletexample.Server.request.RequestServerAPI;
 import com.example.ewalletexample.Server.request.RequestServerFunction;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.service.ServerAPI;
 import com.example.ewalletexample.utilies.SecurityUtils;
-import com.example.ewalletexample.utilies.dataJson.HandlerJsonData;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;

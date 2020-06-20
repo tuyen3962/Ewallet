@@ -17,10 +17,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.aldoapps.autoformatedittext.AutoFormatEditText;
 import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
 import com.example.ewalletexample.Server.api.bank.list.ListBankConnectedAPI;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeAPI;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeRequest;
+import com.example.ewalletexample.Server.api.transaction.fee.GetServiceFeeResponse;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
@@ -31,6 +35,8 @@ import com.example.ewalletexample.service.recycleview.listbank.RecycleViewListBa
 import com.example.ewalletexample.service.recycleview.listbank.UserSelectBankConnect;
 import com.example.ewalletexample.service.storageFirebase.FirebaseStorageHandler;
 import com.example.ewalletexample.service.toolbar.CustomToolbarContext;
+import com.example.ewalletexample.service.websocket.WebsocketClient;
+import com.example.ewalletexample.service.websocket.WebsocketResponse;
 import com.example.ewalletexample.utilies.Utilies;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.storage.FirebaseStorage;
@@ -39,12 +45,13 @@ import com.google.gson.Gson;
 import java.util.List;
 import java.util.Locale;
 
-public class ServiceWalletActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>, UserSelectBankConnect {
+public class ServiceWalletActivity extends AppCompatActivity implements BankMappingCallback<List<BankInfo>>,
+        UserSelectBankConnect, GetServiceFeeResponse {
     private static final int currentHolderChosenColor = R.color.Grey, defaultHolderColor = R.color.White;
 
     FirebaseStorageHandler firebaseStorageHandler;
     RecycleViewListBankConnected recycleViewListBankConnected;
-    String userid, secretKeyString1, secretKeyString2;
+    String userid, secretKeyString1, secretKeyString2, amountTransaction;
     long userAmount;
     View sourceFundLayout;
     List<BankInfo> bankInfoList;
@@ -59,6 +66,9 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
     ListBankConnectedAPI listBankConnectedAPI;
     RecycleViewListBankConnected.ListBankConnectViewHolder currentHolder;
     CustomToolbarContext customToolbarContext;
+    GetServiceFeeAPI getServiceFeeAPI;
+    GetServiceFeeRequest request;
+    WebsocketClient websocketClient;
 
     TextWatcher textWatcher = new TextWatcher() {
         @Override
@@ -115,6 +125,7 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
     }
 
     void Initialize(){
+        request = new GetServiceFeeRequest();
         rvListBankConnected = findViewById(R.id.listBankAccountConnect);
         etBalance = findViewById(R.id.etBalance);
         tvErrorBalance = findViewById(R.id.tvErrorBalance);
@@ -140,11 +151,17 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
         secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
         sourceFundLayout.setVisibility(View.VISIBLE);
         listBankConnectedAPI = new ListBankConnectedAPI(this, userid);
+
+        websocketClient = new WebsocketClient(this, userid);
+        request.service_code = this.service.GetCode();
+        request.key =  secretKeyString1;
+        request.secondKey = secretKeyString2;
+        getServiceFeeAPI = new GetServiceFeeAPI(request, this::GetTransactionFee);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void StartTransaction(View view){
-        String amountTransaction = etBalance.getText().toString();
-        amountTransaction = amountTransaction.replaceAll(",","");
+        amountTransaction = etBalance.getText().toString().replaceAll(",","");
         if (amountTransaction.isEmpty()){
             etBalance.setError("Nhập số tiền bạn muốn thực hiện giao dịch");
             return;
@@ -159,21 +176,8 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
             return;
         }
 
-        Intent intent = new Intent(ServiceWalletActivity.this, SubmitOrderActivity.class);
-        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
-        intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), amountTransaction);
-        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), 0);
-        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), service.GetCode());
-
-        if(service == Service.TOPUP_SERVICE_TYPE){
-            intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.ATM_SOURCE_FUND.GetCode());
-        } else if(service == Service.WITHDRAW_SERVICE_TYPE){
-            intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
-        }
-
-        intent.putExtra(Symbol.BANK_INFO.GetValue(), new Gson().toJson(currentBankConnect));
-
-        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
+        getServiceFeeAPI.StartRequest(getString(R.string.public_key));
+        progressBarManager.ShowProgressBar("Đang lấy phí giao dịch");
     }
 
     public void ClearAmounTransactionText(View view){
@@ -235,5 +239,30 @@ public class ServiceWalletActivity extends AppCompatActivity implements BankMapp
                 finish();
             }
         }
+    }
+
+    @Override
+    public void GetTransactionFee(long fee) {
+        if (fee == -1) {
+            progressBarManager.HideProgressBar();
+            Toast.makeText(this, "Không lấy dược phí giao dịch", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(ServiceWalletActivity.this, SubmitOrderActivity.class);
+        intent.putExtra(Symbol.USER_ID.GetValue(), userid);
+        intent.putExtra(Symbol.AMOUNT_TRANSACTION.GetValue(), amountTransaction);
+        intent.putExtra(Symbol.FEE_TRANSACTION.GetValue(), fee);
+        intent.putExtra(Symbol.SERVICE_TYPE.GetValue(), service.GetCode());
+
+        if(service == Service.TOPUP_SERVICE_TYPE){
+            intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.ATM_SOURCE_FUND.GetCode());
+        } else if(service == Service.WITHDRAW_SERVICE_TYPE){
+            intent.putExtra(Symbol.SOURCE_OF_FUND.GetValue(), SourceFund.WALLET_SOURCE_FUND.GetCode());
+        }
+
+        intent.putExtra(Symbol.BANK_INFO.GetValue(), new Gson().toJson(currentBankConnect));
+
+        startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
     }
 }

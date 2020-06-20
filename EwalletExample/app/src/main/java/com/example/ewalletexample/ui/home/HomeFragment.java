@@ -186,6 +186,11 @@ public class HomeFragment extends Fragment implements UserSelectFunction<Service
                 intent.putExtra(Symbol.FRIEND_ID.GetValue(), friendId);
                 startActivityForResult(intent, RequestCode.SUBMIT_ORDER);
             }
+        } else if (requestCode == RequestCode.CONNECT_BANK_CODE || requestCode == RequestCode.UNLINK_BANK_CODE){
+            boolean isChange = data.getBooleanExtra(Symbol.CHANGE_BALANCE.GetValue(), false);
+            if (isChange){
+                mainActivity.UpdateWallet(data.getLongExtra(Symbol.AMOUNT.GetValue(), 0));
+            }
         }
     }
 }

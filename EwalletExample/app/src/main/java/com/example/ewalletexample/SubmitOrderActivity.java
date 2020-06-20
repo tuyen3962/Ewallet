@@ -8,35 +8,28 @@ import androidx.appcompat.widget.Toolbar;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.davidmiguel.numberkeyboard.NumberKeyboard;
 import com.davidmiguel.numberkeyboard.NumberKeyboardListener;
-import com.example.ewalletexample.Server.api.balance.BalanceResponse;
 import com.example.ewalletexample.Server.api.order.ExchangeMoneyOrder;
 import com.example.ewalletexample.Server.api.order.MobileCardOrder;
-import com.example.ewalletexample.Server.api.order.MobileCardOrderResponse;
 import com.example.ewalletexample.Server.api.order.OrderResponse;
 import com.example.ewalletexample.Server.api.order.TopupOrder;
 import com.example.ewalletexample.Server.api.order.WithdrawOrder;
-import com.example.ewalletexample.Server.api.transaction.TransactionDetailAPI;
-import com.example.ewalletexample.Server.api.transaction.TransactionDetailResponse;
+import com.example.ewalletexample.Server.api.transaction.single.TransactionDetailAPI;
+import com.example.ewalletexample.Server.api.transaction.single.TransactionDetailResponse;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.SourceFund;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.BankInfo;
-import com.example.ewalletexample.data.TransactionDetail;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.UserModel;
-import com.example.ewalletexample.service.ControlListImage;
-import com.example.ewalletexample.service.code.CodeEditText;
 import com.example.ewalletexample.service.mobilecard.MobileCardAmount;
 import com.example.ewalletexample.service.mobilecard.MobileCardOperator;
 import com.example.ewalletexample.service.realtimeDatabase.FirebaseDatabaseHandler;
@@ -46,8 +39,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
-
-import java.util.List;
 
 public class SubmitOrderActivity extends AppCompatActivity implements OrderResponse, ResponseModelByKey<UserModel>, TransactionDetailResponse {
     FirebaseDatabaseHandler<UserModel> firebaseDatabaseHandler;

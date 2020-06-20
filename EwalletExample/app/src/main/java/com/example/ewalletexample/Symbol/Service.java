@@ -7,6 +7,7 @@ import com.example.ewalletexample.SelectMobileCardFunctionActivity;
 import com.example.ewalletexample.ServiceWalletActivity;
 import com.example.ewalletexample.ShowQrcodeActivity;
 import com.example.ewalletexample.UserBankCardActivity;
+import com.example.ewalletexample.VerifyAccountActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ public enum Service {
     MOBILE_CARD_SERVICE_TYPE(4,"Mua thẻ", "Mua thẻ cào" ,R.drawable.ic_mobile_card , false, SelectMobileCardFunctionActivity.class, RequestCode.SUBMIT_ORDER),
     LINK_CARD(5, "Liên kết thẻ","Liên kết với thẻ ngân hàng" ,R.drawable.ic_link, false,ChooseBankConnectActivity.class, RequestCode.CONNECT_BANK_CODE),
     UN_LINK_CARD(6, "Hủy liên kết thẻ","Hủy liên kết với thẻ ngân hàng" ,R.drawable.ic_unlink, false,ChooseBankConnectActivity.class, RequestCode.UNLINK_BANK_CODE),
-    VERIFY_USER(7, "Bảo mật tài khoản","Bảo mật tài khoản" ,R.drawable.mobile_card, false,ChooseBankConnectActivity.class, RequestCode.SECURITY_CODE);
+    VERIFY_USER(7, "Bảo mật tài khoản","Bảo mật tài khoản" ,R.drawable.mobile_card, false, VerifyAccountActivity.class, RequestCode.SECURITY_CODE);
 
     private int numberCode;
     private String nameCode, description;

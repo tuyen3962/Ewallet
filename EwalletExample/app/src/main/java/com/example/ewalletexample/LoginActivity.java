@@ -8,11 +8,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.davidmiguel.numberkeyboard.NumberKeyboard;
-import com.davidmiguel.numberkeyboard.NumberKeyboardListener;
 import com.example.ewalletexample.Server.api.balance.BalanceResponse;
 import com.example.ewalletexample.Server.api.balance.GetBalanceAPI;
 import com.example.ewalletexample.Server.api.login.UserLoginAPI;
@@ -20,17 +19,15 @@ import com.example.ewalletexample.Server.api.login.UserLoginRequest;
 import com.example.ewalletexample.Server.api.login.UserLoginResponse;
 import com.example.ewalletexample.Symbol.ErrorCode;
 import com.example.ewalletexample.Symbol.RequestCode;
-import com.example.ewalletexample.Symbol.Service;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.User;
-import com.example.ewalletexample.data.UserNotifyEntity;
 import com.example.ewalletexample.dialogs.ProgressBarManager;
 import com.example.ewalletexample.model.Response;
 import com.example.ewalletexample.service.CheckInputField;
 import com.example.ewalletexample.service.MemoryPreference.SharedPreferenceLocal;
-import com.example.ewalletexample.service.notification.NotificationCreator;
+import com.example.ewalletexample.service.systemService.NotificationService;
 import com.example.ewalletexample.service.websocket.WebsocketClient;
-import com.example.ewalletexample.service.websocket.WebsocketResponse;
+import com.example.ewalletexample.utilies.GsonUtils;
 import com.example.ewalletexample.utilies.SecurityUtils;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -42,7 +39,7 @@ import java.security.PublicKey;
 
 import javax.crypto.SecretKey;
 
-public class LoginActivity extends AppCompatActivity implements BalanceResponse, UserLoginResponse, WebsocketResponse {
+public class LoginActivity extends AppCompatActivity implements BalanceResponse, UserLoginResponse {
     FirebaseAuth mAuth;
     MaterialTextView tvFullname, tvPhone;
     TextView tvError;
@@ -53,7 +50,6 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
     SharedPreferenceLocal local;
     GetBalanceAPI balanceAPI;
     UserLoginAPI userLoginAPI;
-    Gson gson;
     SecretKey secretKey1, secretKey2;
     String secretKeyString1, secretKeyString2;
     WebsocketClient websocketClient;
@@ -68,8 +64,14 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
         GetValueFromIntent();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.e("TAG", "onStop: ");
+        startService(new Intent(this, NotificationService.class).putExtra(Symbol.USER_ID.GetValue(), user.getUserId()));
+    }
+
     void InitLayoutProperties(){
-        gson = new Gson();
         local = new SharedPreferenceLocal(this, Symbol.NAME_PREFERENCES.GetValue());
         mAuth = FirebaseAuth.getInstance();
         if(mAuth.getCurrentUser() != null){
@@ -92,7 +94,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
         Intent intent = getIntent();
         String update_symbol = intent.getStringExtra(Symbol.UPDATE_SYMBOL.GetValue());
         if (update_symbol.equalsIgnoreCase(Symbol.UPDATE_FOR_REGISTER.GetValue())){
-            user = gson.fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
+            user = GsonUtils.getGson().fromJson(intent.getStringExtra(Symbol.USER.GetValue()), User.class);
             secretKeyString1 = intent.getStringExtra(Symbol.SECRET_KEY_01.GetValue());
             secretKey1 = SecurityUtils.generateAESKeyFromText(secretKeyString1);
             secretKeyString2 = intent.getStringExtra(Symbol.SECRET_KEY_02.GetValue());
@@ -103,7 +105,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
 
             Intent data = new Intent(LoginActivity.this, UpdateUserInformationActivity.class);
             data.putExtra(Symbol.UPDATE_SYMBOL.GetValue(), update_symbol);
-            data.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+            data.putExtra(Symbol.USER.GetValue(), GsonUtils.toJsonString(user));
             data.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
             data.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
             startActivityForResult(data, RequestCode.UPDATE_REGISTER);
@@ -113,7 +115,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
             user.setFullName(intent.getStringExtra(Symbol.FULLNAME.GetValue()));
         }
 
-        websocketClient = new WebsocketClient(this, user.getUserId(), this);
+        websocketClient = new WebsocketClient(this, user.getUserId());
 
         tvFullname.setText(user.getFullName());
         tvPhone.setText(user.getPhoneNumber());
@@ -170,7 +172,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
         mAuth.signInWithCustomToken(customToken);
 
         PublicKey publicKey = SecurityUtils.generatePublicKey(getString(R.string.public_key));
-        balanceAPI = new GetBalanceAPI(publicKey, user.getUserId(), gson, this);
+        balanceAPI = new GetBalanceAPI(publicKey, user.getUserId(), this);
         balanceAPI.GetBalance(secretKeyString1, secretKeyString2);
     }
 
@@ -183,7 +185,7 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
     @Override
     public void GetBalanceResponse(long balance) {
         Intent intent = new Intent(LoginActivity.this, MainLayoutActivity.class);
-        intent.putExtra(Symbol.USER.GetValue(), gson.toJson(user));
+        intent.putExtra(Symbol.USER.GetValue(), GsonUtils.toJsonString(user));
         intent.putExtra(Symbol.SECRET_KEY_01.GetValue(), secretKeyString1);
         intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKeyString2);
         intent.putExtra(Symbol.AMOUNT.GetValue(), balance);
@@ -239,10 +241,5 @@ public class LoginActivity extends AppCompatActivity implements BalanceResponse,
         intent.putExtra(Symbol.SECRET_KEY_02.GetValue(), secretKey2);
         intent.putExtra(Symbol.AMOUNT.GetValue(), amount);
         startActivityForResult(intent, RequestCode.LOGIN_CODE);
-    }
-
-    @Override
-    public void UpdateWallet(String userid, long balance) {
-
     }
 }

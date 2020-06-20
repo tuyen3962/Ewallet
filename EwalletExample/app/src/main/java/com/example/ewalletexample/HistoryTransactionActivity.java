@@ -15,7 +15,7 @@ import android.widget.DatePicker;
 import android.widget.TextView;
 
 import com.example.ewalletexample.Server.api.bank.BankMappingCallback;
-import com.example.ewalletexample.Server.api.transaction.TransactionHistoryAPI;
+import com.example.ewalletexample.Server.api.transaction.list.TransactionHistoryAPI;
 import com.example.ewalletexample.Symbol.RequestCode;
 import com.example.ewalletexample.Symbol.Symbol;
 import com.example.ewalletexample.data.TransactionHistory;
